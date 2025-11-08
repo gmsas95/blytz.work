@@ -59,7 +59,32 @@ Make sure your DATABASE_URL includes:
 - Check logs in Dokploy dashboard
 - Verify all environment variables are set
 
+## Frontend Deployment
+
+### Environment Variables
+Copy the variables from `.env.frontend` into your Dokploy frontend app settings:
+
+**Required Variables:**
+```
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-firebase-project-id
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef12
+```
+
+### Frontend Settings
+- **Root Path**: `./frontend`
+- **Compose File**: `docker-compose.frontend.yml`
+- **Health Check**: http://localhost:3001
+
 ## Success Indicators
-✅ Container builds successfully  
-✅ Health check passes  
-✅ API responds at your-domain.com/health
+✅ Backend container builds successfully  
+✅ Backend health check passes  
+✅ Backend API responds at your-domain.com/health
+✅ Frontend container builds successfully
+✅ Frontend health check passes
+✅ Frontend app responds at your-frontend-domain.com
