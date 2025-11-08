@@ -4,7 +4,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytzhired-backend-${COMPOSE_PROJECT_NAME:-local}
+    container_name: blytz-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -30,4 +30,4 @@ services:
 
 networks:
   default:
-    name: blytzhired-network-${COMPOSE_PROJECT_NAME:-local}
+    name: blytz-network
