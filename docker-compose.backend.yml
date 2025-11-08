@@ -4,7 +4,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytz-backend
+    container_name: blytz-hire-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -30,4 +30,4 @@ services:
 
 networks:
   default:
-    name: blytz-network
+    name: blytz-hire-network
