@@ -53,6 +53,7 @@ jspm_packages/
 .env
 .env.dokploy
 .env.frontend
+.env.nginx
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
