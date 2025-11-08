@@ -5,10 +5,12 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, X, Heart } from 'lucide-react';
 import api from '@/lib/api';
 import { VAProfile as VAProfileType, JobPosting } from '@/types';
+import { useAlert } from '@/components/ui/Alert';
 
 export default function DiscoverPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [jobId, setJobId] = useState<string>('');
+  const { addAlert, AlertContainer } = useAlert();
 
   const { data: jobs } = useQuery({
     queryKey: ['companyJobs'],
@@ -39,7 +41,7 @@ export default function DiscoverPage() {
     },
     onSuccess: (data) => {
       if (data.match) {
-        alert('🎉 It\'s a match! Payment required to unlock contact information.');
+        addAlert('success', '🎉 It\'s a match! Payment required to unlock contact information.');
       }
       // Move to next profile
       setCurrentIndex((prev) => prev + 1);
@@ -131,7 +133,9 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <>
+      <AlertContainer />
+      <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold">Discover Virtual Assistants</h1>
         <p className="text-gray-600">Swipe through potential matches for your job</p>
@@ -227,6 +231,6 @@ export default function DiscoverPage() {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import env from "@fastify/env";
+import rateLimit from "@fastify/rate-limit";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
@@ -8,6 +9,9 @@ import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import matchingRoutes from "./routes/matching.js";
 import paymentRoutes from "./routes/payments.js";
+
+// Import utilities
+import { createRateLimiter } from "./utils/response.js";
 
 // Environment schema
 const envSchema = {
@@ -20,6 +24,9 @@ const envSchema = {
     FIREBASE_PRIVATE_KEY: { type: "string" },
     STRIPE_SECRET_KEY: { type: "string" },
     STRIPE_WEBHOOK_SECRET: { type: "string" },
+    ALLOWED_ORIGINS: { type: "string", default: "" },
+    PAYMENT_AMOUNT: { type: "string", default: "29.99" },
+    PLATFORM_FEE_PERCENTAGE: { type: "string", default: "10" },
     PORT: { type: "string", default: "3000" },
     NODE_ENV: { type: "string", default: "development" },
   },
@@ -29,10 +36,18 @@ const app = Fastify({
   logger: true,
 });
 
+// Register rate limiting
+app.register(rateLimit, {
+  global: true,
+  max: 100, // Max requests per window
+  timeWindow: '15 minutes', // Window duration
+  skipOnError: false,
+});
+
 // Register plugins
 app.register(cors, {
   origin: process.env.NODE_ENV === "production" 
-    ? ["https://yourdomain.com"] 
+    ? process.env.ALLOWED_ORIGINS?.split(',') || ["https://yourdomain.com"]
     : ["http://localhost:3000", "http://localhost:3001"],
   credentials: true,
 });
@@ -54,14 +69,26 @@ app.setErrorHandler((error, request, reply) => {
   
   if (error.validation) {
     return reply.code(400).send({
-      error: "Validation error",
-      details: error.validation,
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Validation error',
+        details: error.validation,
+        timestamp: new Date().toISOString(),
+      }
     });
   }
 
+  // Don't expose internal errors in production
+  const isDev = process.env.NODE_ENV === "development";
   return reply.code(500).send({
-    error: "Internal server error",
-    message: process.env.NODE_ENV === "development" ? error.message : undefined,
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: isDev ? error.message : "Internal server error",
+      ...(isDev && { stack: error.stack }),
+      timestamp: new Date().toISOString(),
+    }
   });
 });
 

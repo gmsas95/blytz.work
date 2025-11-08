@@ -2,7 +2,7 @@ import admin from "firebase-admin";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 // Initialize Firebase Admin
-if (!admin.apps.length && process.env.NODE_ENV !== 'test') {
+if (!admin.apps.length) {
   try {
     if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
       admin.initializeApp({
@@ -12,9 +12,12 @@ if (!admin.apps.length && process.env.NODE_ENV !== 'test') {
           privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         }),
       });
+    } else {
+      throw new Error('Missing Firebase configuration');
     }
   } catch (error: any) {
-    console.warn('Firebase initialization failed:', error.message);
+    console.error('Firebase initialization failed:', error.message);
+    throw error; // Fail fast if Firebase doesn't initialize
   }
 }
 
@@ -30,21 +33,12 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
   }
 
   try {
-    if (process.env.NODE_ENV === 'test') {
-      // Mock authentication for testing
-      request.user = {
-        uid: 'test-user-id',
-        email: 'test@example.com',
-        role: 'company'
-      };
-    } else {
-      const decoded = await admin.auth().verifyIdToken(token);
-      request.user = {
-        uid: decoded.uid,
-        email: decoded.email || '',
-        role: decoded.role
-      };
-    }
+    const decoded = await admin.auth().verifyIdToken(token);
+    request.user = {
+      uid: decoded.uid,
+      email: decoded.email || '',
+      role: decoded.role || 'va' // Default to VA for safety
+    };
   } catch (error) {
     return reply.code(401).send({ error: "Invalid token" });
   }

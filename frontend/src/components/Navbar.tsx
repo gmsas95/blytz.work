@@ -2,12 +2,47 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import type { User } from '@/types/auth';
 
 export function Navbar() {
   const pathname = usePathname();
-  const user = auth?.currentUser;
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (!auth) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get ID token to access custom claims
+          const idTokenResult = await firebaseUser.getIdTokenResult();
+          const role = idTokenResult.claims.role as 'va' | 'company' || 'va';
+          
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            role: role,
+            displayName: firebaseUser.displayName || undefined,
+          });
+        } catch (error) {
+          console.error('Error getting user role:', error);
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            role: 'va', // Default fallback
+            displayName: firebaseUser.displayName || undefined,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
     if (auth) {
@@ -28,7 +63,7 @@ export function Navbar() {
 
           {user && (
             <div className="flex items-center space-x-4">
-              {(user as any)?.role === 'va' && (
+              {user?.role === 'va' && (
                 <>
                   <Link
                     href="/va/profile"
@@ -53,7 +88,7 @@ export function Navbar() {
                 </>
               )}
 
-              {(user as any)?.role === 'company' && (
+              {user?.role === 'company' && (
                 <>
                   <Link
                     href="/company/profile"

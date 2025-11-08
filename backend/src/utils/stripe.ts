@@ -1,12 +1,12 @@
 import Stripe from "stripe";
 
-const stripe = process.env.NODE_ENV === 'test' || !process.env.STRIPE_SECRET_KEY
+const stripe = !process.env.STRIPE_SECRET_KEY
   ? null as any
   : new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2025-02-24.acacia",
     });
 
-export const PLATFORM_FEE_PERCENT = 0.1; // 10% platform fee
+export const PLATFORM_FEE_PERCENT = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || "10") / 100; // Configurable platform fee
 
 export async function createPaymentIntent(matchId: string, amount: number) {
   try {
