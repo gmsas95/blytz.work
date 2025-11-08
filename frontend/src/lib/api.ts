@@ -12,12 +12,13 @@ export const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use(async (config) => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  
-  if (user) {
-    const token = await user.getIdToken();
-    config.headers.Authorization = `Bearer ${token}`;
+  if (auth) {
+    const user = auth.currentUser;
+    
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   
   return config;

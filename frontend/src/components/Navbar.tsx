@@ -7,11 +7,13 @@ import { auth } from '@/lib/firebase';
 
 export function Navbar() {
   const pathname = usePathname();
-  const user = auth.currentUser;
+  const user = auth?.currentUser;
 
   const handleSignOut = async () => {
-    await signOut(auth);
-    window.location.href = '/';
+    if (auth) {
+      await signOut(auth);
+      window.location.href = '/';
+    }
   };
 
   return (

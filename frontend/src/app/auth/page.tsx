@@ -35,6 +35,10 @@ export default function AuthPage() {
     setError('');
 
     try {
+      if (!auth) {
+        throw new Error('Firebase not initialized. Please check configuration.');
+      }
+
       if (isSignUp) {
         await createUserWithEmailAndPassword(auth, data.email, data.password);
       } else {
