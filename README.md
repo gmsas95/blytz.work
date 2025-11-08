@@ -169,7 +169,40 @@ Complete API documentation available in `backend/openapi.yaml`
 
 ## 🚀 **Deployment**
 
-### **VPS Deployment** (Recommended)
+### **Docker Deployment** (Recommended for Dokploy)
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd blytz-hire
+
+# Copy environment template
+cp .env.example .env
+# Edit .env with your actual credentials
+
+# Start all services
+docker-compose up -d
+
+# Check services status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+### **Services Included**
+- **PostgreSQL 15**: Database
+- **Redis 7**: Caching and sessions
+- **Backend API**: Fastify server on port 3000
+- **Frontend**: Next.js app on port 3001
+- **Nginx**: Reverse proxy on port 80/443
+
+### **Dokploy Deployment**
+1. Connect your repository to Dokploy
+2. Set up environment variables in Dokploy dashboard
+3. Deploy using `docker-compose.yml`
+4. Configure custom domain and SSL
+
+### **VPS Deployment** (Manual)
 - **Server**: Ubuntu 24.04 LTS
 - **Web Server**: Nginx with SSL
 - **Process Manager**: PM2
@@ -178,6 +211,7 @@ Complete API documentation available in `backend/openapi.yaml`
 
 ### **Environment Setup**
 Production environment variables required for both frontend and backend.
+See `.env.example` for complete list.
 
 ---
 
