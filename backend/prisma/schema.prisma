@@ -4,7 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("SUPABASE_DATABASE_URL")
+  schemas  = ["blytz_hire"]
 }
 
 model User {
@@ -18,6 +19,7 @@ model User {
   payments   Payment[]
 
   @@map("users")
+  @@schema("blytz_hire")
 }
 
 model VAProfile {
@@ -36,6 +38,7 @@ model VAProfile {
   matches      Match[]
 
   @@map("va_profiles")
+  @@schema("blytz_hire")
 }
 
 model Company {
@@ -49,6 +52,7 @@ model Company {
   jobPostings JobPosting[]
 
   @@map("companies")
+  @@schema("blytz_hire")
 }
 
 model JobPosting {
@@ -64,6 +68,7 @@ model JobPosting {
   matches     Match[]
 
   @@map("job_postings")
+  @@schema("blytz_hire")
 }
 
 model MatchVote {
@@ -79,6 +84,7 @@ model MatchVote {
 
   @@unique([jobPostingId, vaProfileId])
   @@map("match_votes")
+  @@schema("blytz_hire")
 }
 
 model Match {
@@ -95,6 +101,7 @@ model Match {
 
   @@unique([jobPostingId, vaProfileId])
   @@map("matches")
+  @@schema("blytz_hire")
 }
 
 model Payment {
@@ -112,4 +119,5 @@ model Payment {
   user    User  @relation(fields: [userId], references: [id])
 
   @@map("payments")
+  @@schema("blytz_hire")
 }
