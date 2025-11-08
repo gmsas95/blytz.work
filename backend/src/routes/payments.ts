@@ -47,7 +47,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
       }
 
       // Calculate amount (flat fee for MVP)
-      const baseAmount = 29.99; // $29.99 to unlock contact
+      const baseAmount = parseFloat(process.env.PAYMENT_AMOUNT || "29.99"); // Configurable payment amount
       const platformFee = Math.round(baseAmount * PLATFORM_FEE_PERCENT * 100); // in cents
       const totalAmount = Math.round(baseAmount * 100); // in cents
 

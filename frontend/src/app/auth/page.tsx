@@ -45,8 +45,12 @@ export default function AuthPage() {
         await signInWithEmailAndPassword(auth, data.email, data.password);
       }
 
-      // Store user role in localStorage (in production, use custom claims)
-      localStorage.setItem('userRole', data.role);
+      // Store user role temporarily for navigation
+      // In production, role should come from Firebase custom claims
+      if (isSignUp) {
+        // For new users, we'll set role via backend after profile creation
+        sessionStorage.setItem('pendingRole', data.role);
+      }
       
       // Redirect based on role
       if (data.role === 'va') {
