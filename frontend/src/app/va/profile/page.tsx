@@ -13,7 +13,7 @@ import { VAProfile as VAProfileType } from '@/types';
 
 export default function VAProfilePage() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const user = auth?.currentUser;
   const [skills, setSkills] = useState<string[]>([]);
 
   const { data: profile, isLoading } = useQuery({
