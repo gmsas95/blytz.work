@@ -35,6 +35,7 @@ export interface JobPosting {
   description: string;
   rateRange: string;
   isActive: boolean;
+  createdAt: string;
   company?: Company;
 }
 
