@@ -26,7 +26,7 @@ export function Navbar() {
 
           {user && (
             <div className="flex items-center space-x-4">
-              {user.role === 'va' && (
+              {(user as any)?.role === 'va' && (
                 <>
                   <Link
                     href="/va/profile"
@@ -51,7 +51,7 @@ export function Navbar() {
                 </>
               )}
 
-              {user.role === 'company' && (
+              {(user as any)?.role === 'company' && (
                 <>
                   <Link
                     href="/company/profile"
