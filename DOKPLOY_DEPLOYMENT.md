@@ -3,9 +3,9 @@
 ## Quick Setup
 
 ### 1. Environment Variables
-Copy the variables from `.env.dokploy` into your Dokploy application settings:
+See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for all required environment variables.
 
-**Required Variables:**
+**Backend Required Variables:**
 ```
 DATABASE_URL=postgresql://username:password@host:5432/database
 JWT_SECRET=your-super-secret-jwt-key-min-32-characters
