@@ -18,8 +18,14 @@ FIREBASE_PROJECT_ID=your_firebase_project_id
 
 ### **2. Deploy with Dokploy**
 ```bash
-# Start just the app services
-docker-compose up -d
+# Start backend only
+docker-compose -f docker-compose.backend.yml up -d
+
+# Start frontend only
+docker-compose -f docker-compose.frontend.yml up -d
+
+# Start nginx reverse proxy (optional)
+docker-compose -f docker-compose.nginx.yml up -d
 
 # Check status
 docker-compose ps
