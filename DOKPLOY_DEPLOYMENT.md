@@ -81,6 +81,30 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef12
 - **Compose File**: `docker-compose.frontend.yml`
 - **Health Check**: http://localhost:3001
 
+## Nginx Reverse Proxy (Optional)
+
+### Environment Variables
+Copy the variables from `.env.nginx` into your Dokploy nginx app settings:
+
+**Required Variables:**
+```
+BACKEND_URL=blytz-backend:3000
+FRONTEND_URL=blytz-frontend:3001
+SERVER_NAME=your-domain.com
+HTTP_PORT=80
+HTTPS_PORT=443
+```
+
+### Nginx Settings
+- **Root Path**: `./`
+- **Compose File**: `docker-compose.nginx.yml`
+- **Health Check**: http://localhost/health
+
+### Important Notes
+- Deploy backend and frontend first
+- Update service names if your Dokploy containers have different names
+- Configure SSL certificates in `nginx/ssl/` directory if needed
+
 ## Success Indicators
 ✅ Backend container builds successfully  
 ✅ Backend health check passes  
@@ -88,3 +112,5 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef12
 ✅ Frontend container builds successfully
 ✅ Frontend health check passes
 ✅ Frontend app responds at your-frontend-domain.com
+✅ Nginx reverse proxy routes traffic correctly
+✅ Full application accessible via single domain
