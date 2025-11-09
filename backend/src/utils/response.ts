@@ -11,7 +11,7 @@ export function sendSuccess<T>(reply: FastifyReply, data: T, message?: string) {
 
 export function sendError(reply: FastifyReply, error: Error | ApiError, statusCode?: number) {
   const apiError = handleApiError(error);
-  const code = statusCode || ('statusCode' in error ? error.statusCode : 500);
+  const code = statusCode || ('statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : 500);
   
   return reply.code(code).send({
     success: false,

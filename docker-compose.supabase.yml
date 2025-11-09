@@ -1,0 +1,167 @@
+services:
+  # Supabase PostgreSQL
+  supabase-db:
+    image: supabase/postgres:15.1.0.117
+    container_name: blytz-hire-supabase-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${SUPABASE_DB_NAME:-supabasedb}
+      - POSTGRES_USER=${SUPABASE_DB_USER:-supabase_admin}
+      - POSTGRES_PASSWORD=${SUPABASE_DB_PASSWORD:-supabase123}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - JWT_SECRET=${SUPABASE_JWT_SECRET:-your-super-secret-jwt-token}
+      - JWT_EXPIRY=${SUPABASE_JWT_EXPIRY:-3600}
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflicts
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./supabase/init:/docker-entrypoint-initdb.d
+    networks:
+      - blytz-hire-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SUPABASE_DB_USER:-supabase_admin} -d ${SUPABASE_DB_NAME:-supabasedb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Supabase REST API
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: blytz-hire-supabase-rest
+    restart: unless-stopped
+    environment:
+      - PGRST_DB_URI=postgres://${SUPABASE_DB_USER:-supabase_admin}:${SUPABASE_DB_PASSWORD:-supabase123}@supabase-db:5432/${SUPABASE_DB_NAME:-supabasedb}
+      - PGRST_DB_SCHEMA=public,storage,auth,realtime
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=${SUPABASE_JWT_SECRET:-your-super-secret-jwt-token}
+      - PGRST_DB_MAX_ROWS=1000
+      - PGRST_DEFAULT_SERVER_SETTINGS=statement_timeout=60s
+    ports:
+      - "3001:3000"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - blytz-hire-network
+
+  # Supabase Auth
+  supabase-auth:
+    image: supabase/gotrue:v2.143.0
+    container_name: blytz-hire-supabase-auth
+    restart: unless-stopped
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=${SUPABASE_EXTERNAL_URL:-http://localhost:8001}
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://${SUPABASE_DB_USER:-supabase_admin}:${SUPABASE_DB_PASSWORD:-supabase123}@supabase-db:5432/${SUPABASE_DB_NAME:-supabasedb}
+      - GOTRUE_JWT_SECRET=${SUPABASE_JWT_SECRET:-your-super-secret-jwt-token}
+      - GOTRUE_JWT_EXP=${SUPABASE_JWT_EXPIRY:-3600}
+      - GOTRUE_SITE_URL=${SUPABASE_SITE_URL:-http://localhost:3000}
+      - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_MAILER_AUTOCONFIRM=true
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+      - GOTRUE_MAILER_URLPATHS_INVITE=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE=/auth/v1/verify
+    ports:
+      - "9999:9999"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - blytz-hire-network
+
+  # Supabase Storage
+  supabase-storage:
+    image: supabase/storage-api:v0.48.0
+    container_name: blytz-hire-supabase-storage
+    restart: unless-stopped
+    environment:
+      - ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
+      - SERVICE_KEY=${SUPABASE_SERVICE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU}
+      - POSTGREST_URL=http://supabase-rest:3000
+      - PGRST_JWT_SECRET=${SUPABASE_JWT_SECRET:-your-super-secret-jwt-token}
+      - DATABASE_URL=postgres://${SUPABASE_DB_USER:-supabase_admin}:${SUPABASE_DB_PASSWORD:-supabase123}@supabase-db:5432/${SUPABASE_DB_NAME:-supabasedb}
+      - FILE_SIZE_LIMIT=52428800
+      - REGION=${SUPABASE_REGION:-us-east-1}
+      - GLOBAL_S3_BUCKET=${SUPABASE_S3_BUCKET:-supabase-blytz-hire}
+      - ENABLE_IMAGE_TRANSFORMATION=true
+      - IMAGE_TRANSFORMATION_MAX_SIZE=2000
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+      - FILE_STORAGE_BACKEND=file
+      - TENANT_ID=stub
+      - REGION=${SUPABASE_REGION:-us-east-1}
+      - PROJECT_ID=1
+    ports:
+      - "3002:5000"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-rest:
+        condition: service_started
+    networks:
+      - blytz-hire-network
+
+  # Supabase Realtime
+  supabase-realtime:
+    image: supabase/realtime:v2.0.0
+    container_name: blytz-hire-supabase-realtime
+    restart: unless-stopped
+    environment:
+      - PORT=4000
+      - DB_HOST=supabase-db
+      - DB_PORT=5432
+      - DB_USER=${SUPABASE_DB_USER:-supabase_admin}
+      - DB_PASSWORD=${SUPABASE_DB_PASSWORD:-supabase123}
+      - DB_NAME=${SUPABASE_DB_NAME:-supabasedb}
+      - DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime
+      - API_JWT_SECRET=${SUPABASE_JWT_SECRET:-your-super-secret-jwt-token}
+      - FLY_ALLOC_ID=fly-abc123
+      - FLY_APP_NAME=supabase-realtime
+      - SECRET_KEY_BASE=$${SUPABASE_REALTIME_SECRET:-UP64GBBNyFHmK1mQZVbZkJJqyIjGm1cXTpGp3WvI3JM=}
+      - ENABLE_TAILSCALE=false
+      - DATABASE_USE_SSL=false
+      - DATABASE_POOL_SIZE=10
+    ports:
+      - "4000:4000"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - blytz-hire-network
+
+  # Supabase Kong API Gateway
+  supabase-kong:
+    image: kong:3.4
+    container_name: blytz-hire-supabase-kong
+    restart: unless-stopped
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_ADMIN_GUI_URL=http://localhost:8002
+    ports:
+      - "8001:8000"
+      - "8002:8001"
+      - "8003:8443"
+    volumes:
+      - ./supabase/kong.yml:/kong/declarative/kong.yml
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+      - supabase-storage
+    networks:
+      - blytz-hire-network
+
+volumes:
+  supabase_db_data:
+    driver: local
+
+networks:
+  blytz-hire-network:
+    external: true

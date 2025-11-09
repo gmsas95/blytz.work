@@ -9,6 +9,7 @@ import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import matchingRoutes from "./routes/matching.js";
 import paymentRoutes from "./routes/payments.js";
+import userRoutes from "./routes/user.routes.js"; // NEW SOC ROUTE
 
 // Import utilities
 import { createRateLimiter } from "./utils/response.js";
@@ -16,8 +17,9 @@ import { createRateLimiter } from "./utils/response.js";
 // Environment schema
 const envSchema = {
   type: "object",
-  required: ["DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY"],
+  required: ["SUPABASE_DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY"],
   properties: {
+    SUPABASE_DATABASE_URL: { type: "string" },
     DATABASE_URL: { type: "string" },
     FIREBASE_PROJECT_ID: { type: "string" },
     FIREBASE_CLIENT_EMAIL: { type: "string" },
@@ -58,6 +60,7 @@ app.register(env, {
 
 // Register routes
 app.register(healthRoutes);
+app.register(userRoutes, { prefix: "/api" }); // NEW SOC ROUTE
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
 app.register(matchingRoutes, { prefix: "/api" });
@@ -101,6 +104,8 @@ const start = async () => {
       host: "0.0.0.0" 
     });
     app.log.info(`Server listening on port ${process.env.PORT || 3000}`);
+    app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
+    app.log.info(`📊 New user routes available at /api/users/*`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
