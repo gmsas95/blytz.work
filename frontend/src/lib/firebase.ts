@@ -89,3 +89,5 @@ export function useAuth() {
 }
 
 export type { User };
+
+export const auth = authService;
