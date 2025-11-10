@@ -1,3 +1,4 @@
+// Complete Server with Hiring & Payment Systems
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import env from "@fastify/env";
@@ -8,8 +9,9 @@ import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
-import uploadRoutes from "./routes/upload.js"; // NEW UPLOAD ROUTES
-import matchingRoutes from "./routes/matching.js";
+import uploadRoutes from "./routes/upload.js";
+import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
+import contractRoutes from "./routes/contracts.js";
 import paymentRoutes from "./routes/payments.js";
 
 // Import utilities
@@ -64,8 +66,9 @@ app.register(healthRoutes);
 app.register(authRoutes, { prefix: "/api" });
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
-app.register(uploadRoutes, { prefix: "/api" }); // NEW UPLOAD ROUTES
-app.register(matchingRoutes, { prefix: "/api" });
+app.register(uploadRoutes, { prefix: "/api" });
+app.register(jobMarketplaceRoutes, { prefix: "/api" });
+app.register(contractRoutes, { prefix: "/api" });
 app.register(paymentRoutes, { prefix: "/api" });
 
 // Error handler
@@ -111,7 +114,11 @@ const start = async () => {
     app.log.info(`👤 VA profiles system ready at /api/va/*`);
     app.log.info(`🏢 Company profiles system ready at /api/company/*`);
     app.log.info(`📁 File upload system ready at /api/upload/*`);
+    app.log.info(`💼 Job marketplace system ready at /api/jobs/marketplace/*`);
+    app.log.info(`🤝 Contract management system ready at /api/contracts/*`);
+    app.log.info(`💳 Payment system ready at /api/payments/*`);
     app.log.info(`🚀 Platform-first implementation complete`);
+    app.log.info(`🎯 MVP Marketplace Ready - Similar to Fiverr/Upwork`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
