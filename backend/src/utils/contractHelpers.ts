@@ -1,3 +1,7 @@
+import { PrismaClient } from '@prisma/client';
+
+export const prisma = new PrismaClient();
+
 // Complete Timesheet and Milestone Management Functions
 async function getContractTimesheets(contractId: string, user: any) {
   // Get contract and verify access
@@ -10,25 +14,15 @@ async function getContractTimesheets(contractId: string, user: any) {
   });
 
   if (!contract) {
-    throw new Error("Contract not found");
+    return { success: false, message: "Contract not found" };
   }
 
-  // Verify access
-  let hasAccess = false;
-  if (user.role === 'company') {
-    const company = await prisma.company.findUnique({
-      where: { userId: user.uid }
-    });
-    hasAccess = company?.id === contract.companyId;
-  } else if (user.role === 'va') {
-    const vaProfile = await prisma.vAProfile.findUnique({
-      where: { userId: user.uid }
-    });
-    hasAccess = vaProfile?.id === contract.vaProfileId;
-  }
-
-  if (!hasAccess) {
-    throw new Error("Access denied");
+  // Check access permissions
+  const isCompany = contract.companyId === user.companyId;
+  const isVA = contract.vaProfileId === user.vaProfileId;
+  
+  if (!isCompany && !isVA) {
+    return { success: false, message: "Access denied" };
   }
 
   // Get timesheets
@@ -37,46 +31,108 @@ async function getContractTimesheets(contractId: string, user: any) {
     orderBy: { date: 'desc' }
   });
 
-  return timesheets;
+  return {
+    success: true,
+    timesheets: timesheets,
+    contract: contract
+  };
 }
 
-async function deleteTimesheet(timesheetId: string, user: any) {
+async function submitTimesheet(timesheetData: any, user: any) {
+  // Verify contract access
+  const contract = await prisma.contract.findUnique({
+    where: { id: timesheetData.contractId }
+  });
+
+  if (!contract || contract.vaProfileId !== user.vaProfileId) {
+    return { success: false, message: "Access denied" };
+  }
+
+  // Create timesheet
+  const timesheet = await prisma.timesheet.create({
+    data: {
+      contractId: timesheetData.contractId,
+      vaProfileId: user.vaProfileId,
+      date: new Date(timesheetData.date),
+      startTime: new Date(timesheetData.startTime),
+      endTime: new Date(timesheetData.endTime),
+      totalHours: timesheetData.totalHours,
+      description: timesheetData.description,
+      status: 'pending'
+    }
+  });
+
+  // Create notification for company
+  await prisma.notification.create({
+    data: {
+      userId: contract.companyId,
+      type: 'timesheet_submitted',
+      title: 'New Timesheet Submitted',
+      message: `${user.name} submitted a timesheet for ${timesheet.totalHours} hours`,
+      data: {
+        timesheetId: timesheet.id,
+        contractId: contract.id
+      }
+    }
+  });
+
+  return {
+    success: true,
+    timesheet
+  };
+}
+
+async function approveTimesheet(timesheetId: string, user: any) {
   // Get timesheet
   const timesheet = await prisma.timesheet.findUnique({
     where: { id: timesheetId },
     include: {
-      vaProfile: true
+      contract: {
+        include: {
+          company: true,
+          vaProfile: true
+        }
+      }
     }
   });
 
   if (!timesheet) {
-    throw new Error("Timesheet not found");
+    return { success: false, message: "Timesheet not found" };
   }
 
-  // Only VAs can delete their own timesheets
-  if (user.role !== 'va') {
-    throw new Error("Only VAs can delete timesheets");
+  // Verify company access
+  if (timesheet.contract.companyId !== user.companyId) {
+    return { success: false, message: "Access denied" };
   }
 
-  const vaProfile = await prisma.vAProfile.findUnique({
-    where: { userId: user.uid }
+  // Update timesheet status
+  const updatedTimesheet = await prisma.timesheet.update({
+    where: { id: timesheetId },
+    data: {
+      status: 'approved',
+      approvedAt: new Date(),
+      approvedBy: user.id
+    }
   });
 
-  if (vaProfile?.id !== timesheet.vaProfileId) {
-    throw new Error("Access denied");
-  }
-
-  // Cannot delete approved timesheets
-  if (timesheet.status === 'approved') {
-    throw new Error("Cannot delete approved timesheet");
-  }
-
-  // Delete timesheet
-  await prisma.timesheet.delete({
-    where: { id: timesheetId }
+  // Create notification for VA
+  await prisma.notification.create({
+    data: {
+      userId: timesheet.contract.vaProfileId,
+      type: 'timesheet_approved',
+      title: 'Timesheet Approved',
+      message: `Your timesheet for ${timesheet.totalHours} hours has been approved`,
+      data: {
+        timesheetId: timesheetId,
+        contractId: timesheet.contract.id
+      }
+    }
   });
 
-  return true;
+  return {
+    success: true,
+    timesheet: updatedTimesheet
+  };
 }
 
 async function getContractMilestones(contractId: string, user: any) {
@@ -90,25 +146,15 @@ async function getContractMilestones(contractId: string, user: any) {
   });
 
   if (!contract) {
-    throw new Error("Contract not found");
+    return { success: false, message: "Contract not found" };
   }
 
-  // Verify access
-  let hasAccess = false;
-  if (user.role === 'company') {
-    const company = await prisma.company.findUnique({
-      where: { userId: user.uid }
-    });
-    hasAccess = company?.id === contract.companyId;
-  } else if (user.role === 'va') {
-    const vaProfile = await prisma.vAProfile.findUnique({
-      where: { userId: user.uid }
-    });
-    hasAccess = vaProfile?.id === contract.vaProfileId;
-  }
-
-  if (!hasAccess) {
-    throw new Error("Access denied");
+  // Check access permissions
+  const isCompany = contract.companyId === user.companyId;
+  const isVA = contract.vaProfileId === user.vaProfileId;
+  
+  if (!isCompany && !isVA) {
+    return { success: false, message: "Access denied" };
   }
 
   // Get milestones
@@ -117,105 +163,165 @@ async function getContractMilestones(contractId: string, user: any) {
     orderBy: { dueDate: 'asc' }
   });
 
-  return milestones;
+  return {
+    success: true,
+    milestones: milestones,
+    contract: contract
+  };
 }
 
-async function deleteMilestone(milestoneId: string, user: any) {
+async function createMilestone(milestoneData: any, user: any) {
+  // Verify contract access
+  const contract = await prisma.contract.findUnique({
+    where: { id: milestoneData.contractId }
+  });
+
+  if (!contract || contract.companyId !== user.companyId) {
+    return { success: false, message: "Access denied" };
+  }
+
+  // Create milestone
+  const milestone = await prisma.milestone.create({
+    data: {
+      contractId: milestoneData.contractId,
+      title: milestoneData.title,
+      description: milestoneData.description,
+      amount: milestoneData.amount,
+      dueDate: milestoneData.dueDate ? new Date(milestoneData.dueDate) : null,
+      status: 'pending'
+    }
+  });
+
+  // Create notification for VA
+  await prisma.notification.create({
+    data: {
+      userId: contract.vaProfileId,
+      type: 'milestone_created',
+      title: 'New Milestone Created',
+      message: `New milestone: ${milestoneData.title}`,
+      data: {
+        milestoneId: milestone.id,
+        contractId: contract.id
+      }
+    }
+  });
+
+  return {
+    success: true,
+    milestone
+  };
+}
+
+async function completeMilestone(milestoneId: string, user: any) {
   // Get milestone
   const milestone = await prisma.milestone.findUnique({
     where: { id: milestoneId },
     include: {
       contract: {
         include: {
-          company: true
+          company: true,
+          vaProfile: true
         }
       }
     }
   });
 
   if (!milestone) {
-    throw new Error("Milestone not found");
+    return { success: false, message: "Milestone not found" };
   }
 
-  // Only companies can delete milestones
-  if (user.role !== 'company') {
-    throw new Error("Only companies can delete milestones");
+  // Verify VA access
+  if (milestone.contract.vaProfileId !== user.vaProfileId) {
+    return { success: false, message: "Access denied" };
   }
 
-  const company = await prisma.company.findUnique({
-    where: { userId: user.uid }
+  // Update milestone status
+  const updatedMilestone = await prisma.milestone.update({
+    where: { id: milestoneId },
+    data: {
+      status: 'completed',
+      completedAt: new Date()
+    }
   });
 
-  if (company?.id !== milestone.contract.companyId) {
-    throw new Error("Access denied");
-  }
-
-  // Cannot delete completed milestones
-  if (['completed', 'approved'].includes(milestone.status)) {
-    throw new Error("Cannot delete completed milestones");
-  }
-
-  // Delete milestone
-  await prisma.milestone.delete({
-    where: { id: milestoneId }
+  // Create notification for company
+  await prisma.notification.create({
+    data: {
+      userId: milestone.contract.companyId,
+      type: 'milestone_completed',
+      title: 'Milestone Completed',
+      message: `Milestone completed: ${milestone.title}`,
+      data: {
+        milestoneId: milestoneId,
+        contractId: milestone.contract.id
+      }
+    }
   });
-
-  return true;
-}
-
-async function calculateContractMetrics(contract: any) {
-  const totalMilestones = contract.milestones.length;
-  const completedMilestones = contract.milestones.filter((m: any) => m.status === 'completed').length;
-  const approvedMilestones = contract.milestones.filter((m: any) => m.status === 'approved').length;
-  
-  const totalTimesheets = contract.timesheets.length;
-  const approvedTimesheets = contract.timesheets.filter((t: any) => t.status === 'approved').length;
-  const totalHours = contract.timesheets
-    .filter((t: any) => t.status === 'approved')
-    .reduce((sum: number, t: any) => sum + t.totalHours, 0);
-
-  const totalPaid = contract.payments
-    .filter((p: any) => p.status === 'succeeded')
-    .reduce((sum: number, p: any) => sum + (p.amount / 100), 0);
 
   return {
-    milestoneProgress: totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0,
-    milestoneApproved: totalMilestones > 0 ? (approvedMilestones / totalMilestones) * 100 : 0,
-    timesheetProgress: totalTimesheets > 0 ? (approvedTimesheets / totalTimesheets) * 100 : 0,
-    totalHours,
-    totalPaid,
-    amountRemaining: contract.amount - totalPaid
+    success: true,
+    milestone: updatedMilestone
   };
 }
 
-async function createContractStatusNotifications(contract: any, status: string, triggeredBy: string) {
-  // This would be implemented with proper notification system
-  console.log('Contract status notification:', { contractId: contract.id, status, triggeredBy });
-}
+async function approveMilestone(milestoneId: string, user: any) {
+  // Get milestone
+  const milestone = await prisma.milestone.findUnique({
+    where: { id: milestoneId },
+    include: {
+      contract: {
+        include: {
+          company: true,
+          vaProfile: true
+        }
+      }
+    }
+  });
 
-async function createMilestoneStatusNotifications(milestone: any, status: string, triggeredBy: string) {
-  // This would be implemented with proper notification system
-  console.log('Milestone status notification:', { milestoneId: milestone.id, status, triggeredBy });
-}
+  if (!milestone) {
+    return { success: false, message: "Milestone not found" };
+  }
 
-async function createTimesheetStatusNotifications(timesheet: any, status: string, vaProfileId: string) {
-  // This would be implemented with proper notification system
-  console.log('Timesheet status notification:', { timesheetId: timesheet.id, status, vaProfileId });
-}
+  // Verify company access
+  if (milestone.contract.companyId !== user.companyId) {
+    return { success: false, message: "Access denied" };
+  }
 
-async function createContractNotifications(job: any, contract: any, company: any, vaProfileId: string) {
-  // This would be implemented with proper notification system
-  console.log('Contract creation notification:', { jobId: job.id, contractId: contract.id, companyId: company.id, vaProfileId });
+  // Update milestone status
+  const updatedMilestone = await prisma.milestone.update({
+    where: { id: milestoneId },
+    data: {
+      status: 'approved',
+      approvedAt: new Date()
+    }
+  });
+
+  // Create notification for VA
+  await prisma.notification.create({
+    data: {
+      userId: milestone.contract.vaProfileId,
+      type: 'milestone_approved',
+      title: 'Milestone Approved',
+      message: `Your milestone has been approved and is ready for payment`,
+      data: {
+        milestoneId: milestoneId,
+        contractId: milestone.contract.id
+      }
+    }
+  });
+
+  return {
+    success: true,
+    milestone: updatedMilestone
+  };
 }
 
 export {
   getContractTimesheets,
-  deleteTimesheet,
+  submitTimesheet,
+  approveTimesheet,
   getContractMilestones,
-  deleteMilestone,
-  calculateContractMetrics,
-  createContractStatusNotifications,
-  createMilestoneStatusNotifications,
-  createTimesheetStatusNotifications,
-  createContractNotifications
+  createMilestone,
+  completeMilestone,
+  approveMilestone
 };

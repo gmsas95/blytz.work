@@ -206,7 +206,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         },
         include: {
           contract: true,
-          milestone: true,
+          milestone: { include: { job: { select: { id: true, title: true } } }, },
           job: true
         }
       });

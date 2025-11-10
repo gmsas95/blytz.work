@@ -83,7 +83,7 @@ export default async function vaRoutes(app: FastifyInstance) {
           reviews: [], // Mock empty reviews
           responseRate: profile.responseRate || 0,
           averageRating: profile.averageRating || 0,
-          totalReviews: profile.totalReviews || 0,
+          totalReviews: true,
           featuredProfile: profile.featuredProfile || false,
           profileViews: profile.profileViews || 0
         }
@@ -136,7 +136,7 @@ export default async function vaRoutes(app: FastifyInstance) {
           userId: user.uid,
           responseRate: 0,
           averageRating: 0,
-          totalReviews: 0,
+          totalReviews: true,
           featuredProfile: false,
           profileViews: 0
         },
@@ -439,7 +439,7 @@ export default async function vaRoutes(app: FastifyInstance) {
             name: profile.name,
             profileViews: profile.profileViews || 0,
             averageRating: profile.averageRating || 0,
-            totalReviews: profile.totalReviews || 0,
+            totalReviews: true,
             responseRate: profile.responseRate || 0
           },
           portfolio: {
@@ -449,7 +449,7 @@ export default async function vaRoutes(app: FastifyInstance) {
           },
           performance: {
             totalMatches: 0,
-            totalReviews: profile.totalReviews || 0,
+            totalReviews: true,
             conversionRate: analytics.conversionRate,
             averageResponseTime: analytics.averageResponseTime
           },

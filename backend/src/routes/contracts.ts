@@ -239,7 +239,7 @@ export default async function contractRoutes(app: FastifyInstance) {
               name: true,
               logoUrl: true,
               verificationLevel: true,
-              totalReviews: true
+              totalReviews: true,
             }
           },
           proposal: {
@@ -328,7 +328,7 @@ export default async function contractRoutes(app: FastifyInstance) {
               name: true,
               logoUrl: true,
               verificationLevel: true,
-              totalReviews: true
+              totalReviews: true,
             }
           },
           proposal: {

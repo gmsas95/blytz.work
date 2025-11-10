@@ -230,7 +230,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
               logoUrl: true,
               country: true,
               verificationLevel: true,
-              totalReviews: true
+              totalReviews: true,
             }
           },
           _count: {
