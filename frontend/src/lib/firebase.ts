@@ -8,7 +8,9 @@ export const authService = {
           uid: 'dev-user-google',
           email: 'google-user@example.com',
           role: 'company',
-          profileComplete: false
+          profileComplete: false,
+          getIdTokenResult: async () => ({ token: 'mock-token' }),
+          getIdToken: async () => 'mock-token'
         });
       }, 1000);
     });
@@ -22,7 +24,9 @@ export const authService = {
             uid: 'dev-user-email',
             email: email,
             role: 'company',
-            profileComplete: false
+            profileComplete: false,
+            getIdTokenResult: async () => ({ token: 'mock-token' }),
+            getIdToken: async () => 'mock-token'
           });
         } else {
           reject(new Error('Invalid credentials'));
@@ -38,7 +42,9 @@ export const authService = {
           uid: 'dev-user-new',
           email: email,
           role: role,
-          profileComplete: false
+          profileComplete: false,
+          getIdTokenResult: async () => ({ token: 'mock-token' }),
+          getIdToken: async () => 'mock-token'
         });
       }, 1000);
     });
@@ -87,6 +93,14 @@ export function useAuth() {
     signOut: authService.signOut
   };
 }
+
+// Mock Firebase functions that are being imported
+export const getAuth = () => ({
+  onAuthStateChanged: authService.onAuthStateChanged
+});
+
+export const signOut = authService.signOut;
+export const onAuthStateChanged = authService.onAuthStateChanged;
 
 export type { User };
 
