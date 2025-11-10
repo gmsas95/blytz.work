@@ -1,4 +1,4 @@
-// Complete Job Marketplace Routes
+// Job Marketplace API with Complete CRUD
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
@@ -6,14 +6,15 @@ import { z } from "zod";
 
 // Validation schemas
 const createJobPostingSchema = z.object({
-  title: z.string().min(3, "Job title is required"),
-  description: z.string().min(20, "Description must be at least 20 characters"),
-  requirements: z.array(z.string()).min(1, "At least one requirement is required"),
-  responsibilities: z.array(z.string()).min(1, "At least one responsibility is required"),
+  title: z.string().min(5, "Title is required"),
+  description: z.string().min(10, "Description is required"),
+  requirements: z.array(z.string()).optional(),
+  responsibilities: z.array(z.string()).optional(),
   benefits: z.array(z.string()).optional(),
-  rateRange: z.string().min(3, "Rate range is required"),
-  budget: z.number().optional(),
+  rateRange: z.string().min(1, "Rate range is required"),
+  budget: z.number().min(0).optional(),
   location: z.string().optional(),
+  remote: z.boolean().default(true),
   category: z.string().optional(),
   tags: z.array(z.string()).optional(),
   experienceLevel: z.enum(["entry", "mid", "senior", "executive"]).optional(),
@@ -22,135 +23,220 @@ const createJobPostingSchema = z.object({
   duration: z.string().optional(),
   urgency: z.enum(["low", "medium", "high"]).default("medium"),
   skillsRequired: z.array(z.string()).min(1, "At least one skill is required"),
-  toolsUsed: z.array(z.string()).optional(),
+  toolsUsed: z.array(z.any()).optional(),
   teamSize: z.number().min(1).optional(),
   reportingTo: z.string().optional(),
   travelRequired: z.string().optional(),
-  workSchedule: z.object({
-    timezone: z.string(),
-    hours: z.string(),
-    flexibility: z.string().optional()
-  }).optional()
+  workSchedule: z.array(z.any()).optional(),
+  featured: z.boolean().default(false)
+});
+
+const updateJobPostingSchema = z.object({
+  title: z.string().min(5).optional(),
+  description: z.string().min(10).optional(),
+  requirements: z.array(z.string()).optional(),
+  responsibilities: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional(),
+  rateRange: z.string().min(1).optional(),
+  budget: z.number().min(0).optional(),
+  location: z.string().optional(),
+  remote: z.boolean().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  experienceLevel: z.enum(["entry", "mid", "senior", "executive"]).optional(),
+  employmentType: z.enum(["fulltime", "parttime", "contract", "freelance"]).optional(),
+  jobType: z.enum(["fixed", "hourly"]).optional(),
+  duration: z.string().optional(),
+  urgency: z.enum(["low", "medium", "high"]).optional(),
+  skillsRequired: z.array(z.string()).optional(),
+  toolsUsed: z.array(z.any()).optional(),
+  teamSize: z.number().min(1).optional(),
+  reportingTo: z.string().optional(),
+  travelRequired: z.string().optional(),
+  workSchedule: z.array(z.any()).optional(),
+  featured: z.boolean().optional()
 });
 
 const createProposalSchema = z.object({
   jobPostingId: z.string(),
-  coverLetter: z.string().min(10, "Cover letter must be at least 10 characters"),
-  bidAmount: z.number().min(5, "Bid amount must be at least $5"),
+  coverLetter: z.string().min(10, "Cover letter is required"),
+  bidAmount: z.number().min(1, "Bid amount is required"),
   bidType: z.enum(["fixed", "hourly"]).default("fixed"),
-  hourlyRate: z.number().optional(),
-  estimatedHours: z.number().optional(),
-  deliveryTime: z.string().min(2, "Delivery time is required"),
+  hourlyRate: z.number().min(1).optional(),
+  estimatedHours: z.number().min(1).optional(),
+  deliveryTime: z.string().min(1, "Delivery time is required"),
   attachments: z.array(z.any()).optional()
 });
 
-const createContractSchema = z.object({
-  jobId: z.string(),
-  jobPostingId: z.string(),
-  vaProfileId: z.string(),
-  proposalId: z.string().optional(),
-  contractType: z.enum(["fixed", "hourly"]),
-  amount: z.number().min(5, "Amount must be at least $5"),
-  hourlyRate: z.number().optional(),
-  currency: z.string().default("USD"),
-  startDate: z.string(),
-  endDate: z.string().optional(),
-  terms: z.any().optional(),
-  deliverables: z.array(z.any()).optional(),
-  milestones: z.array(z.any()).optional(),
-  paymentSchedule: z.enum(["upon_completion", "milestones", "weekly", "monthly"]).default("upon_completion")
-});
-
-const createMilestoneSchema = z.object({
-  contractId: z.string(),
-  jobId: z.string(),
-  title: z.string().min(2, "Title is required"),
-  description: z.string().optional(),
-  amount: z.number().min(1, "Amount must be at least $1"),
-  dueDate: z.string().optional()
-});
-
-const createTimesheetSchema = z.object({
-  contractId: z.string(),
-  date: z.string(),
-  startTime: z.string(),
-  endTime: z.string(),
-  description: z.string().optional()
+const updateProposalSchema = z.object({
+  coverLetter: z.string().min(10).optional(),
+  bidAmount: z.number().min(1).optional(),
+  bidType: z.enum(["fixed", "hourly"]).optional(),
+  hourlyRate: z.number().min(1).optional(),
+  estimatedHours: z.number().min(1).optional(),
+  deliveryTime: z.string().min(1).optional(),
+  attachments: z.array(z.any()).optional()
 });
 
 export default async function jobMarketplaceRoutes(app: FastifyInstance) {
-  // Get all job postings (marketplace)
-  app.get("/jobs/marketplace", {
+  // Create Job Posting
+  app.post("/jobs/marketplace", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
+    const data = createJobPostingSchema.parse(request.body);
+
+    try {
+      // Verify user is a company
+      if (user.role !== 'company') {
+        return reply.code(403).send({ 
+          error: "Only companies can post jobs",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      // Get company
+      const company = await prisma.company.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (!company) {
+        return reply.code(404).send({ 
+          error: "Company profile not found",
+          code: "COMPANY_NOT_FOUND"
+        });
+      }
+
+      // Create job posting
+      const jobPosting = await prisma.jobPosting.create({
+        data: {
+          ...data,
+          companyId: company.id,
+          status: "open",
+          views: 0,
+          proposals: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+
+      return reply.code(201).send({
+        success: true,
+        data: jobPosting,
+        message: "Job posting created successfully"
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      return reply.code(500).send({ 
+        error: "Failed to create job posting",
+        code: "JOB_CREATE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Get Job Postings
+  app.get("/jobs/marketplace", async (request, reply) => {
     const { 
       page = 1, 
       limit = 20, 
+      search, 
       category, 
       jobType, 
       experienceLevel, 
       skills, 
-      budgetRange,
-      duration,
-      urgent,
+      budgetRange, 
+      duration, 
+      urgent, 
       featured,
-      search
+      status = 'open'
     } = request.query as { 
       page: string; 
       limit: string; 
+      search?: string; 
       category?: string; 
       jobType?: string; 
       experienceLevel?: string; 
       skills?: string; 
-      budgetRange?: string;
-      duration?: string;
-      urgent?: string;
+      budgetRange?: string; 
+      duration?: string; 
+      urgent?: string; 
       featured?: string;
-      search?: string;
+      status?: string;
     };
 
     try {
-      const whereClause: any = { status: "open" };
+      const whereClause: any = { status };
       
-      // Add filters
-      if (category) whereClause.category = category;
-      if (jobType) whereClause.jobType = jobType;
-      if (experienceLevel) whereClause.experienceLevel = experienceLevel;
-      if (urgent === "true") whereClause.urgency = "high";
-      if (featured === "true") whereClause.featured = true;
       if (search) {
         whereClause.OR = [
           { title: { contains: search, mode: "insensitive" } },
           { description: { contains: search, mode: "insensitive" } },
-          { tags: { has: search } }
+          { skillsRequired: { hasSome: [search] } },
+          { tags: { hasSome: [search] } }
         ];
       }
+      
+      if (category) {
+        whereClause.category = category;
+      }
+      
+      if (jobType) {
+        whereClause.jobType = jobType;
+      }
+      
+      if (experienceLevel) {
+        whereClause.experienceLevel = experienceLevel;
+      }
+      
       if (skills) {
-        const skillList = skills.split(',');
-        whereClause.skillsRequired = { hasSome: skillList };
+        const skillArray = skills.split(',').map(s => s.trim());
+        whereClause.skillsRequired = { hasSome: skillArray };
       }
+      
       if (budgetRange) {
-        const [min, max] = budgetRange.split('-').map(Number);
-        if (min && max) {
-          whereClause.budget = { gte: min, lte: max };
-        }
+        const [min, max] = budgetRange.split('-').map(v => parseFloat(v.trim()));
+        whereClause.budget = {};
+        if (min) whereClause.budget.gte = min;
+        if (max) whereClause.budget.lte = max;
       }
+      
       if (duration) {
-        whereClause.duration = { contains: duration };
+        whereClause.duration = duration;
+      }
+      
+      if (urgent === 'true') {
+        whereClause.urgency = { in: ['high'] };
+      }
+      
+      if (featured === 'true') {
+        whereClause.featured = true;
       }
 
-      const jobs = await prisma.jobPosting.findMany({
+      const jobPostings = await prisma.jobPosting.findMany({
         where: whereClause,
         include: {
           company: {
-            select: { 
-              id: true, name: true, logoUrl: true, country: true, 
-              verificationLevel: true, totalReviews: true 
+            select: {
+              id: true,
+              name: true,
+              logoUrl: true,
+              country: true,
+              verificationLevel: true,
+              totalReviews: true
             }
           },
           _count: {
-            select: { proposals: true, views: true }
+            select: {
+              proposals: true
+            }
           }
         },
         orderBy: [
@@ -164,18 +250,10 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
 
       const total = await prisma.jobPosting.count({ where: whereClause });
 
-      // Increment views for each job
-      await Promise.all(jobs.map(job => 
-        prisma.jobPosting.update({
-          where: { id: job.id },
-          data: { views: { increment: 1 } }
-        })
-      ));
-
       return {
         success: true,
         data: {
-          jobs,
+          jobs: jobPostings,
           pagination: {
             page: parseInt(page),
             limit: parseInt(limit),
@@ -186,73 +264,72 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       };
     } catch (error: any) {
       return reply.code(500).send({ 
-        error: "Failed to fetch job marketplace",
-        code: "MARKETPLACE_FETCH_ERROR",
+        error: "Failed to fetch job postings",
+        code: "JOBS_FETCH_ERROR",
         details: error.message
       });
     }
   });
 
-  // Get single job posting
-  app.get("/jobs/marketplace/:id", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
+  // Get Single Job Posting
+  app.get("/jobs/marketplace/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const user = request.user as any;
+    const user = (request as any).user;
 
     try {
-      const job = await prisma.jobPosting.findUnique({
+      const jobPosting = await prisma.jobPosting.findUnique({
         where: { id },
         include: {
           company: {
-            select: { 
-              id: true, name: true, logoUrl: true, country: true, 
-              description: true, verificationLevel: true, totalReviews: true 
+            select: {
+              id: true,
+              name: true,
+              logoUrl: true,
+              country: true,
+              verificationLevel: true,
+              totalReviews: true,
+              description: true,
+              foundedYear: true,
+              companySize: true,
+              industry: true
             }
           },
-          proposals: user.role === 'company' ? {
+          proposals: {
+            where: user?.role === 'va' ? { vaProfile: { userId: user.uid } } : undefined,
             include: {
               vaProfile: {
                 select: {
-                  id: true, name: true, country: true, hourlyRate: true,
-                  skills: true, averageRating: true, totalReviews: true,
-                  portfolioItems: { take: 3 }
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  country: true,
+                  averageRating: true,
+                  totalReviews: true,
+                  skills: true,
+                  hourlyRate: true
                 }
               }
-            },
-            orderBy: { createdAt: 'desc' }
-          } : false,
-          _count: {
-            select: { proposals: true, views: true }
+            }
           }
         }
       });
 
-      if (!job) {
+      if (!jobPosting) {
         return reply.code(404).send({ 
           error: "Job posting not found",
           code: "JOB_NOT_FOUND"
         });
       }
 
-      // Check if user has already submitted a proposal
-      let userProposal = null;
-      if (user.role === 'va') {
-        userProposal = await prisma.proposal.findFirst({
-          where: {
-            jobPostingId: id,
-            vaProfileId: user.uid
-          }
-        });
-      }
+      // Increment view count
+      await prisma.jobPosting.update({
+        where: { id },
+        data: { views: { increment: 1 } }
+      });
 
       return {
         success: true,
-        data: {
-          ...job,
-          userProposal,
-          canPropose: user.role === 'va' && !userProposal && job.status === 'open'
-        }
+        data: jobPosting
       };
     } catch (error: any) {
       return reply.code(500).send({ 
@@ -263,59 +340,69 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
     }
   });
 
-  // Create job posting (company only)
-  app.post("/jobs/marketplace", {
+  // Update Job Posting
+  app.put("/jobs/marketplace/:id", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const data = createJobPostingSchema.parse(request.body);
+    const { id } = request.params as { id: string };
+    const data = updateJobPostingSchema.parse(request.body);
 
     try {
-      // Check if user is a company
+      // Verify user is a company
       if (user.role !== 'company') {
         return reply.code(403).send({ 
-          error: "Only companies can post jobs",
+          error: "Only companies can update job postings",
           code: "INVALID_ROLE"
         });
       }
 
-      // Get company profile
+      // Get company
       const company = await prisma.company.findUnique({
         where: { userId: user.uid }
       });
 
       if (!company) {
-        return reply.code(403).send({ 
-          error: "Company profile required",
-          code: "COMPANY_PROFILE_REQUIRED"
+        return reply.code(404).send({ 
+          error: "Company profile not found",
+          code: "COMPANY_NOT_FOUND"
         });
       }
 
-      // Create job posting
-      const job = await prisma.jobPosting.create({
+      // Get job posting
+      const jobPosting = await prisma.jobPosting.findUnique({
+        where: { id }
+      });
+
+      if (!jobPosting) {
+        return reply.code(404).send({ 
+          error: "Job posting not found",
+          code: "JOB_NOT_FOUND"
+        });
+      }
+
+      // Verify ownership
+      if (jobPosting.companyId !== company.id) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Update job posting
+      const updatedJobPosting = await prisma.jobPosting.update({
+        where: { id },
         data: {
           ...data,
-          companyId: company.id,
-          status: "open",
-          views: 0,
-          proposals: 0,
-          featured: false,
-          createdAt: new Date(),
           updatedAt: new Date()
-        },
-        include: {
-          company: true
         }
       });
 
-      // Create notifications for relevant VAs (simplified - would use more sophisticated targeting)
-      await createJobNotifications(job);
-
-      return reply.code(201).send({
+      return {
         success: true,
-        data: job,
-        message: "Job posted successfully"
-      });
+        data: updatedJobPosting,
+        message: "Job posting updated successfully"
+      };
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         return reply.code(400).send({ 
@@ -326,14 +413,97 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       }
 
       return reply.code(500).send({ 
-        error: "Failed to create job posting",
-        code: "JOB_CREATION_ERROR",
+        error: "Failed to update job posting",
+        code: "JOB_UPDATE_ERROR",
         details: error.message
       });
     }
   });
 
-  // Submit proposal (VA only)
+  // Delete Job Posting
+  app.delete("/jobs/marketplace/:id", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const { id } = request.params as { id: string };
+
+    try {
+      // Verify user is a company
+      if (user.role !== 'company') {
+        return reply.code(403).send({ 
+          error: "Only companies can delete job postings",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      // Get company
+      const company = await prisma.company.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (!company) {
+        return reply.code(404).send({ 
+          error: "Company profile not found",
+          code: "COMPANY_NOT_FOUND"
+        });
+      }
+
+      // Get job posting with contracts
+      const jobPosting = await prisma.jobPosting.findUnique({
+        where: { id },
+        include: {
+          contracts: true,
+          proposals: true
+        }
+      });
+
+      if (!jobPosting) {
+        return reply.code(404).send({ 
+          error: "Job posting not found",
+          code: "JOB_NOT_FOUND"
+        });
+      }
+
+      // Verify ownership
+      if (jobPosting.companyId !== company.id) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Check for active contracts
+      const activeContracts = jobPosting.contracts.filter(c => 
+        ['active', 'paused'].includes(c.status)
+      );
+
+      if (activeContracts.length > 0) {
+        return reply.code(400).send({ 
+          error: "Cannot delete job posting with active contracts",
+          code: "ACTIVE_CONTRACTS_EXIST",
+          details: "Please complete or cancel all active contracts before deleting the job posting"
+        });
+      }
+
+      // Delete job posting (cascades will handle proposals)
+      await prisma.jobPosting.delete({
+        where: { id }
+      });
+
+      return {
+        success: true,
+        message: "Job posting deleted successfully"
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to delete job posting",
+        code: "JOB_DELETE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Create Proposal
   app.post("/jobs/marketplace/proposals", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
@@ -341,7 +511,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
     const data = createProposalSchema.parse(request.body);
 
     try {
-      // Check if user is a VA
+      // Verify user is a VA
       if (user.role !== 'va') {
         return reply.code(403).send({ 
           error: "Only VAs can submit proposals",
@@ -355,35 +525,43 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       });
 
       if (!vaProfile) {
-        return reply.code(403).send({ 
-          error: "VA profile required",
-          code: "VA_PROFILE_REQUIRED"
+        return reply.code(404).send({ 
+          error: "VA profile not found",
+          code: "VA_NOT_FOUND"
         });
       }
 
-      // Check if job is still open
-      const job = await prisma.jobPosting.findUnique({
+      // Get job posting
+      const jobPosting = await prisma.jobPosting.findUnique({
         where: { id: data.jobPostingId }
       });
 
-      if (!job || job.status !== 'open') {
-        return reply.code(400).send({ 
-          error: "Job is not accepting proposals",
-          code: "JOB_NOT_OPEN"
+      if (!jobPosting) {
+        return reply.code(404).send({ 
+          error: "Job posting not found",
+          code: "JOB_NOT_FOUND"
         });
       }
 
-      // Check if user has already submitted a proposal
+      if (jobPosting.status !== 'open') {
+        return reply.code(400).send({ 
+          error: "Job posting is not accepting proposals",
+          code: "JOB_CLOSED"
+        });
+      }
+
+      // Check if VA already has a proposal for this job
       const existingProposal = await prisma.proposal.findFirst({
         where: {
           jobPostingId: data.jobPostingId,
-          vaProfileId: vaProfile.id
+          vaProfileId: vaProfile.id,
+          status: { notIn: ['rejected', 'withdrawn'] }
         }
       });
 
       if (existingProposal) {
         return reply.code(400).send({ 
-          error: "You have already submitted a proposal for this job",
+          error: "You already have a proposal for this job posting",
           code: "PROPOSAL_EXISTS"
         });
       }
@@ -396,20 +574,14 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
           status: "pending",
           createdAt: new Date(),
           updatedAt: new Date()
-        },
-        include: {
-          vaProfile: true
         }
       });
 
-      // Update job posting proposal count
+      // Increment proposal count
       await prisma.jobPosting.update({
         where: { id: data.jobPostingId },
         data: { proposals: { increment: 1 } }
       });
-
-      // Notify company
-      await createProposalNotification(proposal, job.companyId);
 
       return reply.code(201).send({
         success: true,
@@ -427,102 +599,25 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
 
       return reply.code(500).send({ 
         error: "Failed to submit proposal",
-        code: "PROPOSAL_ERROR",
+        code: "PROPOSAL_CREATE_ERROR",
         details: error.message
       });
     }
   });
 
-  // Get proposals for job (company only)
-  app.get("/jobs/marketplace/:id/proposals", {
+  // Update Proposal
+  app.put("/jobs/marketplace/proposals/:id", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
     const { id } = request.params as { id: string };
-    const { status, page = 1, limit = 20 } = request.query as { 
-      status?: string; page: string; limit: string 
-    };
+    const data = updateProposalSchema.parse(request.body);
 
     try {
-      // Check if user owns this job
-      const company = await prisma.company.findUnique({
-        where: { userId: user.uid },
-        include: {
-          jobPostings: {
-            where: { id },
-            select: { id: true }
-          }
-        }
-      });
-
-      if (!company || company.jobPostings.length === 0) {
-        return reply.code(403).send({ 
-          error: "Access denied",
-          code: "ACCESS_DENIED"
-        });
-      }
-
-      const whereClause: any = { jobPostingId: id };
-      if (status) whereClause.status = status;
-
-      const proposals = await prisma.proposal.findMany({
-        where: whereClause,
-        include: {
-          vaProfile: {
-            select: {
-              id: true, name: true, country: true, hourlyRate: true,
-              skills: true, averageRating: true, totalReviews: true,
-              responseRate: true, featured: true,
-              portfolioItems: { take: 3 }
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
-      });
-
-      const total = await prisma.proposal.count({ where: whereClause });
-
-      return {
-        success: true,
-        data: {
-          proposals,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            totalPages: Math.ceil(total / parseInt(limit))
-          }
-        }
-      };
-    } catch (error: any) {
-      return reply.code(500).send({ 
-        error: "Failed to fetch proposals",
-        code: "PROPOSALS_FETCH_ERROR",
-        details: error.message
-      });
-    }
-  });
-
-  // Accept proposal
-  app.post("/jobs/marketplace/proposals/:id/accept", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const user = request.user as any;
-    const { id } = request.params as { id: string };
-    const { startDate, endDate, contractTerms } = request.body as {
-      startDate: string;
-      endDate?: string;
-      contractTerms?: any;
-    };
-
-    try {
-      // Get proposal and verify ownership
+      // Get proposal
       const proposal = await prisma.proposal.findUnique({
         where: { id },
         include: {
-          jobPosting: true,
           vaProfile: true
         }
       });
@@ -534,122 +629,10 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         });
       }
 
-      // Check if user owns the job
-      const company = await prisma.company.findUnique({
-        where: { userId: user.uid },
-        include: {
-          jobPostings: {
-            where: { id: proposal.jobPostingId },
-            select: { id: true }
-          }
-        }
-      });
-
-      if (!company || company.jobPostings.length === 0) {
-        return reply.code(403).send({ 
-          error: "Access denied",
-          code: "ACCESS_DENIED"
-        });
-      }
-
-      // Create job and contract
-      const job = await prisma.job.create({
-        data: {
-          jobPostingId: proposal.jobPostingId,
-          vaProfileId: proposal.vaProfileId,
-          companyId: company.id,
-          status: "active",
-          title: proposal.jobPosting.title,
-          description: proposal.jobPosting.description,
-          budget: proposal.jobPosting.budget,
-          hourlyRate: proposal.bidType === 'hourly' ? proposal.bidAmount : undefined,
-          totalAmount: proposal.bidType === 'fixed' ? proposal.bidAmount : undefined,
-          startDate: new Date(startDate),
-          endDate: endDate ? new Date(endDate) : undefined,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      });
-
-      const contract = await prisma.contract.create({
-        data: {
-          jobId: job.id,
-          jobPostingId: proposal.jobPostingId,
-          vaProfileId: proposal.vaProfileId,
-          companyId: company.id,
-          proposalId: proposal.id,
-          contractType: proposal.bidType,
-          amount: proposal.bidAmount,
-          hourlyRate: proposal.bidType === 'hourly' ? proposal.bidAmount : undefined,
-          currency: "USD",
-          startDate: new Date(startDate),
-          endDate: endDate ? new Date(endDate) : undefined,
-          status: "active",
-          terms: contractTerms,
-          paymentSchedule: "upon_completion",
-          totalPaid: 0,
-          totalHours: proposal.bidType === 'hourly' ? 0 : undefined,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      });
-
-      // Update proposal status
-      await prisma.proposal.update({
-        where: { id },
-        data: {
-          status: "accepted",
-          jobId: job.id,
-          respondedAt: new Date()
-        }
-      });
-
-      // Update job posting status
-      await prisma.jobPosting.update({
-        where: { id: proposal.jobPostingId },
-        data: { status: "in_progress" }
-      });
-
-      // Reject other proposals
-      await prisma.proposal.updateMany({
-        where: {
-          jobPostingId: proposal.jobPostingId,
-          status: "pending",
-          id: { not: id }
-        },
-        data: { status: "rejected" }
-      });
-
-      // Create notifications
-      await createContractNotifications(job, contract, company, proposal.vaProfileId);
-
-      return {
-        success: true,
-        data: { job, contract },
-        message: "Proposal accepted and contract created"
-      };
-    } catch (error: any) {
-      return reply.code(500).send({ 
-        error: "Failed to accept proposal",
-        code: "PROPOSAL_ACCEPT_ERROR",
-        details: error.message
-      });
-    }
-  });
-
-  // Get user's proposals (VA only)
-  app.get("/jobs/marketplace/proposals/my", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const user = request.user as any;
-    const { status, page = 1, limit = 20 } = request.query as { 
-      status?: string; page: string; limit: string 
-    };
-
-    try {
+      // Verify ownership
       if (user.role !== 'va') {
         return reply.code(403).send({ 
-          error: "Only VAs can view their proposals",
+          error: "Only VAs can update proposals",
           code: "INVALID_ROLE"
         });
       }
@@ -658,161 +641,160 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         where: { userId: user.uid }
       });
 
-      if (!vaProfile) {
-        return reply.code(404).send({ 
-          error: "VA profile not found",
-          code: "VA_PROFILE_NOT_FOUND"
+      if (vaProfile?.id !== proposal.vaProfileId) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
         });
       }
 
-      const whereClause: any = { vaProfileId: vaProfile.id };
-      if (status) whereClause.status = status;
+      // Cannot update accepted/rejected proposals
+      if (['accepted', 'rejected'].includes(proposal.status)) {
+        return reply.code(400).send({ 
+          error: "Cannot update proposal after decision",
+          code: "PROPOSAL_DECIDED"
+        });
+      }
 
-      const proposals = await prisma.proposal.findMany({
-        where: whereClause,
-        include: {
-          jobPosting: {
-            select: {
-              id: true, title: true, budget: true, status: true,
-              company: { select: { id: true, name: true, logoUrl: true } }
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+      // Update proposal
+      const updatedProposal = await prisma.proposal.update({
+        where: { id },
+        data: {
+          ...data,
+          updatedAt: new Date()
+        }
       });
-
-      const total = await prisma.proposal.count({ where: whereClause });
 
       return {
         success: true,
-        data: {
-          proposals,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            totalPages: Math.ceil(total / parseInt(limit))
-          }
-        }
+        data: updatedProposal,
+        message: "Proposal updated successfully"
       };
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
       return reply.code(500).send({ 
-        error: "Failed to fetch proposals",
-        code: "PROPOSALS_FETCH_ERROR",
+        error: "Failed to update proposal",
+        code: "PROPOSAL_UPDATE_ERROR",
         details: error.message
       });
     }
   });
 
-  // Get marketplace categories
-  app.get("/jobs/marketplace/categories", {
+  // Delete/Withdraw Proposal
+  app.delete("/jobs/marketplace/proposals/:id", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
+    const user = request.user as any;
+    const { id } = request.params as { id: string };
+
     try {
-      const categories = await prisma.jobPosting.groupBy({
-        by: ['category'],
-        where: {
-          status: 'open',
-          category: { not: null }
-        },
-        _count: {
-          category: true
-        },
-        orderBy: {
-          _count: {
-            category: 'desc'
-          }
+      // Get proposal
+      const proposal = await prisma.proposal.findUnique({
+        where: { id },
+        include: {
+          vaProfile: true,
+          jobPosting: true
         }
+      });
+
+      if (!proposal) {
+        return reply.code(404).send({ 
+          error: "Proposal not found",
+          code: "PROPOSAL_NOT_FOUND"
+        });
+      }
+
+      // Verify ownership
+      if (user.role !== 'va') {
+        return reply.code(403).send({ 
+          error: "Only VAs can delete proposals",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      const vaProfile = await prisma.vAProfile.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (vaProfile?.id !== proposal.vaProfileId) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Cannot delete accepted proposals
+      if (proposal.status === 'accepted') {
+        return reply.code(400).send({ 
+          error: "Cannot delete accepted proposal",
+          code: "PROPOSAL_ACCEPTED",
+          details: "Please contact the company directly to withdraw from this job"
+        });
+      }
+
+      // Delete proposal
+      await prisma.proposal.delete({
+        where: { id }
+      });
+
+      // Decrement proposal count
+      await prisma.jobPosting.update({
+        where: { id: proposal.jobPostingId },
+        data: { proposals: { decrement: 1 } }
       });
 
       return {
         success: true,
-        data: categories.map(cat => ({
-          name: cat.category,
-          count: cat._count.category
-        }))
+        message: "Proposal withdrawn successfully"
       };
     } catch (error: any) {
       return reply.code(500).send({ 
-        error: "Failed to fetch categories",
+        error: "Failed to delete proposal",
+        code: "PROPOSAL_DELETE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Get Job Categories
+  app.get("/jobs/marketplace/categories", async (request, reply) => {
+    try {
+      const categories = await prisma.jobPosting.groupBy({
+        by: ['category'],
+        _count: {
+          id: true
+        },
+        where: {
+          status: 'open',
+          category: { not: null }
+        }
+      });
+
+      const categoryList = categories
+        .map(cat => ({
+          name: cat.category,
+          count: cat._count.id
+        }))
+        .filter(cat => cat.name !== null)
+        .sort((a, b) => b.count - a.count);
+
+      return {
+        success: true,
+        data: categoryList
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to fetch job categories",
         code: "CATEGORIES_FETCH_ERROR",
         details: error.message
       });
     }
   });
-
-  // Helper functions
-  async function createJobNotifications(job: any) {
-    // Create notifications for VAs with matching skills
-    await prisma.notification.createMany({
-      data: await Promise.all(
-        job.skillsRequired.slice(0, 50).map(async (skill: string) => {
-          const vaProfiles = await prisma.vAProfile.findMany({
-            where: {
-              skills: { has: skill },
-              availability: true
-            },
-            take: 10,
-            select: { userId: true }
-          });
-
-          return vaProfiles.map(va => ({
-            userId: va.userId,
-            type: "job_posted",
-            title: "New Job Posted",
-            message: `A new job "${job.title}" matching your skills has been posted`,
-            data: { jobId: job.id, skill },
-            priority: job.urgency === 'high' ? 'high' : 'normal'
-          }));
-        })
-      ).then(notifications => notifications.flat())
-    });
-  }
-
-  async function createProposalNotification(proposal: any, companyId: string) {
-    const company = await prisma.company.findUnique({
-      where: { id: companyId }
-    });
-
-    if (company) {
-      await prisma.notification.create({
-        data: {
-          userId: company.userId,
-          type: "proposal_received",
-          title: "New Proposal Received",
-          message: `${proposal.vaProfile.name} has submitted a proposal for your job`,
-          data: { proposalId: proposal.id },
-          priority: 'high'
-        }
-      });
-    }
-  }
-
-  async function createContractNotifications(job: any, contract: any, company: any, vaProfileId: string) {
-    // Notify VA
-    await prisma.notification.create({
-      data: {
-        userId: job.vaProfileId,
-        type: "contract_awarded",
-        title: "Contract Awarded",
-        message: `Your proposal for "${job.title}" has been accepted`,
-        data: { contractId: contract.id, jobId: job.id },
-        priority: 'high'
-      }
-    });
-
-    // Notify company
-    await prisma.notification.create({
-      data: {
-        userId: company.userId,
-        type: "contract_created",
-        title: "Contract Created",
-        message: `Contract has been created with ${contract.vaProfile.name}`,
-        data: { contractId: contract.id, jobId: job.id },
-        priority: 'normal'
-      }
-    });
-  }
 }
