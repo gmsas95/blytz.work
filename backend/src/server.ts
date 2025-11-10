@@ -8,11 +8,7 @@ import rateLimit from "@fastify/rate-limit";
 import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
-import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
 import contractRoutes from "./routes/contracts.js";
-import paymentRoutes from "./routes/payments.js";
-import vaProfileRoutes from "./routes/vaProfiles.js";
-import companyProfileRoutes from "./routes/companyProfiles.js";
 
 // Import utilities
 import { createRateLimiter } from "./utils/response.js";
@@ -64,12 +60,8 @@ app.register(env, {
 // Register routes
 app.register(healthRoutes);
 app.register(authRoutes, { prefix: "/api" });
-app.register(vaProfileRoutes, { prefix: "/api" });
-app.register(companyProfileRoutes, { prefix: "/api" });
 app.register(uploadRoutes, { prefix: "/api" });
-app.register(jobMarketplaceRoutes, { prefix: "/api" });
 app.register(contractRoutes, { prefix: "/api" });
-app.register(paymentRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, request, reply) => {

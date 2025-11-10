@@ -1,8 +1,8 @@
+// Minimal Contract Helpers
 import { PrismaClient } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
-// Simplified helpers for deployment
 export async function submitTimesheet(timesheetData: any, user: any) {
   try {
     const timesheet = await prisma.timesheet.create({
@@ -20,7 +20,7 @@ export async function submitTimesheet(timesheetData: any, user: any) {
     });
 
     return { success: true, timesheet };
-  } catch (error) {
+  } catch (error: any) {
     return { success: false, message: error.message };
   }
 }
@@ -37,27 +37,7 @@ export async function approveTimesheet(timesheetId: string, user: any) {
     });
 
     return { success: true, timesheet };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
-
-export async function createMilestone(milestoneData: any, user: any) {
-  try {
-    const milestone = await prisma.milestone.create({
-      data: {
-        contractId: milestoneData.contractId,
-        jobId: milestoneData.jobId,
-        title: milestoneData.title,
-        description: milestoneData.description,
-        amount: parseFloat(milestoneData.amount),
-        dueDate: milestoneData.dueDate ? new Date(milestoneData.dueDate) : null,
-        status: 'pending'
-      }
-    });
-
-    return { success: true, milestone };
-  } catch (error) {
+  } catch (error: any) {
     return { success: false, message: error.message };
   }
 }
