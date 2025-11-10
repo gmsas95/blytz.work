@@ -5,10 +5,10 @@ import rateLimit from "@fastify/rate-limit";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
-import authRoutes from "./routes/auth.js"; // NEW AUTH ROUTES
-import userRoutes from "./routes/user.routes.js";
+import authRoutes from "./routes/auth.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
+import uploadRoutes from "./routes/upload.js"; // NEW UPLOAD ROUTES
 import matchingRoutes from "./routes/matching.js";
 import paymentRoutes from "./routes/payments.js";
 
@@ -61,10 +61,10 @@ app.register(env, {
 
 // Register routes
 app.register(healthRoutes);
-app.register(authRoutes, { prefix: "/api" }); // NEW AUTH ROUTES
-app.register(userRoutes, { prefix: "/api" });
+app.register(authRoutes, { prefix: "/api" });
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
+app.register(uploadRoutes, { prefix: "/api" }); // NEW UPLOAD ROUTES
 app.register(matchingRoutes, { prefix: "/api" });
 app.register(paymentRoutes, { prefix: "/api" });
 
@@ -107,8 +107,10 @@ const start = async () => {
     });
     app.log.info(`Server listening on port ${process.env.PORT || 3000}`);
     app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
-    app.log.info(`📊 New user routes available at /api/users/*`);
     app.log.info(`🔐 Authentication system ready at /api/auth/*`);
+    app.log.info(`👤 VA profiles system ready at /api/va/*`);
+    app.log.info(`🏢 Company profiles system ready at /api/company/*`);
+    app.log.info(`📁 File upload system ready at /api/upload/*`);
     app.log.info(`🚀 Platform-first implementation complete`);
   } catch (err) {
     app.log.error(err);
