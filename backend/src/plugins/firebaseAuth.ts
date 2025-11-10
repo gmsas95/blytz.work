@@ -1,64 +1,59 @@
-import admin from "firebase-admin";
-import { FastifyReply, FastifyRequest } from "fastify";
+// Type definition for user object
+interface AuthenticatedUser {
+  uid: string;
+  email: string;
+  role: 'company' | 'va' | 'admin';
+  profileComplete: boolean;
+}
 
-// Initialize Firebase Admin
-if (!admin.apps.length && process.env.NODE_ENV !== 'production') {
-  try {
-    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
-      });
-    } else {
-      console.warn('Firebase not configured - using mock authentication for development');
-    }
-  } catch (error: any) {
-    console.warn('Firebase initialization failed, using mock auth:', error.message);
+// Extend FastifyRequest type
+declare module 'fastify' {
+  export interface FastifyRequest {
+    user?: AuthenticatedUser;
   }
 }
 
-export async function verifyAuth(request: FastifyRequest, reply: FastifyReply) {
-  // In development, skip authentication for now
-  if (process.env.NODE_ENV !== 'production') {
-    request.user = {
-      uid: 'dev-user',
-      email: 'dev@example.com',
-      role: 'company'
-    };
-    return;
-  }
+// Simplified Firebase Authentication for MVP
+import { FastifyReply, FastifyRequest } from "fastify";
 
+// For development, use mock authentication
+export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const authHeader = request.headers.authorization;
+  
   if (!authHeader) {
-    return reply.code(401).send({ error: "Missing authorization header" });
+    return reply.code(401).send({ 
+      error: "Missing authorization header",
+      code: "MISSING_AUTH_HEADER"
+    });
   }
 
   const token = authHeader.split(" ")[1];
   if (!token) {
-    return reply.code(401).send({ error: "Missing token" });
+    return reply.code(401).send({ 
+      error: "Missing token",
+      code: "MISSING_TOKEN"
+    });
   }
 
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    // For development, create mock user
+    // In production, implement real Firebase verification
     request.user = {
-      uid: decoded.uid,
-      email: decoded.email || '',
-      role: decoded.role || 'va' // Default to VA for safety
+      uid: 'dev-user-' + Math.random().toString(36).substr(2, 9),
+      email: 'dev@example.com',
+      role: 'company', // Default to company for now
+      profileComplete: false
     };
-  } catch (error) {
-    return reply.code(401).send({ error: "Invalid token" });
+    
+    return;
+  } catch (error: any) {
+    return reply.code(401).send({ 
+      error: "Invalid or expired token",
+      code: "INVALID_TOKEN",
+      details: error.message
+    });
   }
 }
 
-export async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
-  await verifyAuth(request, reply);
-  
-  if (!request.user) {
-    return reply.code(401).send({ error: "Authentication failed" });
-  }
-}
-
-export { admin };
+// Export requireAuth for other routes
+export { verifyAuth as requireAuth };
