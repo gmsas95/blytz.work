@@ -1,75 +1,202 @@
-// Contract Management Routes
+// Contract Management - Complete CRUD Implementation
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
 
 // Validation schemas
+const createContractSchema = z.object({
+  proposalId: z.string(),
+  startDate: z.string(),
+  endDate: z.string().optional(),
+  contractTerms: z.any().optional()
+});
+
 const createMilestoneSchema = z.object({
-  contractId: z.string(),
-  title: z.string().min(2, "Title is required"),
+  title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  amount: z.number().min(1, "Amount must be at least $1"),
+  amount: z.number().min(0, "Amount must be positive"),
+  dueDate: z.string().optional()
+});
+
+const updateMilestoneSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  amount: z.number().min(0).optional(),
+  status: z.enum(["pending", "in_progress", "completed"]).optional(),
   dueDate: z.string().optional()
 });
 
 const createTimesheetSchema = z.object({
-  contractId: z.string(),
   date: z.string(),
   startTime: z.string(),
   endTime: z.string(),
   description: z.string().optional()
 });
 
-const updateContractSchema = z.object({
-  status: z.enum(["active", "completed", "cancelled", "paused", "terminated"]).optional(),
-  endDate: z.string().optional(),
-  terms: z.any().optional(),
-  deliverables: z.array(z.any()).optional(),
-  milestones: z.array(z.any()).optional()
+const updateTimesheetSchema = z.object({
+  date: z.string().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  description: z.string().optional()
 });
 
 export default async function contractRoutes(app: FastifyInstance) {
-  // Get user's contracts
+  // Create Contract from Proposal
+  app.post("/contracts", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const data = createContractSchema.parse(request.body);
+
+    try {
+      // Verify user is a company
+      if (user.role !== 'company') {
+        return reply.code(403).send({ 
+          error: "Only companies can create contracts",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      // Get proposal
+      const proposal = await prisma.proposal.findUnique({
+        where: { id: data.proposalId },
+        include: {
+          jobPosting: true
+        }
+      });
+
+      if (!proposal) {
+        return reply.code(404).send({ 
+          error: "Proposal not found",
+          code: "PROPOSAL_NOT_FOUND"
+        });
+      }
+
+      // Get company
+      const company = await prisma.company.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (!company) {
+        return reply.code(404).send({ 
+          error: "Company profile not found",
+          code: "COMPANY_NOT_FOUND"
+        });
+      }
+
+      // Create job
+      const job = await prisma.job.create({
+        data: {
+          jobPostingId: proposal.jobPostingId,
+          vaProfileId: proposal.vaProfileId,
+          companyId: company.id,
+          status: "active",
+          title: proposal.jobPosting.title,
+          description: proposal.jobPosting.description,
+          budget: proposal.bidType === 'fixed' ? proposal.bidAmount : undefined,
+          hourlyRate: proposal.bidType === 'hourly' ? proposal.bidAmount : undefined,
+          startDate: new Date(data.startDate),
+          endDate: data.endDate ? new Date(data.endDate) : undefined,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+
+      // Create contract
+      const contract = await prisma.contract.create({
+        data: {
+          jobId: job.id,
+          jobPostingId: proposal.jobPostingId,
+          vaProfileId: proposal.vaProfileId,
+          companyId: company.id,
+          proposalId: proposal.id,
+          contractType: proposal.bidType,
+          amount: proposal.bidAmount,
+          hourlyRate: proposal.bidType === 'hourly' ? proposal.bidAmount : undefined,
+          currency: "USD",
+          startDate: new Date(data.startDate),
+          endDate: data.endDate ? new Date(data.endDate) : undefined,
+          status: "active",
+          terms: data.contractTerms,
+          paymentSchedule: "upon_completion",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+
+      // Update proposal status
+      await prisma.proposal.update({
+        where: { id: data.proposalId },
+        data: {
+          status: "accepted",
+          jobId: job.id,
+          respondedAt: new Date()
+        }
+      });
+
+      // Update job posting status
+      await prisma.jobPosting.update({
+        where: { id: proposal.jobPostingId },
+        data: { status: "in_progress" }
+      });
+
+      return reply.code(201).send({
+        success: true,
+        data: { job, contract },
+        message: "Contract created successfully"
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      return reply.code(500).send({ 
+        error: "Failed to create contract",
+        code: "CONTRACT_CREATE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Get User Contracts
   app.get("/contracts", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { 
-      status, 
-      page = 1, 
-      limit = 20,
-      type // "active", "completed", "all"
-    } = request.query as { 
-      status?: string; 
-      page: string; 
+    const { type = 'active', page = 1, limit = 20 } = request.query as {
+      type: string;
+      page: string;
       limit: string;
-      type?: string;
     };
 
     try {
       let whereClause: any = {};
       
-      // Filter by user role
       if (user.role === 'company') {
         const company = await prisma.company.findUnique({
           where: { userId: user.uid }
         });
-        if (company) whereClause.companyId = company.id;
+        if (company) {
+          whereClause.companyId = company.id;
+        }
       } else if (user.role === 'va') {
         const vaProfile = await prisma.vAProfile.findUnique({
           where: { userId: user.uid }
         });
-        if (vaProfile) whereClause.vaProfileId = vaProfile.id;
+        if (vaProfile) {
+          whereClause.vaProfileId = vaProfile.id;
+        }
       }
 
-      // Filter by status
       if (type === 'active') {
-        whereClause.status = 'active';
+        whereClause.status = { in: ['active', 'paused'] };
       } else if (type === 'completed') {
         whereClause.status = 'completed';
-      } else if (status) {
-        whereClause.status = status;
       }
 
       const contracts = await prisma.contract.findMany({
@@ -77,39 +204,56 @@ export default async function contractRoutes(app: FastifyInstance) {
         include: {
           job: {
             select: {
-              id: true, title: true, description: true, status: true,
-              createdAt: true, updatedAt: true
+              id: true,
+              title: true,
+              description: true,
+              status: true,
+              createdAt: true,
+              updatedAt: true
             }
           },
           jobPosting: {
             select: {
-              id: true, title: true, category: true, tags: true
+              id: true,
+              title: true,
+              category: true,
+              tags: true
             }
           },
           vaProfile: {
             select: {
-              id: true, name: true, country: true, averageRating: true,
-              totalReviews: true, skills: true, avatarUrl: true
+              id: true,
+              name: true,
+              country: true,
+              bio: true,
+              averageRating: true,
+              totalReviews: true,
+              skills: true,
+              hourlyRate: true,
+              avatarUrl: true
             }
           },
           company: {
             select: {
-              id: true, name: true, country: true, logoUrl: true,
-              verificationLevel: true, totalReviews: true
+              id: true,
+              name: true,
+              logoUrl: true,
+              verificationLevel: true,
+              totalReviews: true
             }
           },
           proposal: {
             select: {
-              id: true, coverLetter: true, bidAmount: true, bidType
+              id: true,
+              coverLetter: true,
+              bidAmount: true,
+              bidType: true
             }
-          },
-          milestones: {
-            orderBy: { dueDate: 'asc' }
           },
           _count: {
             select: {
-              payments: true,
-              timesheets: true
+              milestones: true,
+              payments: true
             }
           }
         },
@@ -141,7 +285,7 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  // Get single contract
+  // Get Single Contract
   app.get("/contracts/:id", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
@@ -157,33 +301,48 @@ export default async function contractRoutes(app: FastifyInstance) {
               payments: true
             }
           },
-          jobPosting: true,
+          jobPosting: {
+            select: {
+              id: true,
+              title: true,
+              category: true,
+              tags: true
+            }
+          },
           vaProfile: {
             select: {
-              id: true, name: true, country: true, bio: true, averageRating: true,
-              totalReviews: true, skills: true, hourlyRate: true, avatarUrl: true
+              id: true,
+              name: true,
+              country: true,
+              bio: true,
+              averageRating: true,
+              totalReviews: true,
+              skills: true,
+              hourlyRate: true,
+              avatarUrl: true
             }
           },
           company: {
             select: {
-              id: true, name: true, country: true, bio: true, logoUrl: true,
-              verificationLevel: true, totalReviews: true, website: true
+              id: true,
+              name: true,
+              logoUrl: true,
+              verificationLevel: true,
+              totalReviews: true
             }
           },
           proposal: {
-            include: {
-              vaProfile: true
+            select: {
+              id: true,
+              coverLetter: true,
+              bidAmount: true,
+              bidType: true,
+              deliveryTime: true
             }
           },
-          milestones: {
-            orderBy: { dueDate: 'asc' }
-          },
-          timesheets: {
-            orderBy: { date: 'desc' }
-          },
-          payments: {
-            orderBy: { createdAt: 'desc' }
-          }
+          payments: true,
+          milestones: true,
+          timesheets: true
         }
       });
 
@@ -194,7 +353,7 @@ export default async function contractRoutes(app: FastifyInstance) {
         });
       }
 
-      // Verify user has access to this contract
+      // Verify access
       let hasAccess = false;
       if (user.role === 'company') {
         const company = await prisma.company.findUnique({
@@ -215,15 +374,9 @@ export default async function contractRoutes(app: FastifyInstance) {
         });
       }
 
-      // Calculate contract metrics
-      const metrics = await calculateContractMetrics(contract);
-
       return {
         success: true,
-        data: {
-          ...contract,
-          metrics
-        }
+        data: contract
       };
     } catch (error: any) {
       return reply.code(500).send({ 
@@ -234,22 +387,17 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  // Update contract
+  // Update Contract
   app.put("/contracts/:id", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
     const { id } = request.params as { id: string };
-    const data = updateContractSchema.parse(request.body);
+    const { status } = request.body as { status: string };
 
     try {
-      // Verify ownership and permissions
       const contract = await prisma.contract.findUnique({
-        where: { id },
-        include: {
-          company: true,
-          vaProfile: true
-        }
+        where: { id }
       });
 
       if (!contract) {
@@ -259,63 +407,41 @@ export default async function contractRoutes(app: FastifyInstance) {
         });
       }
 
-      // Check permissions (companies can modify more, VAs have limited access)
-      let hasPermission = false;
-      if (user.role === 'company') {
-        const company = await prisma.company.findUnique({
-          where: { userId: user.uid }
-        });
-        hasPermission = company?.id === contract.companyId;
-      } else if (user.role === 'va') {
-        const vaProfile = await prisma.vAProfile.findUnique({
-          where: { userId: user.uid }
-        });
-        hasPermission = vaProfile?.id === contract.vaProfileId && 
-                       (!data.status || ['completed'].includes(data.status));
-      }
-
-      if (!hasPermission) {
+      // Only companies can update contract status
+      if (user.role !== 'company') {
         return reply.code(403).send({ 
-          error: "Insufficient permissions",
-          code: "INSUFFICIENT_PERMISSIONS"
+          error: "Only companies can update contracts",
+          code: "INVALID_ROLE"
         });
       }
 
-      // Update contract
-      const updatedContract = await prisma.contract.update({
-        where: { id },
-        data: {
-          ...data,
-          endDate: data.endDate ? new Date(data.endDate) : undefined,
-          updatedAt: new Date()
-        },
-        include: {
-          job: true,
-          vaProfile: true,
-          company: true,
-          milestones: true
-        }
+      const company = await prisma.company.findUnique({
+        where: { userId: user.uid }
       });
 
-      // Create notifications
-      if (data.status) {
-        await createContractStatusNotifications(updatedContract, data.status, user.uid);
+      if (company?.id !== contract.companyId) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
       }
+
+      const updateData: any = { status, updatedAt: new Date() };
+      if (status === 'completed') {
+        updateData.endDate = new Date();
+      }
+
+      const updatedContract = await prisma.contract.update({
+        where: { id },
+        data: updateData
+      });
 
       return {
         success: true,
         data: updatedContract,
-        message: "Contract updated successfully"
+        message: `Contract ${status} successfully`
       };
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return reply.code(400).send({ 
-          error: "Validation error",
-          code: "VALIDATION_ERROR",
-          details: error.errors
-        });
-      }
-
       return reply.code(500).send({ 
         error: "Failed to update contract",
         code: "CONTRACT_UPDATE_ERROR",
@@ -324,7 +450,7 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  // Milestone routes
+  // Create Milestone
   app.post("/contracts/:id/milestones", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
@@ -333,7 +459,7 @@ export default async function contractRoutes(app: FastifyInstance) {
     const data = createMilestoneSchema.parse(request.body);
 
     try {
-      // Verify contract ownership (company only can create milestones)
+      // Get contract and verify access
       const contract = await prisma.contract.findUnique({
         where: { id },
         include: {
@@ -348,6 +474,7 @@ export default async function contractRoutes(app: FastifyInstance) {
         });
       }
 
+      // Only companies can create milestones
       if (user.role !== 'company') {
         return reply.code(403).send({ 
           error: "Only companies can create milestones",
@@ -369,17 +496,16 @@ export default async function contractRoutes(app: FastifyInstance) {
       // Create milestone
       const milestone = await prisma.milestone.create({
         data: {
-          ...data,
           contractId: id,
           jobId: contract.jobId,
-          status: "pending",
+          title: data.title,
+          description: data.description,
+          amount: data.amount,
+          dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
           createdAt: new Date(),
           updatedAt: new Date()
         }
       });
-
-      // Notify VA
-      await createMilestoneNotification(milestone, contract.vaProfileId);
 
       return reply.code(201).send({
         success: true,
@@ -403,12 +529,13 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  app.put("/contracts/:id/milestones/:milestoneId", {
+  // Update Milestone
+  app.put("/milestones/:milestoneId", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { id, milestoneId } = request.params as { id: string; milestoneId: string };
-    const { status } = request.body as { status: string };
+    const { milestoneId } = request.params as { milestoneId: string };
+    const data = updateMilestoneSchema.parse(request.body);
 
     try {
       // Get milestone and verify access
@@ -417,62 +544,66 @@ export default async function contractRoutes(app: FastifyInstance) {
         include: {
           contract: {
             include: {
-              company: true,
-              vaProfile: true
+              company: true
             }
           }
         }
       });
 
-      if (!milestone || milestone.contractId !== id) {
+      if (!milestone) {
         return reply.code(404).send({ 
           error: "Milestone not found",
           code: "MILESTONE_NOT_FOUND"
         });
       }
 
-      // Check permissions
-      let hasPermission = false;
+      // Verify access
+      let hasAccess = false;
       if (user.role === 'company') {
         const company = await prisma.company.findUnique({
           where: { userId: user.uid }
         });
-        hasPermission = company?.id === milestone.contract.companyId && 
-                       ['approved', 'rejected'].includes(status);
+        hasAccess = company?.id === milestone.contract.companyId;
       } else if (user.role === 'va') {
         const vaProfile = await prisma.vAProfile.findUnique({
           where: { userId: user.uid }
         });
-        hasPermission = vaProfile?.id === milestone.contract.vaProfileId && 
-                       status === 'completed';
+        const contract = await prisma.contract.findUnique({
+          where: { id: milestone.contractId }
+        });
+        hasAccess = vaProfile?.id === contract?.vaProfileId;
       }
 
-      if (!hasPermission) {
+      if (!hasAccess) {
         return reply.code(403).send({ 
-          error: "Insufficient permissions",
-          code: "INSUFFICIENT_PERMISSIONS"
+          error: "Access denied",
+          code: "ACCESS_DENIED"
         });
       }
 
       // Update milestone
-      const updateData: any = { status, updatedAt: new Date() };
-      if (status === 'completed') updateData.completedAt = new Date();
-      if (status === 'approved') updateData.approvedAt = new Date();
-
       const updatedMilestone = await prisma.milestone.update({
         where: { id: milestoneId },
-        data: updateData
+        data: {
+          ...data,
+          updatedAt: new Date()
+        }
       });
-
-      // Create notifications
-      await createMilestoneStatusNotifications(updatedMilestone, status, user.uid);
 
       return {
         success: true,
         data: updatedMilestone,
-        message: `Milestone ${status} successfully`
+        message: "Milestone updated successfully"
       };
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
       return reply.code(500).send({ 
         error: "Failed to update milestone",
         code: "MILESTONE_UPDATE_ERROR",
@@ -481,7 +612,143 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  // Timesheet routes (for hourly contracts)
+  // Get Contract Milestones
+  app.get("/contracts/:id/milestones", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const { id } = request.params as { id: string };
+
+    try {
+      // Get contract and verify access
+      const contract = await prisma.contract.findUnique({
+        where: { id },
+        include: {
+          company: true,
+          vaProfile: true
+        }
+      });
+
+      if (!contract) {
+        return reply.code(404).send({ 
+          error: "Contract not found",
+          code: "CONTRACT_NOT_FOUND"
+        });
+      }
+
+      // Verify access
+      let hasAccess = false;
+      if (user.role === 'company') {
+        const company = await prisma.company.findUnique({
+          where: { userId: user.uid }
+        });
+        hasAccess = company?.id === contract.companyId;
+      } else if (user.role === 'va') {
+        const vaProfile = await prisma.vAProfile.findUnique({
+          where: { userId: user.uid }
+        });
+        hasAccess = vaProfile?.id === contract.vaProfileId;
+      }
+
+      if (!hasAccess) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Get milestones
+      const milestones = await prisma.milestone.findMany({
+        where: { contractId: id },
+        orderBy: { dueDate: 'asc' }
+      });
+
+      return {
+        success: true,
+        data: milestones
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to fetch milestones",
+        code: "MILESTONES_FETCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Delete Milestone
+  app.delete("/milestones/:milestoneId", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const { milestoneId } = request.params as { milestoneId: string };
+
+    try {
+      // Get milestone
+      const milestone = await prisma.milestone.findUnique({
+        where: { id: milestoneId },
+        include: {
+          contract: {
+            include: {
+              company: true
+            }
+          }
+        }
+      });
+
+      if (!milestone) {
+        return reply.code(404).send({ 
+          error: "Milestone not found",
+          code: "MILESTONE_NOT_FOUND"
+        });
+      }
+
+      // Only companies can delete milestones
+      if (user.role !== 'company') {
+        return reply.code(403).send({ 
+          error: "Only companies can delete milestones",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      const company = await prisma.company.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (company?.id !== milestone.contract.companyId) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Cannot delete completed milestones
+      if (['completed', 'approved'].includes(milestone.status)) {
+        return reply.code(400).send({ 
+          error: "Cannot delete completed milestones",
+          code: "MILESTONE_COMPLETED"
+        });
+      }
+
+      // Delete milestone
+      await prisma.milestone.delete({
+        where: { id: milestoneId }
+      });
+
+      return {
+        success: true,
+        message: "Milestone deleted successfully"
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to delete milestone",
+        code: "MILESTONE_DELETE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Create Timesheet
   app.post("/contracts/:id/timesheets", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
@@ -490,7 +757,7 @@ export default async function contractRoutes(app: FastifyInstance) {
     const data = createTimesheetSchema.parse(request.body);
 
     try {
-      // Verify contract ownership (VA only can submit timesheets)
+      // Get contract and verify access
       const contract = await prisma.contract.findUnique({
         where: { id },
         include: {
@@ -498,16 +765,17 @@ export default async function contractRoutes(app: FastifyInstance) {
         }
       });
 
-      if (!contract || contract.contractType !== 'hourly') {
-        return reply.code(400).send({ 
-          error: "Only hourly contracts allow timesheets",
-          code: "INVALID_CONTRACT_TYPE"
+      if (!contract) {
+        return reply.code(404).send({ 
+          error: "Contract not found",
+          code: "CONTRACT_NOT_FOUND"
         });
       }
 
+      // Only VAs can create timesheets
       if (user.role !== 'va') {
         return reply.code(403).send({ 
-          error: "Only VAs can submit timesheets",
+          error: "Only VAs can create timesheets",
           code: "INVALID_ROLE"
         });
       }
@@ -524,8 +792,8 @@ export default async function contractRoutes(app: FastifyInstance) {
       }
 
       // Calculate total hours
-      const startTime = new Date(`${data.date}T${data.startTime}`);
-      const endTime = new Date(`${data.date}T${data.endTime}`);
+      const startTime = new Date(data.startTime);
+      const endTime = new Date(data.endTime);
       const totalHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
 
       // Create timesheet
@@ -534,23 +802,19 @@ export default async function contractRoutes(app: FastifyInstance) {
           contractId: id,
           vaProfileId: contract.vaProfileId,
           date: new Date(data.date),
-          startTime: startTime,
-          endTime: endTime,
+          startTime,
+          endTime,
           totalHours,
           description: data.description,
-          status: "pending",
           createdAt: new Date(),
           updatedAt: new Date()
         }
       });
 
-      // Notify company
-      await createTimesheetNotification(timesheet, contract.companyId);
-
       return reply.code(201).send({
         success: true,
         data: timesheet,
-        message: "Timesheet submitted successfully"
+        message: "Timesheet created successfully"
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -562,91 +826,93 @@ export default async function contractRoutes(app: FastifyInstance) {
       }
 
       return reply.code(500).send({ 
-        error: "Failed to submit timesheet",
-        code: "TIMESHEET_ERROR",
+        error: "Failed to create timesheet",
+        code: "TIMESHEET_CREATE_ERROR",
         details: error.message
       });
     }
   });
 
-  app.put("/contracts/:id/timesheets/:timesheetId", {
+  // Update Timesheet
+  app.put("/timesheets/:timesheetId", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { id, timesheetId } = request.params as { id: string; timesheetId: string };
-    const { status } = request.body as { status: "approved" | "rejected" };
+    const { timesheetId } = request.params as { timesheetId: string };
+    const data = updateTimesheetSchema.parse(request.body);
 
     try {
       // Get timesheet and verify access
       const timesheet = await prisma.timesheet.findUnique({
         where: { id: timesheetId },
         include: {
-          contract: {
-            include: {
-              company: true,
-              vaProfile: true
-            }
-          }
+          vaProfile: true
         }
       });
 
-      if (!timesheet || timesheet.contractId !== id) {
+      if (!timesheet) {
         return reply.code(404).send({ 
           error: "Timesheet not found",
           code: "TIMESHEET_NOT_FOUND"
         });
       }
 
-      // Only companies can approve/reject timesheets
-      if (user.role !== 'company') {
+      // Only VAs can update their own timesheets
+      if (user.role !== 'va') {
         return reply.code(403).send({ 
-          error: "Only companies can approve timesheets",
+          error: "Only VAs can update timesheets",
           code: "INVALID_ROLE"
         });
       }
 
-      const company = await prisma.company.findUnique({
+      const vaProfile = await prisma.vAProfile.findUnique({
         where: { userId: user.uid }
       });
 
-      if (company?.id !== timesheet.contract.companyId) {
+      if (vaProfile?.id !== timesheet.vaProfileId) {
         return reply.code(403).send({ 
           error: "Access denied",
           code: "ACCESS_DENIED"
         });
       }
 
-      // Update timesheet
-      const updateData: any = { status, updatedAt: new Date() };
-      if (status === 'approved') {
-        updateData.approvedAt = new Date();
-        updateData.approvedBy = user.uid;
+      // Cannot update approved timesheets
+      if (timesheet.status === 'approved') {
+        return reply.code(400).send({ 
+          error: "Cannot update approved timesheet",
+          code: "TIMESHEET_APPROVED"
+        });
       }
 
+      // Calculate new total hours if dates changed
+      let updateData = { ...data, updatedAt: new Date() };
+      if (data.date || data.startTime || data.endTime) {
+        const date = new Date(data.date || timesheet.date);
+        const startTime = new Date(data.startTime || timesheet.startTime);
+        const endTime = new Date(data.endTime || timesheet.endTime);
+        updateData.totalHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      }
+
+      // Update timesheet
       const updatedTimesheet = await prisma.timesheet.update({
         where: { id: timesheetId },
         data: updateData
       });
 
-      // Update contract total hours
-      if (status === 'approved') {
-        await prisma.contract.update({
-          where: { id },
-          data: {
-            totalHours: { increment: timesheet.totalHours }
-          }
-        });
-      }
-
-      // Notify VA
-      await createTimesheetStatusNotifications(updatedTimesheet, status, timesheet.vaProfileId);
-
       return {
         success: true,
         data: updatedTimesheet,
-        message: `Timesheet ${status} successfully`
+        message: "Timesheet updated successfully"
       };
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
       return reply.code(500).send({ 
         error: "Failed to update timesheet",
         code: "TIMESHEET_UPDATE_ERROR",
@@ -655,149 +921,135 @@ export default async function contractRoutes(app: FastifyInstance) {
     }
   });
 
-  // Helper functions
-  async function calculateContractMetrics(contract: any) {
-    const totalMilestones = contract.milestones.length;
-    const completedMilestones = contract.milestones.filter((m: any) => m.status === 'completed').length;
-    const approvedMilestones = contract.milestones.filter((m: any) => m.status === 'approved').length;
-    
-    const totalTimesheets = contract.timesheets.length;
-    const approvedTimesheets = contract.timesheets.filter((t: any) => t.status === 'approved').length;
-    const totalHours = contract.timesheets
-      .filter((t: any) => t.status === 'approved')
-      .reduce((sum: number, t: any) => sum + t.totalHours, 0);
+  // Get Contract Timesheets
+  app.get("/contracts/:id/timesheets", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const { id } = request.params as { id: string };
 
-    const totalPaid = contract.payments
-      .filter((p: any) => p.status === 'succeeded')
-      .reduce((sum: number, p: any) => sum + (p.amount / 100), 0);
-
-    return {
-      milestoneProgress: totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0,
-      milestoneApproved: totalMilestones > 0 ? (approvedMilestones / totalMilestones) * 100 : 0,
-      timesheetProgress: totalTimesheets > 0 ? (approvedTimesheets / totalTimesheets) * 100 : 0,
-      totalHours,
-      totalPaid,
-      amountRemaining: contract.amount - totalPaid
-    };
-  }
-
-  async function createContractStatusNotifications(contract: any, status: string, triggeredBy: string) {
-    // Get user IDs for notification
-    const vaProfile = await prisma.vAProfile.findUnique({
-      where: { id: contract.vaProfileId }
-    });
-    const company = await prisma.company.findUnique({
-      where: { id: contract.companyId }
-    });
-
-    if (!vaProfile || !company) return;
-
-    // Notify the other party
-    const notifyUserId = triggeredBy === company.userId ? vaProfile.userId : company.userId;
-    const statusMessage = {
-      'completed': 'Contract has been marked as completed',
-      'cancelled': 'Contract has been cancelled',
-      'paused': 'Contract has been paused',
-      'terminated': 'Contract has been terminated'
-    };
-
-    await prisma.notification.create({
-      data: {
-        userId: notifyUserId,
-        type: "contract_status_changed",
-        title: "Contract Status Updated",
-        message: statusMessage[status] || `Contract status changed to ${status}`,
-        data: { contractId: contract.id, status },
-        priority: 'high'
-      }
-    });
-  }
-
-  async function createMilestoneNotification(milestone: any, vaProfileId: string) {
-    const vaProfile = await prisma.vAProfile.findUnique({
-      where: { id: vaProfileId }
-    });
-
-    if (vaProfile) {
-      await prisma.notification.create({
-        data: {
-          userId: vaProfile.userId,
-          type: "milestone_created",
-          title: "New Milestone Created",
-          message: `A new milestone "${milestone.title}" has been created for your contract`,
-          data: { milestoneId: milestone.id, amount: milestone.amount },
-          priority: 'normal'
+    try {
+      // Get contract and verify access
+      const contract = await prisma.contract.findUnique({
+        where: { id },
+        include: {
+          company: true,
+          vaProfile: true
         }
       });
-    }
-  }
 
-  async function createMilestoneStatusNotifications(milestone: any, status: string, triggeredBy: string) {
-    const contract = await prisma.contract.findUnique({
-      where: { id: milestone.contractId },
-      include: {
-        company: true,
-        vaProfile: true
+      if (!contract) {
+        return reply.code(404).send({ 
+          error: "Contract not found",
+          code: "CONTRACT_NOT_FOUND"
+        });
       }
-    });
 
-    if (!contract) return;
-
-    // Notify the other party
-    const notifyUserId = triggeredBy === contract.company.userId ? contract.vaProfile.userId : contract.company.userId;
-    const statusMessage = {
-      'completed': `Milestone "${milestone.title}" has been completed`,
-      'approved': `Milestone "${milestone.title}" has been approved and funded`,
-      'rejected': `Milestone "${milestone.title}" has been rejected`
-    };
-
-    await prisma.notification.create({
-      data: {
-        userId: notifyUserId,
-        type: "milestone_status_changed",
-        title: "Milestone Status Updated",
-        message: statusMessage[status] || `Milestone status changed to ${status}`,
-        data: { milestoneId: milestone.id, status, amount: milestone.amount },
-        priority: status === 'approved' ? 'high' : 'normal'
+      // Verify access
+      let hasAccess = false;
+      if (user.role === 'company') {
+        const company = await prisma.company.findUnique({
+          where: { userId: user.uid }
+        });
+        hasAccess = company?.id === contract.companyId;
+      } else if (user.role === 'va') {
+        const vaProfile = await prisma.vAProfile.findUnique({
+          where: { userId: user.uid }
+        });
+        hasAccess = vaProfile?.id === contract.vaProfileId;
       }
-    });
-  }
 
-  async function createTimesheetNotification(timesheet: any, companyId: string) {
-    const company = await prisma.company.findUnique({
-      where: { id: companyId }
-    });
+      if (!hasAccess) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
 
-    if (company) {
-      await prisma.notification.create({
-        data: {
-          userId: company.userId,
-          type: "timesheet_submitted",
-          title: "Timesheet Submitted",
-          message: `A new timesheet for ${timesheet.totalHours.toFixed(1)} hours has been submitted`,
-          data: { timesheetId: timesheet.id, hours: timesheet.totalHours },
-          priority: 'normal'
-        }
+      // Get timesheets
+      const timesheets = await prisma.timesheet.findMany({
+        where: { contractId: id },
+        orderBy: { date: 'desc' }
+      });
+
+      return {
+        success: true,
+        data: timesheets
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to fetch timesheets",
+        code: "TIMESHEETS_FETCH_ERROR",
+        details: error.message
       });
     }
-  }
+  });
 
-  async function createTimesheetStatusNotifications(timesheet: any, status: string, vaProfileId: string) {
-    const vaProfile = await prisma.vAProfile.findUnique({
-      where: { id: vaProfileId }
-    });
+  // Delete Timesheet
+  app.delete("/timesheets/:timesheetId", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    const { timesheetId } = request.params as { timesheetId: string };
 
-    if (vaProfile) {
-      await prisma.notification.create({
-        data: {
-          userId: vaProfile.userId,
-          type: "timesheet_status_changed",
-          title: "Timesheet Status Updated",
-          message: `Your timesheet for ${timesheet.totalHours.toFixed(1)} hours has been ${status}`,
-          data: { timesheetId: timesheet.id, status, hours: timesheet.totalHours },
-          priority: status === 'approved' ? 'high' : 'normal'
+    try {
+      // Get timesheet
+      const timesheet = await prisma.timesheet.findUnique({
+        where: { id: timesheetId },
+        include: {
+          vaProfile: true
         }
       });
+
+      if (!timesheet) {
+        return reply.code(404).send({ 
+          error: "Timesheet not found",
+          code: "TIMESHEET_NOT_FOUND"
+        });
+      }
+
+      // Only VAs can delete their own timesheets
+      if (user.role !== 'va') {
+        return reply.code(403).send({ 
+          error: "Only VAs can delete timesheets",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      const vaProfile = await prisma.vAProfile.findUnique({
+        where: { userId: user.uid }
+      });
+
+      if (vaProfile?.id !== timesheet.vaProfileId) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      // Cannot delete approved timesheets
+      if (timesheet.status === 'approved') {
+        return reply.code(400).send({ 
+          error: "Cannot delete approved timesheet",
+          code: "TIMESHEET_APPROVED"
+        });
+      }
+
+      // Delete timesheet
+      await prisma.timesheet.delete({
+        where: { id: timesheetId }
+      });
+
+      return {
+        success: true,
+        message: "Timesheet deleted successfully"
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to delete timesheet",
+        code: "TIMESHEET_DELETE_ERROR",
+        details: error.message
+      });
     }
-  }
+  });
 }
