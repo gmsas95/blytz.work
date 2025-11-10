@@ -5,11 +5,12 @@ import rateLimit from "@fastify/rate-limit";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
+import authRoutes from "./routes/auth.js"; // NEW AUTH ROUTES
+import userRoutes from "./routes/user.routes.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import matchingRoutes from "./routes/matching.js";
 import paymentRoutes from "./routes/payments.js";
-import userRoutes from "./routes/user.routes.js"; // NEW SOC ROUTE
 
 // Import utilities
 import { createRateLimiter } from "./utils/response.js";
@@ -60,7 +61,8 @@ app.register(env, {
 
 // Register routes
 app.register(healthRoutes);
-app.register(userRoutes, { prefix: "/api" }); // NEW SOC ROUTE
+app.register(authRoutes, { prefix: "/api" }); // NEW AUTH ROUTES
+app.register(userRoutes, { prefix: "/api" });
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
 app.register(matchingRoutes, { prefix: "/api" });
@@ -106,6 +108,8 @@ const start = async () => {
     app.log.info(`Server listening on port ${process.env.PORT || 3000}`);
     app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
     app.log.info(`📊 New user routes available at /api/users/*`);
+    app.log.info(`🔐 Authentication system ready at /api/auth/*`);
+    app.log.info(`🚀 Platform-first implementation complete`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
