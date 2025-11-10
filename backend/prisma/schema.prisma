@@ -1,4 +1,4 @@
-// Enhanced VA Profile System with Portfolio, Skills, and Verification
+// Minimal Working Schema for MVP
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,274 +20,69 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // Relationships
-  vaProfile       VAProfile?
-  company         Company?
-  payments        Payment[]
-  notifications   Notification[]
-
   @@map("users")
   @@schema("blytz_hire")
 }
 
-model VAProfile {
-  id                    String   @id @default(cuid())
-  userId                 String   @unique
-  name                  String
-  bio                   String?
-  country               String
-  hourlyRate             Int
-  skills                 String[]
-  availability           Boolean  @default(true)
-  email                  String?   // Contact info (locked until payment)
-  phone                  String?   // Contact info (locked until payment)
-  timezone               String?
-  languages              Json[]    // [{ code: "en", level: "fluent" }]
-  workExperience         Json[]    // [{ company: "ABC", years: 2, role: "Developer" }]
-  education              Json[]    // [{ institution: "University", degree: "BS" }]
-  responseRate           Float?    // Percentage
-  averageRating          Float?     // 1-5 stars
-  totalReviews           Int        @default(0)
-  featuredProfile        Boolean    @default(false)
-  profileViews           Int        @default(0)
-  resumeUrl              String?    // Uploaded resume
-  videoIntroUrl          String?    // Video introduction
-  skillsScore            Int?       // Overall skills assessment score (0-100)
-  verificationLevel      String     @default("basic") // "basic" | "professional" | "premium"
-  backgroundCheckPassed  Boolean    @default(false)
-  portfolioItems         PortfolioItem[]
-  skillsAssessments      SkillsAssessment[]
-  reviews               Review[]     @relation("vaReviews")
-  badges                Badge[]
-
-  user                  User         @relation(fields: [userId], references: [id])
-  matchVotes            MatchVote[]
-  matches               Match[]
-
-  @@map("va_profiles")
-  @@schema("blytz_hire")
-}
-
-model PortfolioItem {
-  id           String   @id @default(cuid())
-  vaProfileId  String
-  title        String
-  description  String
-  fileUrl      String
-  fileType     String   // "image" | "document" | "video" | "link"
-  thumbnailUrl String?
-  category     String?  // "website", "app", "design", "writing", etc.
-  technologies String[] // ["React", "Node.js", "MongoDB"]
-  featured     Boolean  @default(false)
-  projectUrl   String?  // Live project URL
-  createdAt    DateTime @default(now())
-
-  vaProfile    VAProfile @relation(fields: [vaProfileId], references: [id])
-
-  @@map("portfolio_items")
-  @@schema("blytz_hire")
-}
-
-model SkillsAssessment {
-  id            String   @id @default(cuid())
-  vaProfileId   String
-  skillName     String
-  category      String   // "technical" | "language" | "soft" | "design"
-  score         Int      // 0-100
-  difficulty    String   // "basic" | "intermediate" | "advanced"
-  assessmentType String   // "automated" | "manual" | "peer"
-  completedAt   DateTime @default(now())
-  expiresAt     DateTime? // Assessments expire after 6 months
-
-  vaProfile     VAProfile @relation(fields: [vaProfileId], references: [id])
-
-  @@map("skills_assessments")
-  @@schema("blytz_hire")
-}
-
-model Badge {
-  id          String   @id @default(cuid())
-  vaProfileId  String
-  badgeType   String   // "top_rated" | "quick_responder" | "expert" | "verified"
-  title       String
-  description String
-  icon        String   // Badge icon URL or emoji
-  level       String   // "bronze" | "silver" | "gold" | "platinum"
-  issuedAt    DateTime @default(now())
-  expiresAt   DateTime?
-
-  vaProfile    VAProfile @relation(fields: [vaProfileId], references: [id])
-
-  @@map("badges")
-  @@schema("blytz_hire")
-}
-
-model Company {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  name              String
-  bio               String?
-  country           String
-  website           String?
-  logoUrl           String?
-  industry          String?   // "technology" | "healthcare" | "finance" etc.
-  companySize       String?   // "1-10" | "11-50" | "51-200" | "201+"
-  foundedYear       Int?
-  description       String?
-  mission           String?
-  values           Json?     // Company values array
-  benefits         Json?     // Company benefits
-  email             String?
-  phone             String?
-  verificationLevel  String    @default("basic") // "basic" | "professional" | "premium"
-  backgroundCheckPassed Boolean   @default(false)
-  featuredCompany   Boolean    @default(false)
-  socialLinks       Json?      // Social media links
-  techStack         Json?      // Technology stack used
-
-  user              User         @relation(fields: [userId], references: [id])
-  jobPostings       JobPosting[]
-  reviews               Review[]     @relation("companyReviews")
-
-  @@map("companies")
-  @@schema("blytz_hire")
-}
-
-model Review {
-  id          String   @id @default(cuid())
-  reviewerId  String
-  targetType  String   // "va" | "company"
-  targetId    String
-  rating      Int      // 1-5
-  comment     String?
-  categories  Json?    // { communication: 5, quality: 4, timeliness: 5 }
-  helpful     Int      @default(0) // Helpful votes
-  verified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relationships with different names
-  vaProfile   VAProfile? @relation("vaReviews", fields: [targetId], references: [id], map: "reviews_va_targetId_fkey")
-  company     Company?    @relation("companyReviews", fields: [targetId], references: [id], map: "reviews_company_targetId_fkey")
-
-  @@map("reviews")
-  @@schema("blytz_hire")
-}
-
-model Notification {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String   // "match" | "message" | "payment" | "review" | "profile_view"
-  title       String
-  message     String
-  data        Json?    // Additional notification data
-  read        Boolean   @default(false)
-  priority    String    @default("normal") // "low" | "normal" | "high" | "urgent"
-  channels    Json?     // { push: true, email: true, in_app: true }
-  expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-
-  user        User      @relation(fields: [userId], references: [id])
-
-  @@map("notifications")
-  @@schema("blytz_hire")
-}
-
-// Existing models (unchanged but enhanced)
 model JobPosting {
   id          String   @id @default(cuid())
-  companyId   String
   title       String
   description String
-  requirements Json?   // Job requirements
-  responsibilities Json? // Job responsibilities
-  benefits     Json?   // Company benefits, perks
+  budget      Float?   // Fixed price budget
   rateRange   String
-  location    String?
-  remote      Boolean  @default(true)
   category    String?
   tags        String[]
-  experienceLevel String? // "entry" | "mid" | "senior" | "executive"
-  employmentType String? // "fulltime" | "parttime" | "contract" | "freelance"
-  skillsRequired String[] // Required skills
-  toolsUsed     Json?     // Tools used in the role
-  teamSize      Int?       // Team size
-  reportingTo   String?    // Who they report to
-  travelRequired String?   // Travel requirement
-  workSchedule  Json?      // Work schedule and timezone expectations
-  isActive    Boolean  @default(true)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  company     Company      @relation(fields: [companyId], references: [id])
-  matchVotes  MatchVote[]
-  matches     Match[]
+  status      String   @default("open") // "open" | "in_progress" | "completed" | "cancelled"
+  skillsRequired String[]
+  views        Int      @default(0)
+  proposals    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("job_postings")
   @@schema("blytz_hire")
 }
 
-model MatchVote {
+model Proposal {
   id            String   @id @default(cuid())
   jobPostingId  String
-  vaProfileId   String
-  voteByCompany Boolean?
-  voteByVA      Boolean?
-  interestLevel  Int?    // 1-5 (how interested they are)
-  notes         String? // Additional notes about the vote
+  coverLetter   String
+  bidAmount     Float
+  bidType       String   @default("fixed") // "fixed" | "hourly"
+  deliveryTime  String   // e.g., "3 days", "1 week"
+  status        String   @default("pending") // "pending" | "viewed" | "accepted" | "rejected"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id])
-  vaProfile  VAProfile  @relation(fields: [vaProfileId], references: [id])
-
-  @@unique([jobPostingId, vaProfileId])
-  @@map("match_votes")
+  @@map("proposals")
   @@schema("blytz_hire")
 }
 
-model Match {
-  id              String   @id @default(cuid())
-  jobPostingId     String
-  vaProfileId      String
-  matchScore       Float?    // 0-100 AI compatibility score
-  compatibilityBreakdown Json? // Detailed compatibility analysis
-  paymentStatus    String   @default("pending") // "pending" | "paid" | "failed"
-  contactUnlocked   Boolean  @default(false)
-  communicationStarted Boolean  @default(false)
-  lastContactAt    DateTime?
-  matchStatus      String   @default("new") // "new" | "contacted" | "interviewing" | "hired" | "rejected"
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+model Contract {
+  id                String   @id @default(cuid())
+  amount            Float
+  contractType      String   // "fixed" | "hourly"
+  status            String   @default("active") // "active" | "completed" | "cancelled"
+  totalPaid         Float     @default(0)
+  totalHours        Float?    // For hourly contracts
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id])
-  vaProfile  VAProfile  @relation(fields: [vaProfileId], references: [id])
-  payments   Payment[]
-
-  @@unique([jobPostingId, vaProfileId])
-  @@map("matches")
+  @@map("contracts")
   @@schema("blytz_hire")
 }
 
 model Payment {
-  id            String   @id @default(cuid())
-  matchId       String
-  userId        String   // Payer (company user)
-  stripePaymentIntentId String @unique
-  amount        Int      // in cents
-  status        String   // "succeeded" | "pending" | "failed"
-  stripeFee     Int?     // Stripe processing fee
-  platformFee   Int?     // Our platform fee
-  method        String   // "card" | "bank" | "crypto"
-  metadata      Json?    // Additional payment data
-  refundAmount  Int?     // Refund amount if any
-  refundedAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  match   Match @relation(fields: [matchId], references: [id])
-  user    User  @relation(fields: [userId], references: [id])
+  id                    String   @id @default(cuid())
+  amount                Int      // in cents
+  status                String   // "pending" | "processing" | "succeeded" | "failed" | "refunded"
+  stripeFee             Int?     // Stripe processing fee
+  platformFee           Int?     // Our platform fee
+  method                String   // "card" | "bank" | "crypto"
+  type                  String   @default("payment") // "payment" | "refund" | "payout"
+  refundAmount          Int?     // Refund amount if any
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@map("payments")
   @@schema("blytz_hire")
