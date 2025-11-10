@@ -295,7 +295,7 @@ export default async function companyRoutes(app: FastifyInstance) {
             name: profile.name,
             verificationLevel: profile.verificationLevel,
             totalJobs: profile.jobPostings?.length || 0,
-            totalReviews: 0
+            totalReviews: true,
           },
           performance: {
             totalMatches: 47,
