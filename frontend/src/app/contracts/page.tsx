@@ -32,7 +32,8 @@ export default function ContractsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'all'>('active');
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   
-  const { user, addAlert, removeAlert } = useAlert();
+  const { user } = useAuth();
+  const { addAlert, removeAlert } = useAlert();
 
   useEffect(() => {
     loadContracts();
