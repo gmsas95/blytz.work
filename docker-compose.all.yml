@@ -1,4 +1,6 @@
-# Production-ready Docker Compose Configuration
+# Complete BlytzHire Platform - All Services
+version: '3.8'
+
 services:
   # PostgreSQL Database
   hire-postgres:
@@ -23,15 +25,7 @@ services:
       retries: 3
       start_period: 60s
 
-volumes:
-  postgres_data:
-    driver: local
-
-networks:
-  blytz-network:
-    driver: bridge
-
-  # Backend API Service
+  # Backend API
   backend:
     build:
       context: ./backend
@@ -62,3 +56,34 @@ networks:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # Frontend Web App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      FIREBASE_API_KEY: ${FIREBASE_API_KEY}
+      FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
+      FIREBASE_APP_ID: ${FIREBASE_APP_ID}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - blytz-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  blytz-network:
+    driver: bridge

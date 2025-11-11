@@ -2,11 +2,11 @@
 version: '3.8'
 
 services:
-  hire-frontend:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: hire-frontend
+    container_name: frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
