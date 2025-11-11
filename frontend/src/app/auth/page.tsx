@@ -1,7 +1,7 @@
 // Complete Authentication Page
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/firebase';
 import { ChevronLeft, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAlert } from '@/components/ui/Alert';
