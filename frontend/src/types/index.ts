@@ -1,0 +1,65 @@
+export interface User {
+  uid: string;
+  email: string;
+  role: 'va' | 'company';
+  createdAt: string;
+}
+
+export interface VAProfile {
+  id: string;
+  userId: string;
+  name: string;
+  country: string;
+  hourlyRate: number;
+  skills: string[];
+  availability: boolean;
+  email?: string;
+  phone?: string;
+  user?: User;
+}
+
+export interface Company {
+  id: string;
+  userId: string;
+  name: string;
+  country: string;
+  email?: string;
+  user?: User;
+  jobPostings?: JobPosting[];
+}
+
+export interface JobPosting {
+  id: string;
+  companyId: string;
+  title: string;
+  description: string;
+  rateRange: string;
+  isActive: boolean;
+  createdAt: string;
+  company?: Company;
+}
+
+export interface Match {
+  id: string;
+  jobPostingId: string;
+  vaProfileId: string;
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  contactUnlocked: boolean;
+  createdAt: string;
+  jobPosting?: JobPosting;
+  vaProfile?: VAProfile;
+}
+
+export interface PaymentIntent {
+  clientSecret: string;
+  paymentIntentId: string;
+  amount: number;
+  currency: string;
+}
+
+export interface ContactInfo {
+  vaEmail: string;
+  vaPhone?: string;
+  companyEmail: string;
+  unlockedAt: string;
+}
