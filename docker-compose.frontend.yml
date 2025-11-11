@@ -1,5 +1,4 @@
 # Frontend Web App
-version: '3.8'
 
 services:
   frontend:
@@ -19,11 +18,3 @@ services:
       FIREBASE_APP_ID: ${FIREBASE_APP_ID}
     ports:
       - "3000:3000"
-    depends_on:
-      - hire-postgres
-    networks:
-      - blytz-network
-
-networks:
-  blytz-network:
-    external: true
