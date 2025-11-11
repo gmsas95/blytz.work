@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertContainer } from '@/components/ui/Alert';
+import { useAlert } from '@/components/ui/Alert';
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Mock VA data
@@ -35,6 +36,7 @@ const mockRecommendations = [
 ];
 
 export default function DiscoverPage() {
+  const { addAlert } = useAlert();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recommendations, setRecommendations] = useState(mockRecommendations);
   const [savedVAs, setSavedVAs] = useState<number[]>([]);
@@ -45,13 +47,11 @@ export default function DiscoverPage() {
     if (direction === 'right') {
       setSavedVAs([...savedVAs, currentVA.id]);
       // Show success notification
-      if ((window as any).addAlert) {
-        (window as any).addAlert({
-          type: 'success',
-          title: 'VA Saved',
-          message: `${currentVA.name} has been saved to your favorites`
-        });
-      }
+      addAlert({
+        type: 'success',
+        title: 'VA Saved',
+        message: `${currentVA.name} has been saved to your favorites`
+      });
     }
     
     if (currentIndex < recommendations.length - 1) {
@@ -73,13 +73,11 @@ export default function DiscoverPage() {
     } else {
       setSavedVAs([...savedVAs, vaId]);
       // Show save notification
-      if ((window as any).addAlert) {
-        (window as any).addAlert({
-          type: 'success',
-          title: 'VA Saved',
-          message: `${currentVA.name} added to favorites`
-        });
-      }
+      addAlert({
+        type: 'success',
+        title: 'VA Saved',
+        message: `${currentVA.name} added to favorites`
+      });
     }
   };
 

@@ -9,6 +9,7 @@ export const authService = {
           email: 'google-user@example.com',
           role: 'company',
           profileComplete: false,
+          displayName: 'Google User',
           getIdTokenResult: async () => ({ token: 'mock-token' }),
           getIdToken: async () => 'mock-token'
         });
@@ -25,6 +26,7 @@ export const authService = {
             email: email,
             role: 'company',
             profileComplete: false,
+            displayName: email.split('@')[0],
             getIdTokenResult: async () => ({ token: 'mock-token' }),
             getIdToken: async () => 'mock-token'
           });
@@ -43,6 +45,7 @@ export const authService = {
           email: email,
           role: role,
           profileComplete: false,
+          displayName: email.split('@')[0],
           getIdTokenResult: async () => ({ token: 'mock-token' }),
           getIdToken: async () => 'mock-token'
         });
@@ -102,6 +105,6 @@ export const getAuth = () => ({
 export const signOut = authService.signOut;
 export const onAuthStateChanged = authService.onAuthStateChanged;
 
-export type { User };
+
 
 export const auth = authService;
