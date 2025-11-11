@@ -19,7 +19,7 @@ interface AlertContextType {
 
 const AlertContext = createContext<AlertContextType | null>(null);
 
-// Hook for using Alert context
+// useAlert hook - ONLY provides context functionality
 export function useAlert() {
   const context = useContext(AlertContext);
   if (!context) {
@@ -101,7 +101,7 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
       setAlerts(prev => prev.filter(alert => 
         Date.now() - alert.timestamp < 3000
       ));
-    }, 1000);
+    }, 100);
     return () => clearInterval(timer);
   }, []);
 
@@ -133,6 +133,6 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
 // Default export
 export default AlertContainer;
 
-// Additional named exports for compatibility
+// Additional named exports
 export { AlertContainer as Toast };
 export { AlertContainer as NotificationProvider };
