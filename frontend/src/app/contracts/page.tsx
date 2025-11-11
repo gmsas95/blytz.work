@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Contract Management - View and Manage Active Contracts
 'use client';
 
@@ -124,7 +125,7 @@ export default function ContractsPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [metrics, setMetrics] = useState<ContractMetrics | null>(null);
 
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Load contracts
   useEffect(() => {
