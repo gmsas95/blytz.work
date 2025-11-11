@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/components/AuthProvider';
+import { AlertContainer } from '@/components/ui/Alert';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,10 +23,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <AuthProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Navbar />
-              <main>{children}</main>
-            </div>
+            <AlertContainer>
+              <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <main>{children}</main>
+              </div>
+            </AlertContainer>
           </AuthProvider>
         </Providers>
       </body>
