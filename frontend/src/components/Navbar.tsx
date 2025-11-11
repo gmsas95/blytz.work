@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getAuth, signOut, onAuthStateChanged } from '@/lib/firebase';
+import { signOut, isFirebaseAvailable, onAuthStateChanged } from '@/lib/firebase-real';
+import { useAuth } from '@/components/AuthProvider';
 import { useState, useEffect } from 'react';
 import type { User } from '@/types/auth';
 

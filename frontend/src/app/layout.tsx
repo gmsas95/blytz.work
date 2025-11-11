@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
-import { getAuth } from '@/lib/firebase';
+import { AuthProvider } from '@/components/AuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,10 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="min-h-screen bg-gray-50">
-            <Navbar />
-            <main>{children}</main>
-          </div>
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Navbar />
+              <main>{children}</main>
+            </div>
+          </AuthProvider>
         </Providers>
       </body>
     </html>
