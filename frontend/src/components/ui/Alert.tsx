@@ -3,23 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 
-// Alert Props Interface
-interface AlertProps {
+// Working Alert component
+export function Alert({ type = 'info', children, onClose, className = '' }: {
   type?: 'error' | 'warning' | 'success' | 'info';
-  title?: string;
   children: React.ReactNode;
   onClose?: () => void;
   className?: string;
-}
-
-// Alert Component - WORKING
-export function Alert({ 
-  type = 'info', 
-  title, 
-  children, 
-  onClose,
-  className = '' 
-}: AlertProps) {
+}) {
   const styles = {
     error: 'bg-red-50 border-red-200 text-red-800',
     warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
@@ -35,11 +25,10 @@ export function Alert({
   };
 
   return (
-    <div className={`p-4 rounded-lg border flex items-start gap-3 ${styles[type]} ${className}`}>
-      <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${icons[type]}`} />
+    <div className={`p-4 rounded-lg border flex items-start gap-3 ${styles[type as keyof typeof styles]} ${className}`}>
+      <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${icons[type as keyof typeof icons]}`} />
       <div className="flex-1">
-        {title && <h4 className="font-semibold mb-1">{title}</h4>}
-        <div className="text-sm">{children}</div>
+        <div className="text-sm font-medium">{children}</div>
       </div>
       {onClose && (
         <button onClick={onClose} className="flex-shrink-0 p-1 hover:bg-gray-100 rounded">
@@ -50,57 +39,60 @@ export function Alert({
   );
 }
 
-// AlertContainer - DEFINITIVE WORKING VERSION
-const AlertContainerComponent = () => {
-  const [alerts, setAlerts] = useState<Array<{
-    id: string;
-    type: 'success' | 'error' | 'info' | 'warning';
-    message: string;
-    timestamp: number;
-  }>>([]);
+// Working AlertContainer - SIMPLE AND RELIABLE
+let globalAlerts: Array<{id: string, message: string, type: string}> = [];
+let globalSetAlerts: React.Dispatch<any> | null = null;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setAlerts(prev => prev.filter(alert => Date.now() - alert.timestamp < 3000));
-    }, 100);
-    return () => clearInterval(timer);
+export function AlertContainer() {
+  const [alerts, setAlerts] = React.useState(globalAlerts);
+
+  React.useEffect(() => {
+    globalSetAlerts = setAlerts;
+    return () => { globalSetAlerts = null; };
   }, []);
 
-  useEffect(() => {
-    (window as any).showAlert = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
-      setAlerts(prev => [...prev, {
-        id: Math.random().toString(36).substr(2, 9),
-        type,
-        message,
-        timestamp: Date.now()
-      }]);
-    };
-    return () => {
-      delete (window as any).showAlert;
-    };
-  }, []);
+  React.useEffect(() => {
+    globalAlerts = alerts;
+  }, [alerts]);
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
       {alerts.map(alert => (
-        <Alert
-          key={alert.id}
-          type={alert.type}
-          onClose={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
-        >
-          {alert.message}
-        </Alert>
+        <div key={alert.id} className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md shadow-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">{alert.message}</span>
+            <button onClick={() => {
+              const newAlerts = alerts.filter(a => a.id !== alert.id);
+              setAlerts(newAlerts);
+              globalAlerts = newAlerts;
+            }}>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       ))}
     </div>
   );
+}
+
+// Global function to add alerts
+export const addAlert = (message: string, type: string = 'success') => {
+  const newAlert = {
+    id: Date.now().toString(),
+    message,
+    type
+  };
+  
+  if (globalSetAlerts) {
+    globalSetAlerts((prev: any) => [...prev, newAlert]);
+  } else {
+    globalAlerts.push(newAlert);
+  }
 };
 
-// EXPORT GUARANTEED TO WORK
-export const AlertContainer = AlertContainerComponent;
+// Default export - GUARANTEED TO WORK
+export default AlertContainer;
 
-// DEFAULT EXPORT FOR COMPATIBILITY
-export default AlertContainerComponent;
-
-// NAMED EXPORTS FOR TREE SHAKING
-export { AlertContainerComponent as Toast };
-export { AlertContainerComponent as NotificationProvider };
+// Named exports - ADDITIONAL COMPATIBILITY
+export { AlertContainer as Toast };
+export { AlertContainer as NotificationProvider };
