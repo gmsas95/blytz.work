@@ -6,12 +6,12 @@ We are using our own PostgreSQL database, NOT Supabase.
 
 ### 🔗 Database Connection String:
 ```bash
-postgresql://postgres:your_password@hire-postgres:5432/blytz_hire
+postgresql://postgres:your_password@hire-postgres:5433/blytz_hire
 ```
 
 ### 🔗 With Your Password:
 ```bash
-postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 ```
 
 ---
@@ -21,13 +21,13 @@ postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_
 ### ❌ BEFORE (Wrong):
 ```yaml
 # Wrong - We don't use Supabase!
-SUPABASE_DATABASE_URL: "postgresql://postgres:password@supabase-db:5432/blytz_hire"
+SUPABASE_DATABASE_URL: "postgresql://postgres:password@supabase-db:5433/blytz_hire"
 ```
 
 ### ✅ AFTER (Correct):
 ```yaml
 # Correct - Our own PostgreSQL!
-DATABASE_URL: "postgresql://postgres:password@hire-postgres:5432/blytz_hire"
+DATABASE_URL: "postgresql://postgres:password@hire-postgres:5433/blytz_hire"
 ```
 
 ---
@@ -38,7 +38,7 @@ DATABASE_URL: "postgresql://postgres:password@hire-postgres:5432/blytz_hire"
 - **Container Name**: `hire-postgres`
 - **Database**: `blytz_hire`
 - **User**: `postgres`
-- **Internal Port**: `5432`
+- **Internal Port**: `5433`
 - **External Port**: `5433`
 - **Password**: Set via `DB_PASSWORD`
 
@@ -46,7 +46,7 @@ DATABASE_URL: "postgresql://postgres:password@hire-postgres:5432/blytz_hire"
 
 #### **Backend Application (Inside Docker):**
 ```bash
-DATABASE_URL="postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire"
+DATABASE_URL="postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire"
 ```
 
 #### **Backend Application (Outside Docker):**
@@ -70,7 +70,7 @@ datasource db {
 ### ✅ Required for Backend (Dokploy):
 ```bash
 Key: DATABASE_URL
-Value: postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+Value: postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 Secret: Yes
 
 Key: DB_PASSWORD
@@ -101,11 +101,11 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "5433:5433"
     
   backend:
     environment:
-      DATABASE_URL: "postgresql://postgres:${DB_PASSWORD}@hire-postgres:5432/blytz_hire"
+      DATABASE_URL: "postgresql://postgres:${DB_PASSWORD}@hire-postgres:5433/blytz_hire"
     depends_on:
       - hire-postgres
 ```
@@ -140,17 +140,17 @@ pool.query('SELECT NOW()').then(res => console.log('✅ Database connected:', re
 
 #### **🌟 Primary Database URL:**
 ```bash
-postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 ```
 
 #### **🔧 Environment Variable:**
 ```bash
-DATABASE_URL=postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+DATABASE_URL=postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 ```
 
 #### **🐳 Container Access:**
 ```bash
-# Internal (Docker network): hire-postgres:5432
+# Internal (Docker network): hire-postgres:5433
 # External (Server access): localhost:5433
 ```
 
@@ -159,7 +159,7 @@ DATABASE_URL=postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgre
 - **User**: postgres
 - **Password**: z46fkjvmqzf7z2woihbvo9hr2yloopac
 - **Host**: hire-postgres (internal) / localhost:5433 (external)
-- **Port**: 5432 (internal) / 5433 (external)
+- **Port**: 5433 (internal) / 5433 (external)
 
 ---
 
@@ -207,7 +207,7 @@ DATABASE_URL=postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgre
 ## 🎯 YOUR DATABASE URL IS:
 
 ```bash
-postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 ```
 
 ### ✅ Use This For:
@@ -245,7 +245,7 @@ postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_
 
 ### ✅ Your Database URL is Correct:
 ```bash
-DATABASE_URL="postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire"
+DATABASE_URL="postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire"
 ```
 
 ### ✅ Ready For:
@@ -261,7 +261,7 @@ DATABASE_URL="postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgr
 
 ### 📋 Copy Your Database URL:
 ```bash
-postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5432/blytz_hire
+postgresql://postgres:z46fkjvmqzf7z2woihbvo9hr2yloopac@hire-postgres:5433/blytz_hire
 ```
 
 ### 🎯 Your Database is Ready!
