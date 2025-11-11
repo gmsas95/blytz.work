@@ -30,7 +30,7 @@ export default function AuthPage() {
     sendPasswordReset
   } = useAuth();
 
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Redirect if already logged in
   useEffect(() => {
