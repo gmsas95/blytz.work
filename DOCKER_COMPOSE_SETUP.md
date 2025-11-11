@@ -49,20 +49,20 @@ FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 ### 3. Start Services
 ```bash
 # Start PostgreSQL only
-docker compose -f docker-compose.postgres.yml up -d hire-postgres
+docker compose -f docker-compose.postgres.yml up -d blytz-postgres
 
 # Start all services (when backend/frontend are ready)
 docker compose -f docker-compose.postgres.yml up -d
 
 # View logs
-docker compose logs -f hire-postgres
+docker compose logs -f blytz-postgres
 ```
 
 ## 🗄️ PostgreSQL Configuration
 
-### Service: `hire-postgres`
+### Service: `blytz-postgres`
 - **Image**: postgres:15-alpine
-- **Container**: hire-postgres
+- **Container**: blytz-postgres
 - **Port**: 5432
 - **Database**: blytz_hire
 - **User**: postgres
@@ -93,7 +93,7 @@ npm run dev
 ### Production
 ```bash
 # Use Docker Compose database
-DATABASE_URL="postgresql://postgres:${DB_PASSWORD}@hire-postgres:5432/blytz_hire"
+DATABASE_URL="postgresql://postgres:${DB_PASSWORD}@blytz-postgres:5432/blytz_hire"
 
 # Start with Docker
 docker compose -f docker-compose.postgres.yml up -d
@@ -104,7 +104,7 @@ docker compose -f docker-compose.postgres.yml up -d
 ### Connect to Database
 ```bash
 # Connect via Docker
-docker exec -it hire-postgres psql -U postgres -d blytz_hire
+docker exec -it blytz-postgres psql -U postgres -d blytz_hire
 
 # Connect locally (if port exposed)
 psql -h localhost -p 5432 -U postgres -d blytz_hire
@@ -153,13 +153,13 @@ npx prisma studio
 #### 1. Database Connection Failed
 ```bash
 # Check container status
-docker ps | grep hire-postgres
+docker ps | grep blytz-postgres
 
 # Check logs
-docker logs hire-postgres
+docker logs blytz-postgres
 
 # Test connection
-docker exec -it hire-postgres pg_isready -U postgres -d blytz_hire
+docker exec -it blytz-postgres pg_isready -U postgres -d blytz_hire
 ```
 
 #### 2. Environment Variables Not Loading
@@ -190,7 +190,7 @@ ports:
 #### Database Health
 ```bash
 # Manual health check
-docker exec -it hire-postgres pg_isready -U postgres -d blytz_hire
+docker exec -it blytz-postgres pg_isready -U postgres -d blytz_hire
 
 # Automated health check
 docker compose ps
@@ -202,7 +202,7 @@ docker compose ps
 docker compose ps
 
 # View detailed health
-docker inspect hire-postgres
+docker inspect blytz-postgres
 ```
 
 ## 🚀 Production Deployment
@@ -240,7 +240,7 @@ When ready, the Docker Compose includes:
 ### Backend Service
 - **Build**: From ./backend/Dockerfile
 - **Port**: 3001
-- **Depends**: hire-postgres (healthy)
+- **Depends**: blytz-postgres (healthy)
 - **Environment**: All API keys and configuration
 
 ### Frontend Service
