@@ -1,33 +1,29 @@
+# Frontend Web App
+version: '3.8'
+
 services:
-  # Frontend Next.js App
-  frontend:
+  hire-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: blytz-frontend
+    container_name: hire-frontend
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
-      NEXT_PUBLIC_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
-      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
-      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
-      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
-      NEXT_PUBLIC_FIREBASE_APP_ID: ${FIREBASE_APP_ID}
-      PORT: 3001
-      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      FIREBASE_API_KEY: ${FIREBASE_API_KEY}
+      FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
+      FIREBASE_APP_ID: ${FIREBASE_APP_ID}
     ports:
-      - "${PORT:-3002}:3001"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      - "3000:3000"
+    depends_on:
+      - hire-postgres
     networks:
-      - blytz-hire-network
+      - blytz-network
 
 networks:
-  blytz-hire-network:
+  blytz-network:
     external: true
