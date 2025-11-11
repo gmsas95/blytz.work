@@ -2,135 +2,70 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut, isFirebaseAvailable, onAuthStateChanged } from '@/lib/firebase-real';
+import { isFirebaseAvailable } from '@/lib/firebase-v10';
 import { useAuth } from '@/components/AuthProvider';
-import { useState, useEffect } from 'react';
-import type { User } from '@/types/auth';
 
 export function Navbar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, signOut: handleSignOut } = useAuth();
 
-  const auth = getAuth();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // Get ID token to access custom claims
-          const idTokenResult = await firebaseUser.getIdTokenResult();
-          const role = idTokenResult.claims.role as 'va' | 'company' || 'va';
-          
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            role: role,
-            displayName: firebaseUser.displayName || undefined,
-          });
-        } catch (error) {
-          console.error('Error getting user role:', error);
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            role: 'va', // Default fallback
-            displayName: firebaseUser.displayName || undefined,
-          });
-        }
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    if (auth) {
-      await signOut();
+  const handleSignOutClick = async () => {
+    try {
+      await handleSignOut();
       window.location.href = '/';
+    } catch (error) {
+      console.error('Sign out error:', error);
     }
   };
 
+  // Don't show navbar on auth pages
+  if (pathname === '/auth') {
+    return null;
+  }
+
   return (
-    <nav className="border-b bg-white">
+    <nav className="bg-white shadow-md border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-primary-600">
-              VA Match
+          <div className="flex">
+            <Link href="/" className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900">BlytzHire</h1>
             </Link>
           </div>
 
-          {user && (
-            <div className="flex items-center space-x-4">
-              {user?.role === 'va' && (
-                <>
-                  <Link
-                    href="/va/profile"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/va/profile'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    My Profile
-                  </Link>
-                  <Link
-                    href="/va/matches"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/va/matches'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Matches
-                  </Link>
-                </>
-              )}
-
-              {user?.role === 'company' && (
-                <>
-                  <Link
-                    href="/company/profile"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/company/profile'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Company
-                  </Link>
-                  <Link
-                    href="/company/jobs"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/company/jobs'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Job Postings
-                  </Link>
-                  <Link
-                    href="/company/discover"
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/company/discover'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Discover VAs
-                  </Link>
-                </>
-              )}
-
-              <button
-                onClick={handleSignOut}
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900"
-              >
-                Sign Out
-              </button>
-            </div>
-          )}
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <Link
+                  href={user.role === 'company' ? '/company/profile' : '/va/profile'}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Profile
+                </Link>
+                <Link
+                  href="/contracts"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Contracts
+                </Link>
+                <button
+                  onClick={handleSignOutClick}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
