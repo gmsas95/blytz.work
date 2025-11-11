@@ -48,5 +48,13 @@ export const isFirebaseAvailable = () => {
   return typeof window !== 'undefined' && auth !== undefined;
 };
 
+// Helper for onAuthStateChanged with proper auth parameter
+export const useAuthStateListener = (callback: (user: FirebaseUser | null) => void) => {
+  if (isFirebaseAvailable()) {
+    return firebaseOnAuthStateChanged(auth, callback);
+  }
+  return () => {}; // Return empty unsubscribe function
+};
+
 // Export default for compatibility
 export default app;
