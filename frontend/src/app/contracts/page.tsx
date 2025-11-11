@@ -71,7 +71,7 @@ export default function ContractsPage() {
       setContracts(mockContracts);
     } catch (err) {
       setError('Failed to load contracts');
-      addAlert('Failed to load contracts', 'error');
+      addAlert({ message: 'Failed to load contracts', type: 'error' });
     } finally {
       setLoading(false);
     }
