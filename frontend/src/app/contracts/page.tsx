@@ -1,7 +1,6 @@
 'use client';
 
 import { AlertContainer } from "@/components/ui/Alert";
-import { useAlert } from "@/components/ui/Alert";
 import { useState, useEffect } from 'react';
 import { useAlert } from "@/components/ui/Alert";
 import { useAuth } from '@/lib/firebase';
