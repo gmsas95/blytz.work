@@ -1,32 +1,19 @@
-# Production-ready Docker Compose Configuration
+# BlytzHire Platform
+# Use specific compose files for different services:
+# PostgreSQL: docker compose -f docker-compose.postgres.yml up
+# All services: docker compose -f docker-compose.all.yml up (when ready)
+
+version: '3.8'
+
 services:
-  # PostgreSQL Database
-  hire-postgres:
-    image: postgres:15-alpine
-    container_name: hire-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: blytz_hire
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/prisma:/docker-entrypoint-initdb.d
-    networks:
-      - blytz-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d blytz_hire"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+  # Placeholder for future main compose file
+  # Individual services are in separate compose files:
+  # - docker-compose.postgres.yml (Database)
+  # - docker-compose.backend.yml (API)
+  # - docker-compose.frontend.yml (Web app)
 
 volumes:
-  postgres_data:
-    driver: local
+  # Volumes are defined in service-specific compose files
 
 networks:
-  blytz-network:
-    driver: bridge
+  # Networks are defined in service-specific compose files
