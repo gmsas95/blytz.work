@@ -107,6 +107,16 @@ services:
       - traefik.http.services.blytz-hired-frontend-yeqzcm-7-websecure.loadbalancer.server.port=3000
       - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.service=blytz-hired-frontend-yeqzcm-7-websecure
       - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.rule=Host(`hyred.blytz.app`)
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.entrypoints=web
+      - traefik.http.services.blytz-hired-frontend-yeqzcm-7-web.loadbalancer.server.port=3000
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.service=blytz-hired-frontend-yeqzcm-7-web
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.middlewares=redirect-to-https@file
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.rule=Host(`hyred.blytz.app`)
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.entrypoints=websecure
+      - traefik.http.services.blytz-hired-frontend-yeqzcm-7-websecure.loadbalancer.server.port=3000
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.service=blytz-hired-frontend-yeqzcm-7-websecure
+      - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-websecure.tls.certresolver=letsencrypt
       - traefik.docker.network=dokploy-network
       - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.rule=Host(`hyred.blytz.app`)
       - traefik.http.routers.blytz-hired-frontend-yeqzcm-7-web.entrypoints=web
