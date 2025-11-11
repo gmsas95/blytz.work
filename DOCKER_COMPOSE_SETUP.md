@@ -1,4 +1,4 @@
-# Docker Compose PostgreSQL Setup
+# PostgreSQL Docker Compose Setup
 
 ## 🎯 Overview
 
@@ -6,7 +6,7 @@ This repository includes a production-ready Docker Compose configuration for run
 
 ## 📁 Files
 
-- `docker-compose.yml` - Main Docker Compose configuration
+- `docker-compose.postgres.yml` - Main Docker Compose configuration
 - `.env.template` - Environment variable template
 - `.env` - Your actual environment variables (not tracked)
 
@@ -49,10 +49,10 @@ FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 ### 3. Start Services
 ```bash
 # Start PostgreSQL only
-docker compose up -d hire-postgres
+docker compose -f docker-compose.postgres.yml up -d hire-postgres
 
 # Start all services (when backend/frontend are ready)
-docker compose up -d
+docker compose -f docker-compose.postgres.yml up -d
 
 # View logs
 docker compose logs -f hire-postgres
@@ -96,7 +96,7 @@ npm run dev
 DATABASE_URL="postgresql://postgres:${DB_PASSWORD}@hire-postgres:5432/blytz_hire"
 
 # Start with Docker
-docker compose up -d
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
 ## 📊 Database Management
@@ -172,7 +172,7 @@ cat .env
 
 # Restart services
 docker compose down
-docker compose up -d
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
 #### 3. Port Already in Use
@@ -180,7 +180,7 @@ docker compose up -d
 # Check what's using the port
 lsof -i :5432
 
-# Change port in docker-compose.yml
+# Change port in docker-compose.postgres.yml
 ports:
   - "5433:5432"  # Use different host port
 ```
