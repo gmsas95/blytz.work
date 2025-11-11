@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, useAuthStateListener, handleSignOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-real';
+import { isFirebaseAvailable, useAuthStateListener, performSignOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-v10';
 
 interface AuthUser {
   uid: string;
