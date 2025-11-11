@@ -16,10 +16,8 @@ import { createRateLimiter } from "./utils/response.js";
 // Environment schema
 const envSchema = {
   type: "object",
-  required: ["SUPABASE_DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY"],
+  required: ["DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY"],
   properties: {
-    SUPABASE_DATABASE_URL: { type: "string" },
-    DATABASE_URL: { type: "string" },
     FIREBASE_PROJECT_ID: { type: "string" },
     FIREBASE_CLIENT_EMAIL: { type: "string" },
     FIREBASE_PRIVATE_KEY: { type: "string" },

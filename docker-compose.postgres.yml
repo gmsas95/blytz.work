@@ -35,7 +35,6 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: "postgresql://postgres:${DB_PASSWORD}@hire-postgres:5432/blytz_hire"
-      SUPABASE_DATABASE_URL: "postgresql://postgres:${DB_PASSWORD}@hire-postgres:5432/blytz_hire"
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
