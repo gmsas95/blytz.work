@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertContainer } from '@/components/ui/Alert';
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -15,7 +15,9 @@ const mockRecommendations = [
     rating: 4.8,
     skills: ["Calendar Management", "Email", "Research"],
     languages: ["English", "Mandarin"],
-    description: "Professional executive assistant with expertise in C-suite support."
+    description: "Professional executive assistant with expertise in C-suite support.",
+    availability: "Full-time",
+    timezone: "GMT+8"
   },
   {
     id: 2,
@@ -26,7 +28,9 @@ const mockRecommendations = [
     rating: 4.9,
     skills: ["Content Creation", "Analytics", "SEO"],
     languages: ["English", "Spanish"],
-    description: "Creative social media specialist with proven track record."
+    description: "Creative social media specialist with proven track record.",
+    availability: "Part-time",
+    timezone: "GMT-6"
   }
 ];
 
@@ -35,14 +39,22 @@ export default function DiscoverPage() {
   const [recommendations, setRecommendations] = useState(mockRecommendations);
   const [savedVAs, setSavedVAs] = useState<number[]>([]);
 
-  const currentVA = recommendations?.[currentIndex];
+  const currentVA = recommendations[currentIndex];
 
-  const handleSwipe = (direction: string) => {
-    if (direction === "right") {
-      setSavedVAs([...savedVAs, currentVA?.id || 0]);
+  const handleSwipe = (direction: 'left' | 'right') => {
+    if (direction === 'right') {
+      setSavedVAs([...savedVAs, currentVA.id]);
+      // Show success notification
+      if ((window as any).addAlert) {
+        (window as any).addAlert({
+          type: 'success',
+          title: 'VA Saved',
+          message: `${currentVA.name} has been saved to your favorites`
+        });
+      }
     }
     
-    if (currentIndex < (recommendations?.length || 1) - 1) {
+    if (currentIndex < recommendations.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
   };
@@ -50,20 +62,26 @@ export default function DiscoverPage() {
   const toggleSave = (vaId: number) => {
     if (savedVAs.includes(vaId)) {
       setSavedVAs(savedVAs.filter(id => id !== vaId));
+      // Show remove notification
+      if ((window as any).addAlert) {
+        (window as any).addAlert({
+          type: 'info',
+          title: 'VA Removed',
+          message: `Removed from favorites`
+        });
+      }
     } else {
       setSavedVAs([...savedVAs, vaId]);
+      // Show save notification
+      if ((window as any).addAlert) {
+        (window as any).addAlert({
+          type: 'success',
+          title: 'VA Saved',
+          message: `${currentVA.name} added to favorites`
+        });
+      }
     }
   };
-
-  if (!currentVA) {
-    return (
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Loading...</h1>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -137,7 +155,7 @@ export default function DiscoverPage() {
             <button
               onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
               disabled={currentIndex === 0}
-              className="btn-secondary flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               Previous
@@ -148,9 +166,9 @@ export default function DiscoverPage() {
             </span>
 
             <button
-              onClick={() => setCurrentIndex(Math.min((recommendations?.length || 1) - 1, currentIndex + 1))}
-              disabled={currentIndex === (recommendations?.length || 1) - 1}
-              className="btn-secondary flex items-center gap-2"
+              onClick={() => setCurrentIndex(Math.min(recommendations.length - 1, currentIndex + 1))}
+              disabled={currentIndex === recommendations.length - 1}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
               <ChevronRight className="w-4 h-4" />
