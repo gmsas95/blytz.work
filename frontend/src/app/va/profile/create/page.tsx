@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Complete VA Profile Creation Page
 'use client';
 
@@ -52,7 +53,7 @@ export default function CreateVAProfilePage() {
     }>
   });
   
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Redirect if not logged in or not VA
   useEffect(() => {

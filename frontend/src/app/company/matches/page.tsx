@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 export default function MatchesPage() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   const { data: matches, isLoading, error } = useQuery({
     queryKey: ['matches'],

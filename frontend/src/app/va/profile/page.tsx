@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Enhanced VA Profile Management Page
 'use client';
 
@@ -70,7 +71,7 @@ export default function VAProfilePage() {
   const [editData, setEditData] = useState<Partial<VAProfile>>({});
   const [uploading, setUploading] = useState<string | null>(null);
   
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Load profile
   useEffect(() => {

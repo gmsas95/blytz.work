@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Payment History - View all payments, transactions, and financial summary
 'use client';
 
@@ -88,7 +89,7 @@ export default function PaymentsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Load payments and summary
   useEffect(() => {

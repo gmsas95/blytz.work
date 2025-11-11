@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Job Marketplace - Discover and Apply for Jobs
 'use client';
 
@@ -77,7 +78,7 @@ export default function JobMarketplacePage() {
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
 
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Load marketplace data
   useEffect(() => {

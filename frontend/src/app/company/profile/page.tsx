@@ -1,3 +1,4 @@
+import { AlertContainer } from "@/components/ui/Alert";
 // Enhanced Company Profile Management Page
 'use client';
 
@@ -79,7 +80,7 @@ export default function CompanyProfilePage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'jobs' | 'analytics'>('profile');
   
-  const { addAlert, AlertContainer } = useAlert();
+  const { addAlert } = useAlert();
 
   // Load profile
   useEffect(() => {
