@@ -302,3 +302,101 @@ JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters
 POSTGRES_DB=blytz_hire
 POSTGRES_USER=postgres
 ```
+
+## 🚨 FRONTEND DEPLOYMENT TROUBLESHOOTING
+
+### Issue: Frontend Build Fails with JSX Errors
+If deployment fails with "Expression expected" or JSX syntax errors:
+
+#### Quick Fix (5 minutes):
+1. **Check TypeScript Compilation:**
+   ```bash
+   cd frontend
+   npx tsc --noEmit --skipLibCheck
+   ```
+
+2. **Fix Common JSX Issues:**
+   - Missing closing tags: `</div>`
+   - Fragment mismatches: `<>` vs `</>`
+   - Variable typos: `recommendations` vs `recommendations`
+
+3. **Test Build Locally:**
+   ```bash
+   npm run build
+   ```
+
+4. **If Build Fails, Create Minimal Page:**
+   ```tsx
+   export default function Page() {
+     return (
+       <div>
+         <h1>Page Under Construction</h1>
+         <p>Full functionality coming soon.</p>
+       </div>
+     );
+   }
+   ```
+
+### Common Frontend Build Errors:
+
+#### 1. JSX Syntax Errors
+```
+Error: Expression expected
+./src/app/company/discover/page.tsx:206:9
+```
+**Solution**: Check for missing closing tags around line 206
+
+#### 2. Fragment Mismatches
+```
+Error: JSX fragment has no corresponding closing tag
+```
+**Solution**: Ensure `<>` has matching `</>`
+
+#### 3. Variable Name Typos
+```
+Error: recommendations is not defined
+```
+**Solution**: Check variable spelling and imports
+
+#### 4. Missing Environment Variables
+```
+Warning: The "FIREBASE_MESSAGING_SENDER_ID" variable is not set
+```
+**Solution**: Add missing environment variables in Dokploy
+
+### Frontend Environment Variables:
+```bash
+# Frontend Configuration (Required)
+NEXT_PUBLIC_API_URL=http://your-domain.com:3001
+NEXT_PUBLIC_APP_URL=http://your-domain.com
+
+# Firebase Configuration (Required)
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+FIREBASE_PROJECT_ID=your_firebase_project_id
+
+# Optional Firebase Variables
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
+
+# Stripe Configuration (Required)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+```
+
+### Frontend Docker Compose:
+```yaml
+services:
+  hire-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      FIREBASE_API_KEY: ${FIREBASE_API_KEY}
+      FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+```
