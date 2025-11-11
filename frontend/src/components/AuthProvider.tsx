@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, onAuthStateChanged, signOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-real';
+import { isFirebaseAvailable, useAuthStateListener, signOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-real';
 
 interface AuthUser {
   uid: string;
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = useAuthStateListener(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser) {
           // Get ID token to access custom claims
