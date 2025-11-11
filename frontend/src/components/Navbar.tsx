@@ -13,7 +13,7 @@ export function Navbar() {
   const auth = getAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
           // Get ID token to access custom claims
