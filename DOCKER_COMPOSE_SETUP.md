@@ -400,3 +400,53 @@ services:
       FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
 ```
+
+## 🚀 UPDATED DOCKER COMPOSE FILES
+
+### Complete Service Configuration:
+
+#### docker-compose.postgres.yml (PostgreSQL + Backend)
+```bash
+# Start database and API
+docker compose -f docker-compose.postgres.yml up -d
+
+# Services:
+- hire-postgres: PostgreSQL on port 5433
+- backend: API on port 3001
+```
+
+#### docker-compose.frontend.yml (Frontend Only)
+```bash
+# Start frontend web app
+docker compose -f docker-compose.frontend.yml up -d
+
+# Services:
+- frontend: Web app on port 3000
+```
+
+#### docker-compose.all.yml (Complete Platform)
+```bash
+# Start all services
+docker compose -f docker-compose.all.yml up -d
+
+# Services:
+- hire-postgres: PostgreSQL on port 5433
+- backend: API on port 3001
+- frontend: Web app on port 3000
+```
+
+### Service Names:
+- PostgreSQL: `hire-postgres`
+- Backend API: `backend`
+- Frontend Web App: `frontend`
+
+### Network:
+- All services use `blytz-network`
+- Services can communicate internally
+- External access via mapped ports
+
+### Deployment Ready:
+- Individual services can be deployed
+- All services can be deployed together
+- Environment variables documented
+- Health checks configured
