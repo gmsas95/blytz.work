@@ -1,9 +1,9 @@
 # Production-ready Docker Compose Configuration
 services:
   # PostgreSQL Database
-  blytz-postgres:
+  hire-postgres:
     image: postgres:15-alpine
-    container_name: blytz-postgres
+    container_name: hire-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: blytz_hire
