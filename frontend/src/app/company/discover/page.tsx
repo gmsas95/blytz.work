@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { AlertContainer } from '@/components/ui/Alert';
 import { useAlert } from '@/components/ui/Alert';
