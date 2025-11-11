@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, useAuthStateListener, performSignOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-v10';
+import { isFirebaseAvailable, useAuthStateListener, performSignOut as signOutFunction, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-v10';
 
 interface AuthUser {
   uid: string;
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const performSignOut = async (): Promise<void> => {
     try {
-      await handleSignOut();
+      await signOutFunction();
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
