@@ -56,5 +56,13 @@ export const useAuthStateListener = (callback: (user: FirebaseUser | null) => vo
   return () => {}; // Return empty unsubscribe function
 };
 
+// Helper for signOut with proper auth parameter
+export const handleSignOut = async () => {
+  if (isFirebaseAvailable() && auth) {
+    return await signOut(auth);
+  }
+  throw new Error('Firebase is not available');
+};
+
 // Export default for compatibility
 export default app;

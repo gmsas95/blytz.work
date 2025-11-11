@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, useAuthStateListener, signOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-real';
+import { isFirebaseAvailable, useAuthStateListener, handleSignOut, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-real';
 
 interface AuthUser {
   uid: string;
@@ -114,13 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     throw new Error('Password reset not implemented');
   };
 
-  const handleSignOut = async (): Promise<void> => {
-    if (!isFirebaseAvailable()) {
-      throw new Error('Firebase is not available');
-    }
-    
+  const performSignOut = async (): Promise<void> => {
     try {
-      await signOut();
+      await handleSignOut();
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
@@ -137,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     createUserWithEmailAndPassword: createUserWithEmailPassword,
     sendEmailVerification,
     sendPasswordReset: sendPasswordResetEmail,
-    signOut: handleSignOut,
+    signOut: performSignOut,
   };
 
   return (
