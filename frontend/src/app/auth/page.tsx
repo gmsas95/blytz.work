@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/firebase';
 import { ChevronLeft, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAlert } from '@/components/ui/Alert';
+import { AlertContainer } from '@/components/ui/Alert';
 
 type AuthMode = 'signin' | 'signup' | 'forgot';
 type UserRole = 'company' | 'va';
@@ -17,26 +16,11 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  const { user, addAlert } = useAlert();
 
-  // Mock user for development (remove this when real auth is connected)
-  const mockUser = {
-    uid: 'dev-user',
-    email: email || 'dev@example.com',
-    role: role,
-    profileComplete: false,
-    emailVerified: true
+  // Simple alert function for now
+  const addAlert = (message: string, type: 'success' | 'error' = 'success') => {
+    console.log(`${type}: ${message}`);
   };
-
-  // Redirect if already logged in
-  useEffect(() => {
-    const currentUser = user || mockUser;
-    if (currentUser && currentUser.emailVerified) {
-      const redirectUrl = currentUser.role === 'company' ? '/company/jobs' : '/va/profile';
-      window.location.href = redirectUrl;
-    }
-  }, [user, email, role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,21 +42,19 @@ export default function AuthPage() {
     }
 
     try {
+      // Mock authentication for now
+      addAlert('Authentication successful!', 'success');
+      
       if (mode === 'signin') {
-        // await signInWithEmailAndPassword(email, password);
-        addAlert({ message: 'Signed in successfully!', type: 'success' });
         window.location.href = '/company/jobs';
       } else if (mode === 'signup') {
-        // await createUserWithEmailAndPassword(email, password, role);
-        addAlert({ message: 'Account created successfully!', type: 'success' });
         window.location.href = '/va/profile';
       } else if (mode === 'forgot') {
-        // await sendPasswordReset(email);
-        addAlert({ message: 'Password reset email sent!', type: 'success' });
+        addAlert('Password reset email sent!', 'success');
         setMode('signin');
       }
     } catch (error) {
-      addAlert({ message: 'Authentication failed', type: 'error' });
+      addAlert('Authentication failed', 'error');
       setErrors({ general: 'Authentication failed' });
     } finally {
       setLoading(false);
