@@ -111,3 +111,81 @@ Then your deployment should succeed with:
 - ✅ Container starts without errors
 - ✅ Environment variables loaded
 - ✅ Web app accessible on port 3000
+
+## 🎯 CRITICAL FRONTEND ENVIRONMENT VARIABLES
+
+### REQUIRED FOR DEPLOYMENT (Add in Dokploy):
+
+#### Core Application Variables
+```bash
+Key: NEXT_PUBLIC_APP_URL
+Value: http://72.60.236.89:3000
+Secret: No
+
+Key: NEXT_PUBLIC_API_URL
+Value: http://72.60.236.89:3001
+Secret: No
+```
+
+#### Firebase Configuration
+```bash
+Key: FIREBASE_API_KEY
+Value: AIzaSyDy63cQFqr6DT7_y9pmhgASd8NX5GW0oio
+Secret: No
+
+Key: FIREBASE_AUTH_DOMAIN
+Value: blytz-hyred.firebaseapp.com
+Secret: No
+
+Key: FIREBASE_PROJECT_ID
+Value: blytz-hyred
+Secret: No
+
+Key: FIREBASE_MESSAGING_SENDER_ID
+Value: 100201094663
+Secret: No
+
+Key: FIREBASE_APP_ID
+Value: [Get from Firebase Project Settings]
+Secret: No
+```
+
+#### Stripe Configuration
+```bash
+Key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+Value: pk_test_51SRuCWFUqEv3bsXBHpdAWsMnHe3zZc4IWgjR7vZEs9OXYm5XYFmhB9kqYilObPUrgp0cTILAeVtsCHX7R42irY9Q00QEJDpcWU
+Secret: No
+```
+
+### 🔥 DEPLOYMENT SUCCESS REQUIREMENTS:
+
+#### 1. Alert Component Path Resolution
+```
+✅ CORRECT: import { AlertContainer } from '@/components/ui/Alert'
+❌ WRONG:  import { AlertContainer } from '@/components/Alert'
+```
+
+#### 2. Environment Variable Syntax
+```
+✅ CORRECT: NEXT_PUBLIC_* variables for browser access
+❌ WRONG: Missing NEXT_PUBLIC_ prefix
+```
+
+#### 3. Build Process
+```
+✅ WORKING: Next.js 16.0.1 with Turbopack
+✅ WORKING: TypeScript with strict checks
+✅ WORKING: Tailwind CSS styling
+✅ WORKING: Lucide React icons
+```
+
+### 🚨 DEPLOYMENT TROUBLESHOOTING:
+
+#### Error: Module not found '@/components/Alert'
+**Solution**: Use correct path '@/components/ui/Alert'
+
+#### Error: Environment variable not set
+**Solution**: Add NEXT_PUBLIC_APP_URL and NEXT_PUBLIC_API_URL in Dokploy
+
+#### Error: Build failed with Turbopack
+**Solution**: Check JSX syntax and null checks
