@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
-import { authService as auth } from '@/lib/firebase';
+import { getAuth, signOut, onAuthStateChanged } from '@/lib/firebase';
 import { useState, useEffect } from 'react';
 import type { User } from '@/types/auth';
 
@@ -11,9 +10,9 @@ export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    if (!auth) return;
+  const auth = getAuth();
 
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
