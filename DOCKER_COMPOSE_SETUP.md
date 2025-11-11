@@ -268,3 +268,37 @@ For issues with Docker Compose setup:
 
 ---
 *Last Updated: $(date '+%Y-%m-%d')*
+
+## 🚨 DEPLOYMENT TROUBLESHOOTING
+
+### Issue: DB_PASSWORD Not Set
+If deployment fails with "POSTGRES_PASSWORD is not specified":
+
+#### Quick Fix (1 minute):
+1. **Add Environment Variable in Dokploy:**
+   - Key: `DB_PASSWORD`
+   - Value: `z46fkjvmqzf7z2woihbvo9hr2yloopac`
+   - Secret: Yes
+
+2. **Trigger Redeployment**
+3. **Monitor logs**: Should show "PostgreSQL init process complete"
+
+#### Alternative - Use Default Password:
+```yaml
+# In docker-compose.postgres.yml
+POSTGRES_PASSWORD: z46fkjvmqzf7z2woihbvo9hr2yloopac  # Replace with your password
+```
+
+### Required Environment Variables for Deployment:
+```bash
+# PostgreSQL (REQUIRED)
+DB_PASSWORD=your_secure_password
+
+# Application (REQUIRED for production)
+NODE_ENV=production
+JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters
+
+# Optional Configuration
+POSTGRES_DB=blytz_hire
+POSTGRES_USER=postgres
+```
