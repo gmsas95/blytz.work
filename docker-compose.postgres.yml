@@ -1,16 +1,16 @@
 # Production-ready Docker Compose Configuration
 services:
   # PostgreSQL Database
-  hire-postgres:
+  blytz-postgres:
     image: postgres:15-alpine
-    container_name: hire-postgres
+    container_name: blytz-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: blytz_hire
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
