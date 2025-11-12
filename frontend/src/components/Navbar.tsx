@@ -1,73 +1,203 @@
 'use client';
 
+import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isFirebaseAvailable } from '@/lib/firebase-v10';
+import { Disclosure } from '@headlessui/react';
+import { 
+  Bars3Icon,
+  XMarkIcon,
+  ArrowRightOnRectangleIcon,
+  DocumentTextIcon,
+  SparklesIcon,
+  BuildingOfficeIcon,
+  BriefcaseIcon,
+} from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/AuthProvider';
+import { motion } from 'framer-motion';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, signOut: handleSignOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleSignOutClick = async () => {
+  const handleSignOut = async () => {
     try {
-      await handleSignOut();
+      await signOut();
       window.location.href = '/';
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
-  // Don't show navbar on auth pages
+  // Don't show navbar on auth page
   if (pathname === '/auth') {
     return null;
   }
 
+  const navigation = [
+    { name: 'Discover', href: '/company/discover', icon: SparklesIcon, role: 'company' },
+    { name: 'Jobs', href: '/company/jobs', icon: BriefcaseIcon, role: 'company' },
+    { name: 'Matches', href: '/va/matches', icon: SparklesIcon, role: 'va' },
+    { name: 'Contracts', href: '/contracts', icon: DocumentTextIcon, role: 'all' },
+  ];
+
   return (
-    <nav className="bg-white shadow-md border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link href="/" className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">BlytzHire</h1>
-            </Link>
+    <Disclosure as="nav" className="bg-white shadow-md sticky top-0 z-40">
+      {({ open }) => (
+        <>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 justify-between">
+              {/* Logo */}
+              <div className="flex">
+                <Link href="/" className="flex items-center group">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <span className="text-white font-bold text-sm">B</span>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold text-gray-900 leading-none">BlytzHire</h1>
+                      <p className="text-xs text-gray-500 leading-none">VA Marketplace</p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Desktop Navigation */}
+              <div className="hidden sm:flex sm:items-center sm:space-x-1">
+                {user && navigation.map((item) => {
+                  const isActive = pathname === item.href;
+                  if (item.role !== 'all' && item.role !== user.role) return null;
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Right side buttons */}
+              <div className="hidden sm:flex sm:items-center sm:space-x-3">
+                {user ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">
+                          {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {user.displayName || user.email?.split('@')[0]}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  >
+                    Get Started
+                  </Link>
+                )}
+              </div>
+
+              {/* Mobile menu button */}
+              <div className="sm:hidden flex items-center">
+                {user ? (
+                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center mr-3">
+                    <span className="text-white text-xs font-medium">
+                      {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-3"
+                  >
+                    Get Started
+                  </Link>
+                )}
+                <Disclosure.Button 
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  onClick={() => setMobileMenuOpen(!open)}
+                >
+                  <span className="sr-only">Open main menu</span>
+                  {open ? (
+                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                  ) : (
+                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                  )}
+                </Disclosure.Button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                <Link
-                  href={user.role === 'company' ? '/company/profile' : '/va/profile'}
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Profile
-                </Link>
-                <Link
-                  href="/contracts"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Contracts
-                </Link>
-                <button
-                  onClick={handleSignOutClick}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
-                >
-                  Sign In
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+          {/* Mobile menu panel */}
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="sm:hidden border-t border-gray-200 bg-white"
+            >
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {user && navigation.map((item) => {
+                  const isActive = pathname === item.href;
+                  if (item.role !== 'all' && item.role !== user.role) return null;
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`block rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+              
+              {user && (
+                <div className="pt-4 pb-3 border-t border-gray-200">
+                  <div className="px-2">
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                        <span>Sign Out</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </>
+      )}
+    </Disclosure>
   );
 }
