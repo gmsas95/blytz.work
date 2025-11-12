@@ -27,7 +27,7 @@ let auth: ReturnType<typeof getAuth> | null = null;
 let firebaseInitialized = false;
 
 const initializeFirebase = () => {
-  if (firebaseInitialized || !typeof window !== 'undefined' || !firebaseConfig.apiKey) {
+  if (firebaseInitialized || typeof window === 'undefined' || !firebaseConfig.apiKey) {
     return auth;
   }
 
@@ -89,7 +89,7 @@ export type { FirebaseUser };
 
 // Check Firebase availability
 export const isFirebaseAvailable = () => {
-  // Try to initialize Firebase if not already done
+  // Try to initialize Firebase if not already done and in browser
   if (!firebaseInitialized && typeof window !== 'undefined') {
     initializeFirebase();
   }
