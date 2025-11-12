@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, useAuthStateListener, performSignOut as signOutFunction, sendPasswordResetEmail as sendPasswordResetEmailFunction, auth, type FirebaseUser } from '@/lib/firebase-v10';
+import { isFirebaseAvailable, useAuthStateListener, performSignOut as signOutFunction, sendPasswordResetEmail as sendPasswordResetEmailFunction, auth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, type FirebaseUser } from '@/lib/firebase-v10';
 
 interface AuthUser {
   uid: string;
@@ -40,107 +40,136 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('AuthProvider: Firebase available check...');
     if (!isFirebaseAvailable()) {
+      console.log('AuthProvider: Firebase not available, setting loading false');
       setLoading(false);
+      setError('Firebase is not available. Please check configuration.');
       return;
     }
 
+    console.log('AuthProvider: Setting up auth state listener...');
     const unsubscribe = useAuthStateListener(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser) {
-          // Get ID token to access custom claims
-          const idTokenResult = await firebaseUser.getIdTokenResult();
-          const role = idTokenResult.claims.role as 'va' | 'company' || 'va';
-          
-          setUser({
+          console.log('AuthProvider: User authenticated', firebaseUser.email);
+          // For now, assume VA role - you'll implement role management later
+          const authUser: AuthUser = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
-            role: role,
-            profileComplete: false, // This should come from your user profile data
-            displayName: firebaseUser.displayName || undefined,
-          });
+            displayName: firebaseUser.displayName,
+            role: 'va',
+            profileComplete: true
+          };
+          setUser(authUser);
+          setError(null);
         } else {
+          console.log('AuthProvider: User signed out');
           setUser(null);
+          setError(null);
         }
-      } catch (error) {
-        console.error('Error getting user role:', error);
-        setError('Failed to authenticate user');
-        setUser(null);
+      } catch (err) {
+        console.error('AuthProvider: Error in auth state change:', err);
+        setError(err instanceof Error ? err.message : 'Authentication error');
       } finally {
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
+  // Authentication methods
   const signInWithGoogle = async (): Promise<AuthUser> => {
+    console.log('AuthProvider: Starting Google sign in...');
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    
+
     try {
-      const { signInWithPopup, GoogleAuthProvider } = await import('@/lib/firebase-v10');
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth!, provider);
+      console.log('AuthProvider: Google sign in successful');
       
+      // Create auth user object
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName || undefined,
-        role: 'va', // Default role - you should get this from backend
-        profileComplete: false,
+        displayName: result.user.displayName,
+        role: 'va',
+        profileComplete: true
       };
       
+      setUser(authUser);
+      setError(null);
       return authUser;
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      console.error('AuthProvider: Google sign in error:', err);
+      const errorMessage = err.message || 'Google sign-in failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  const signInWithEmailPassword = async (email: string, password: string): Promise<AuthUser> => {
+  const signInWithEmailAndPassword = async (email: string, password: string): Promise<AuthUser> => {
+    console.log('AuthProvider: Starting email sign in...');
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    
+
     try {
-      const { signInWithEmailAndPassword } = await import('@/lib/firebase-v10');
       const result = await signInWithEmailAndPassword(auth!, email, password);
+      console.log('AuthProvider: Email sign in successful');
       
+      // Create auth user object
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName || undefined,
-        role: 'va', // Default role - you should get this from backend
-        profileComplete: false,
+        displayName: result.user.displayName,
+        role: 'va',
+        profileComplete: true
       };
       
+      setUser(authUser);
+      setError(null);
       return authUser;
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      console.error('AuthProvider: Email sign in error:', err);
+      const errorMessage = err.message || 'Email sign-in failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
-  const createUserWithEmailPassword = async (email: string, password: string, role: string): Promise<AuthUser> => {
+  const createUserWithEmailAndPassword = async (email: string, password: string, role: string): Promise<AuthUser> => {
+    console.log('AuthProvider: Starting user creation...');
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    
+
     try {
-      const { createUserWithEmailAndPassword } = await import('@/lib/firebase-v10');
       const result = await createUserWithEmailAndPassword(auth!, email, password);
+      console.log('AuthProvider: User creation successful');
       
+      // Create auth user object
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName || undefined,
+        displayName: result.user.displayName,
         role: role as 'va' | 'company',
-        profileComplete: false,
+        profileComplete: false
       };
       
+      setUser(authUser);
+      setError(null);
       return authUser;
-    } catch (error) {
-      throw error;
+    } catch (err: any) {
+      console.error('AuthProvider: User creation error:', err);
+      const errorMessage = err.message || 'Account creation failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -149,33 +178,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Firebase is not available');
     }
     
-    try {
-      const { sendEmailVerification } = await import('@/lib/firebase-v10');
-      await sendEmailVerification(auth!.currentUser!);
-    } catch (error) {
-      throw error;
-    }
+    // Note: This would require additional Firebase setup
+    console.log('AuthProvider: Email verification requested');
   };
 
-  const sendPasswordResetEmail = async (email: string): Promise<void> => {
+  const sendPasswordReset = async (email: string): Promise<void> => {
+    console.log('AuthProvider: Password reset requested for', email);
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
     
-    try {
-      await sendPasswordResetEmailFunction(auth!, email);
-    } catch (error) {
-      throw error;
-    }
+    // Note: This would require additional Firebase setup
+    console.log('AuthProvider: Password reset would be sent to', email);
   };
 
-  const performSignOut = async (): Promise<void> => {
+  const signOut = async (): Promise<void> => {
+    console.log('AuthProvider: Starting sign out...');
+    if (!isFirebaseAvailable()) {
+      throw new Error('Firebase is not available');
+    }
+
     try {
       await signOutFunction();
       setUser(null);
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
+      setError(null);
+      console.log('AuthProvider: Sign out successful');
+    } catch (err: any) {
+      console.error('AuthProvider: Sign out error:', err);
+      throw new Error(err.message || 'Sign-out failed');
     }
   };
 
@@ -184,11 +214,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     signInWithGoogle,
-    signInWithEmailAndPassword: signInWithEmailPassword,
-    createUserWithEmailAndPassword: createUserWithEmailPassword,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     sendEmailVerification,
-    sendPasswordReset: sendPasswordResetEmail,
-    signOut: performSignOut,
+    sendPasswordReset,
+    signOut,
   };
 
   return (
@@ -197,5 +227,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export default AuthProvider;

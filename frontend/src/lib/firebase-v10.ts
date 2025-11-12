@@ -13,14 +13,30 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
 };
 
+// Debug logging
+console.log('Firebase config:', {
+  apiKey: firebaseConfig.apiKey ? 'SET' : 'NOT_SET',
+  authDomain: firebaseConfig.authDomain ? 'SET' : 'NOT_SET',
+  projectId: firebaseConfig.projectId ? 'SET' : 'NOT_SET',
+  window: typeof window !== 'undefined' ? 'BROWSER' : 'SERVER',
+});
+
 // Initialize Firebase
 let app: ReturnType<typeof initializeApp> | null = null;
 let auth: ReturnType<typeof getAuth> | null = null;
 
 try {
-  if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
+  if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'placeholder_key') {
+    console.log('Initializing Firebase with config...');
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    console.log('Firebase initialized successfully');
+  } else {
+    console.log('Firebase not initialized:', {
+      window: typeof window,
+      apiKey: firebaseConfig.apiKey,
+      isPlaceholder: firebaseConfig.apiKey === 'placeholder_key'
+    });
   }
 } catch (error) {
   console.error('Firebase initialization error:', error);
@@ -29,11 +45,13 @@ try {
 // Export auth instance directly - not wrappers
 export { auth };
 
-// Export individual functions that work with the auth instance
+// Export individual functions that work with auth instance
 export const useAuthStateListener = (callback: (user: FirebaseUser | null) => void) => {
   if (!auth) {
+    console.log('Auth not available, returning empty unsubscribe');
     return () => {}; // Return empty unsubscribe function
   }
+  console.log('Setting up auth state listener');
   return onAuthStateChanged(auth, callback);
 };
 
@@ -59,7 +77,12 @@ export type { FirebaseUser };
 
 // Helper function to check if Firebase is available
 export const isFirebaseAvailable = () => {
-  return typeof window !== 'undefined' && auth !== null;
+  const available = typeof window !== 'undefined' && auth !== null;
+  console.log('Firebase availability check:', available, {
+    window: typeof window,
+    auth: auth !== null
+  });
+  return available;
 };
 
 // Export default for compatibility
