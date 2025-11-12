@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isFirebaseAvailable, useAuthStateListener, performSignOut as signOutFunction, sendPasswordResetEmail, type FirebaseUser } from '@/lib/firebase-v10';
+import { isFirebaseAvailable, useAuthStateListener, performSignOut as signOutFunction, sendPasswordResetEmail as sendPasswordResetEmailFunction, auth, type FirebaseUser } from '@/lib/firebase-v10';
 
 interface AuthUser {
   uid: string;
@@ -161,8 +161,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    // Implement password reset here
-    throw new Error('Password reset not implemented');
+    
+    try {
+      await sendPasswordResetEmailFunction(auth!, email);
+    } catch (error) {
+      throw error;
+    }
   };
 
   const performSignOut = async (): Promise<void> => {
