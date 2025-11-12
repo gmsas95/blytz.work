@@ -6,13 +6,15 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
-  RocketLaunchIcon,
-  SparklesIcon,
-  ShieldCheckIcon,
-  CurrencyDollarIcon,
   ArrowRightIcon,
+  PlayIcon,
   CheckCircleIcon,
   StarIcon,
+  SparklesIcon,
+  ShieldCheckIcon,
+  RocketLaunchIcon,
+  UsersIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
@@ -20,213 +22,281 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push(user.role === 'company' ? '/company/discover' : '/va/matches');
-      }
+    if (!loading && user) {
+      router.push(user.role === 'company' ? '/company/discover' : '/va/matches');
     }
   }, [user, loading, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"
-          />
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="h-12 w-12 border-4 border-primary-600 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
+  const features = [
+    {
+      icon: ShieldCheckIcon,
+      title: 'Vetted Professionals',
+      description: 'All VAs undergo rigorous screening and verification process to ensure quality and reliability.',
+      color: 'primary'
+    },
+    {
+      icon: CurrencyDollarIcon,
+      title: 'Transparent Pricing',
+      description: 'Fair pricing with $29.99 per successful connection. No hidden fees or subscriptions.',
+      color: 'success'
+    },
+    {
+      icon: RocketLaunchIcon,
+      title: 'Quick Matching',
+      description: 'Our smart algorithm matches you with qualified VAs in minutes, not weeks.',
+      color: 'warning'
+    }
+  ];
+
+  const testimonials = [
+    {
+      name: 'Sarah Johnson',
+      role: 'CEO, TechStart',
+      content: 'Found an amazing VA within 24 hours. The quality of candidates is outstanding!',
+      rating: 5
+    },
+    {
+      name: 'Mike Chen',
+      role: 'Founder, DesignHub',
+      content: 'BlytzHire transformed how we hire remote talent. Highly recommend!',
+      rating: 5
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
-            <div className="lg:col-span-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 mb-6">
-                  <SparklesIcon className="h-4 w-4 mr-1" />
-                  Trusted by 500+ companies
-                </div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="relative container-modern pt-20 pb-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center badge badge-success mb-6">
+                <SparklesIcon className="h-4 w-4 mr-2" />
+                Trusted by 500+ companies
+              </div>
+              
+              <h1 className="text-display mb-6">
+                <span className="block text-gray-900">Hire World-Class</span>
+                <span className="gradient-text block">Virtual Assistants</span>
+              </h1>
+              
+              <p className="text-body text-lg mb-8 max-w-lg">
+                Connect with pre-vetted VAs from around the world. Scale your business with top talent in days, not months.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <Link
+                  href="/auth"
+                  className="btn-primary group"
+                >
+                  Get Started
+                  <ArrowRightIcon className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
                 
-                <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block">Hire Professional</span>
-                  <span className="block text-blue-600">Virtual Assistants</span>
-                </h1>
-                
-                <p className="mt-6 text-lg text-gray-600 max-w-2xl">
-                  Connect with pre-vetted VAs from around the world. Find skilled professionals for your business needs in minutes, not weeks.
-                </p>
-                
-                <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href="/auth"
-                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md"
-                  >
-                    Get Started
-                    <ArrowRightIcon className="ml-2 h-5 w-5" />
-                  </Link>
-                  
-                  <button className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <span className="flex items-center">
-                      <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                      </svg>
-                      Watch Demo
-                    </span>
-                  </button>
-                </div>
+                <button className="btn-outline group">
+                  <PlayIcon className="h-4 w-4 mr-2" />
+                  Watch Demo
+                </button>
+              </div>
 
-                {/* Social Proof */}
-                <div className="mt-8 flex items-center space-x-6">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <StarIcon key={i} className="h-5 w-5 text-yellow-400" fill="currentColor" />
-                    ))}
-                    <span className="ml-2 text-sm font-medium text-gray-900">4.9/5</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">2,000+</span> successful hires
-                  </div>
+              <div className="flex items-center gap-8">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <StarIcon key={i} className="h-5 w-5 text-amber-400" fill="currentColor" />
+                  ))}
+                  <span className="ml-2 font-semibold text-gray-900">4.9/5</span>
                 </div>
-              </motion.div>
-            </div>
+                <div className="text-gray-600">
+                  <span className="font-semibold text-gray-900">2,000+</span> successful hires
+                </div>
+              </div>
+            </motion.div>
 
-            <div className="lg:col-span-6 mt-12 lg:mt-0">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="relative"
-              >
-                <div className="relative mx-auto w-full max-w-lg">
-                  {/* Floating Elements */}
-                  <div className="absolute -top-4 -left-4 bg-white rounded-lg shadow-md p-3 flex items-center space-x-2 animate-pulse">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircleIcon className="h-4 w-4 text-green-600" />
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative">
+                <div className="absolute -top-4 -left-4 bg-white rounded-xl shadow-md p-4 card-hover animate-float">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-success-100 flex items-center justify-center">
+                      <CheckCircleIcon className="h-5 w-5 text-success-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-900">VA Matched</p>
-                      <p className="text-xs text-gray-500">2 min ago</p>
+                      <p className="text-sm font-medium text-gray-900">New VA Match</p>
+                      <p className="text-xs text-gray-500">Just now</p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Main Image */}
-                  <div className="relative overflow-hidden rounded-2xl shadow-lg border border-gray-100">
-                    <img
-                      className="w-full h-auto"
-                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                      alt="Remote work setup with professional virtual assistant"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                <div className="relative rounded-2xl overflow-hidden shadow-strong border border-gray-100">
+                  <img
+                    src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    alt="Professional virtual assistant working"
+                    className="w-full h-auto"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                </div>
+
+                <div className="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-md p-4 card-hover animate-float-delayed">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                      <UsersIcon className="h-5 w-5 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">500+ VAs Online</p>
+                      <p className="text-xs text-gray-500">Available now</p>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Features Section */}
-      <div className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 bg-gray-50">
+        <div className="container-modern">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need to hire talent
+            <h2 className="text-heading mb-4">
+              Everything You Need to Scale
             </h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-body text-lg max-w-2xl mx-auto">
               Our platform provides all the tools and features you need to find, hire, and manage virtual assistants effectively.
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: ShieldCheckIcon,
-                title: 'Vetted Professionals',
-                description: 'All VAs undergo rigorous screening and verification process to ensure quality and reliability.',
-                color: 'blue'
-              },
-              {
-                icon: CurrencyDollarIcon,
-                title: 'Fair Pricing',
-                description: 'Transparent pricing with $29.99 per successful connection. No hidden fees or subscriptions.',
-                color: 'green'
-              },
-              {
-                icon: RocketLaunchIcon,
-                title: 'Quick Matching',
-                description: 'Our smart algorithm matches you with qualified VAs in minutes, not weeks.',
-                color: 'yellow'
-              }
-            ].map((feature, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="relative bg-white rounded-2xl p-8 shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100"
+                className="card-hover"
               >
-                <div className={`inline-flex items-center justify-center h-12 w-12 rounded-lg bg-${feature.color}-100 mb-4`}>
+                <div className={`inline-flex items-center justify-center h-12 w-12 rounded-xl bg-${feature.color}-100 mb-6`}>
                   <feature.icon className={`h-6 w-6 text-${feature.color}-600`} />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-subheading mb-3">{feature.title}</h3>
+                <p className="text-body">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white">
+        <div className="container-modern">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-heading mb-4">
+              Loved by Companies Worldwide
+            </h2>
+            <p className="text-body text-lg max-w-2xl mx-auto">
+              See what our customers have to say about their experience with BlytzHire.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={testimonial.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="card-hover"
+              >
+                <div className="flex items-center mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <StarIcon key={i} className="h-5 w-5 text-amber-400" fill="currentColor" />
+                  ))}
+                </div>
+                <p className="text-body mb-6 italic">"{testimonial.content}"</p>
+                <div>
+                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                  <p className="text-sm text-gray-600">{testimonial.role}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <section className="py-24 gradient-primary">
+        <div className="container-modern">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to scale your business?
+            <h2 className="text-heading mb-4 text-white">
+              Ready to Transform Your Business?
             </h2>
-            <p className="mt-4 text-xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
               Join thousands of companies already using BlytzHire to find world-class virtual assistants.
             </p>
-            <div className="mt-8">
-              <Link
-                href="/auth"
-                className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-white text-blue-600 hover:bg-blue-50 transition-colors shadow-lg"
-              >
-                Start Hiring Today
-                <ArrowRightIcon className="ml-2 h-5 w-5" />
-              </Link>
-            </div>
+            <Link
+              href="/auth"
+              className="inline-flex items-center px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              Start Hiring Today
+              <ArrowRightIcon className="ml-2 h-5 w-5" />
+            </Link>
           </motion.div>
         </div>
-      </div>
+      </section>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float 3s ease-in-out infinite;
+          animation-delay: 1.5s;
+        }
+        .bg-grid-pattern {
+          background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+          background-size: 50px 50px;
+        }
+      `}</style>
     </div>
   );
 }

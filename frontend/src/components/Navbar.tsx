@@ -19,7 +19,6 @@ import { motion } from 'framer-motion';
 export function Navbar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -43,20 +42,20 @@ export function Navbar() {
   ];
 
   return (
-    <Disclosure as="nav" className="bg-white shadow-md sticky top-0 z-40">
+    <Disclosure as="nav" className="sticky top-0 z-40 glass border-b border-gray-200/50 backdrop-blur-md">
       {({ open }) => (
         <>
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="container-modern">
             <div className="flex h-16 justify-between">
               {/* Logo */}
-              <div className="flex">
+              <div className="flex items-center">
                 <Link href="/" className="flex items-center group">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-9 w-9 rounded-xl bg-primary-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <span className="text-white font-bold text-sm">B</span>
                     </div>
                     <div>
-                      <h1 className="text-xl font-bold text-gray-900 leading-none">BlytzHire</h1>
+                      <h1 className="text-lg font-bold text-gray-900 leading-none">BlytzHire</h1>
                       <p className="text-xs text-gray-500 leading-none">VA Marketplace</p>
                     </div>
                   </div>
@@ -64,7 +63,7 @@ export function Navbar() {
               </div>
 
               {/* Desktop Navigation */}
-              <div className="hidden sm:flex sm:items-center sm:space-x-1">
+              <div className="hidden lg:flex lg:items-center lg:space-x-1">
                 {user && navigation.map((item) => {
                   const isActive = pathname === item.href;
                   if (item.role !== 'all' && item.role !== user.role) return null;
@@ -73,10 +72,8 @@ export function Navbar() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      className={`nav-link ${
+                        isActive ? 'nav-link-active' : 'nav-link-inactive'
                       }`}
                     >
                       <item.icon className="h-4 w-4" />
@@ -86,13 +83,13 @@ export function Navbar() {
                 })}
               </div>
 
-              {/* Right side buttons */}
-              <div className="hidden sm:flex sm:items-center sm:space-x-3">
+              {/* Right side */}
+              <div className="hidden lg:flex lg:items-center lg:space-x-3">
                 {user ? (
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center">
-                        <span className="text-white text-xs font-medium">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
                           {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
                         </span>
                       </div>
@@ -102,7 +99,8 @@ export function Navbar() {
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                      className="btn-ghost p-2"
+                      title="Sign out"
                     >
                       <ArrowRightOnRectangleIcon className="h-4 w-4" />
                     </button>
@@ -110,33 +108,24 @@ export function Navbar() {
                 ) : (
                   <Link
                     href="/auth"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    className="btn-primary group"
                   >
                     Get Started
+                    <span className="ml-2 transition-transform group-hover:translate-x-0.5">→</span>
                   </Link>
                 )}
               </div>
 
               {/* Mobile menu button */}
-              <div className="sm:hidden flex items-center">
-                {user ? (
-                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center mr-3">
-                    <span className="text-white text-xs font-medium">
+              <div className="flex items-center space-x-3 lg:hidden">
+                {user && (
+                  <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
                       {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
-                ) : (
-                  <Link
-                    href="/auth"
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors mr-3"
-                  >
-                    Get Started
-                  </Link>
                 )}
-                <Disclosure.Button 
-                  className="inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                  onClick={() => setMobileMenuOpen(!open)}
-                >
+                <Disclosure.Button className="btn-ghost p-2">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
                     <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
@@ -154,10 +143,10 @@ export function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="sm:hidden border-t border-gray-200 bg-white"
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="lg:hidden border-t border-gray-200/50 bg-white/95 backdrop-blur-xl"
             >
-              <div className="px-2 pt-2 pb-3 space-y-1">
+              <div className="px-4 py-6 space-y-4">
                 {user && navigation.map((item) => {
                   const isActive = pathname === item.href;
                   if (item.role !== 'all' && item.role !== user.role) return null;
@@ -166,34 +155,41 @@ export function Navbar() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`block rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          ? 'bg-primary-50 text-primary-700 border border-primary-200'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                     >
                       <item.icon className="h-5 w-5" />
-                      <span>{item.name}</span>
+                      <span className="text-base">{item.name}</span>
                     </Link>
                   );
                 })}
-              </div>
-              
-              {user && (
-                <div className="pt-4 pb-3 border-t border-gray-200">
-                  <div className="px-2">
+                
+                {user && (
+                  <div className="pt-4 border-t border-gray-200">
                     <button
                       onClick={handleSignOut}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                     >
-                      <div className="flex items-center space-x-2">
-                        <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                        <span>Sign Out</span>
-                      </div>
+                      <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                      <span className="text-base">Sign Out</span>
                     </button>
                   </div>
-                </div>
-              )}
+                )}
+
+                {!user && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <Link
+                      href="/auth"
+                      className="btn-primary w-full"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </>
