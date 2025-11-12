@@ -71,23 +71,23 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 mb-4">
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="auth-logo">
               <span className="text-white font-bold text-lg">B</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="auth-title">
               {isLogin ? 'Welcome back' : 'Create account'}
             </h1>
-            <p className="text-gray-600">
+            <p className="auth-subtitle">
               {isLogin ? 'Sign in to your BlytzHire account' : 'Join the VA marketplace'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+            <div className="auth-error">
               {error}
             </div>
           )}
@@ -96,7 +96,7 @@ export default function AuthPage() {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 mb-6 disabled:opacity-50"
+            className="auth-google-btn"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -107,31 +107,23 @@ export default function AuthPage() {
             Continue with Google
           </button>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Or continue with email</span>
-            </div>
+          <div className="auth-divider">
+            <div className="auth-divider-line"></div>
+            <span className="auth-divider-text">Or continue with email</span>
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <form onSubmit={handleEmailSubmit} className="auth-form">
             {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="auth-role-section">
+                <label className="auth-label">
                   I am a
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="auth-role-buttons">
                   <button
                     type="button"
                     onClick={() => setRole('va')}
-                    className={`flex items-center justify-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                      role === 'va'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`auth-role-btn ${role === 'va' ? 'auth-role-active' : ''}`}
                   >
                     <UserCircleIcon className="h-4 w-4 mr-2" />
                     VA
@@ -139,11 +131,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setRole('company')}
-                    className={`flex items-center justify-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                      role === 'company'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`auth-role-btn ${role === 'company' ? 'auth-role-active' : ''}`}
                   >
                     <BuildingOfficeIcon className="h-4 w-4 mr-2" />
                     Company
@@ -152,8 +140,8 @@ export default function AuthPage() {
               </div>
             )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="auth-field">
+              <label htmlFor="email" className="auth-label">
                 Email address
               </label>
               <input
@@ -164,16 +152,17 @@ export default function AuthPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input"
+                className="auth-input"
                 placeholder="you@example.com"
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="auth-field">
+              <label htmlFor="password" className="auth-label">
                 Password
               </label>
-              <div className="relative">
+              <div className="auth-input-wrapper">
+                <LockClosedIcon className="auth-input-icon" />
                 <input
                   id="password"
                   name="password"
@@ -182,13 +171,13 @@ export default function AuthPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pr-10"
-                  placeholder="••••••••"
+                  className="auth-input auth-input-with-icon"
+                  placeholder="•••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="auth-input-toggle"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-4 w-4" />
@@ -202,11 +191,11 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full"
+              className="auth-submit-btn"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  <div className="auth-spinner"></div>
                   {isLogin ? 'Signing in...' : 'Creating account...'}
                 </div>
               ) : (
@@ -226,11 +215,11 @@ export default function AuthPage() {
               )}
             </button>
 
-            <div className="text-center">
+            <div className="auth-toggle">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+                className="auth-toggle-link"
               >
                 {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
@@ -238,10 +227,10 @@ export default function AuthPage() {
           </form>
         </div>
 
-        <div className="text-center mt-6">
+        <div className="auth-back-link">
           <Link
             href="/"
-            className="text-gray-600 hover:text-gray-700 text-sm"
+            className="auth-back-text"
           >
             ← Back to Home
           </Link>
