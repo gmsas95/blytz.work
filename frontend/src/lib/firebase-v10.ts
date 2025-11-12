@@ -4,14 +4,31 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPasswor
 import { getAnalytics } from 'firebase/analytics';
 
 // Firebase configuration from environment variables
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
+const getFirebaseConfig = () => {
+  const config = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
+  };
+
+  // Debug all environment variables
+  console.log('🔍 Environment Variables Check:', {
+    'NEXT_PUBLIC_FIREBASE_API_KEY': process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅' : '❌',
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN': process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? '✅' : '❌',
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID': process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✅' : '❌',
+    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET': process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? '✅' : '❌',
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID': process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ? '✅' : '❌',
+    'NEXT_PUBLIC_FIREBASE_APP_ID': process.env.NEXT_PUBLIC_FIREBASE_APP_ID ? '✅' : '❌',
+    'Browser': typeof window !== 'undefined' ? '🌐' : '🖥️',
+  });
+
+  return config;
 };
+
+const firebaseConfig = getFirebaseConfig();
 
 // Debug logging
 console.log('🔥 Firebase Config Check:', {
@@ -28,12 +45,20 @@ let auth: ReturnType<typeof getAuth> | null = null;
 try {
   if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== '') {
     console.log('🚀 Initializing Firebase...');
+    console.log('🔑 API Key (first 10 chars):', firebaseConfig.apiKey.substring(0, 10) + '...');
+    console.log('🌐 Auth Domain:', firebaseConfig.authDomain);
+    console.log('📦 Project ID:', firebaseConfig.projectId);
+    
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     console.log('✅ Firebase initialized successfully');
   } else {
     console.log('⚠️ Firebase not initialized - Missing configuration');
-    console.log('📋 Please add Firebase config to .env.local file');
+    console.log('📋 To fix:');
+    console.log('   1. Create Firebase project at https://console.firebase.google.com');
+    console.log('   2. Add Web App to get config');
+    console.log('   3. Update .env.local with Firebase values');
+    console.log('   4. Restart development server');
   }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
@@ -76,6 +101,12 @@ export type { FirebaseUser };
 export const isFirebaseAvailable = () => {
   const available = typeof window !== 'undefined' && auth !== null;
   console.log('🔍 Firebase availability check:', available ? '✅ AVAILABLE' : '❌ NOT AVAILABLE');
+  if (!available) {
+    console.log('📊 Status:', {
+      'Window': typeof window !== 'undefined' ? '✅' : '❌',
+      'Auth': auth !== null ? '✅' : '❌',
+    });
+  }
   return available;
 };
 

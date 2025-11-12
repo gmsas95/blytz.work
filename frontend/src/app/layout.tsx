@@ -4,6 +4,7 @@ import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/components/AuthProvider';
 import { AlertContainer } from '@/components/ui/Alert';
+import { EnvironmentStatus } from '@/components/EnvironmentStatus';
 
 export const metadata: Metadata = {
   title: 'BlytzHire - Professional VA Marketplace',
@@ -27,6 +28,7 @@ export default function RootLayout({
               <div className="min-h-screen bg-white">
                 <Navbar />
                 <main>{children}</main>
+                <EnvironmentStatus />
               </div>
             </AlertContainer>
           </AuthProvider>
