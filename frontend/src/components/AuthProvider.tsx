@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const authUser: AuthUser = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
-            displayName: firebaseUser.displayName,
+            displayName: firebaseUser.displayName || undefined,
             role: 'va',
             profileComplete: true
           };
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName,
+        displayName: result.user.displayName || undefined,
         role: 'va',
         profileComplete: true
       };
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName,
+        displayName: result.user.displayName || undefined,
         role: 'va',
         profileComplete: true
       };
@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const authUser: AuthUser = {
         uid: result.user.uid,
         email: result.user.email || '',
-        displayName: result.user.displayName,
+        displayName: result.user.displayName || undefined,
         role: role as 'va' | 'company',
         profileComplete: false
       };
