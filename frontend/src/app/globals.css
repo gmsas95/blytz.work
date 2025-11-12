@@ -936,6 +936,24 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* Additional utility classes for component compatibility */
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.text-success-700 {
+  color: #16a34a;
+}
+
 /* Responsive auth */
 @media (max-width: 480px) {
   .auth-wrapper {
