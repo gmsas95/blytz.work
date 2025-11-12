@@ -20,12 +20,14 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  // Only redirect when NOT loading and user exists
   useEffect(() => {
     if (!loading && user) {
       router.push(user.role === 'company' ? '/company/discover' : '/va/matches');
     }
   }, [user, loading, router]);
 
+  // Show loading ONLY during initial auth check
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -37,6 +39,7 @@ export default function HomePage() {
     );
   }
 
+  // ALWAYS show homepage for unauthenticated users
   const features = [
     {
       icon: ShieldCheckIcon,
@@ -79,13 +82,13 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
                   href="/auth"
-                  className="btn-primary group inline-flex items-center"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Get Started
-                  <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="ml-2 h-5 w-5" />
                 </Link>
                 
-                <button className="btn-secondary inline-flex items-center">
+                <button className="inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
                   <PlayIcon className="h-5 w-5 mr-2" />
                   Watch Demo
                 </button>
@@ -105,7 +108,7 @@ export default function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="absolute -top-4 -left-4 bg-white rounded-lg shadow-lg p-4 border border-gray-100">
+              <div className="absolute -top-4 -left-4 bg-white rounded-lg shadow-md p-4 border border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                     <CheckCircleIcon className="h-5 w-5 text-green-600" />
@@ -138,13 +141,13 @@ export default function HomePage() {
               Everything You Need to Scale
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Our platform provides all the tools and features you need to find, hire, and manage virtual assistants effectively.
+              Our platform provides all tools and features you need to find, hire, and manage virtual assistants effectively.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={feature.title} className="card bg-white hover:shadow-lg transition-shadow duration-300">
+              <div key={feature.title} className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-300">
                 <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-blue-100 mb-4">
                   <feature.icon className="h-6 w-6 text-blue-600" />
                 </div>
@@ -156,22 +159,65 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Loved by Companies Worldwide
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              See what our customers have to say about their experience with BlytzHire.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <StarIcon key={i} className="h-5 w-5 text-yellow-400" fill="currentColor" />
+                ))}
+              </div>
+              <p className="text-gray-600 mb-6 italic">"Found an amazing VA within 24 hours. The quality of candidates is outstanding!"</p>
+              <div>
+                <p className="font-semibold text-gray-900">Sarah Johnson</p>
+                <p className="text-sm text-gray-600">CEO, TechStart</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <StarIcon key={i} className="h-5 w-5 text-yellow-400" fill="currentColor" />
+                ))}
+              </div>
+              <p className="text-gray-600 mb-6 italic">"BlytzHire transformed how we hire remote talent. Highly recommend!"</p>
+              <div>
+                <p className="font-semibold text-gray-900">Mike Chen</p>
+                <p className="text-sm text-gray-600">Founder, DesignHub</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Business?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of companies already using BlytzHire to find world-class virtual assistants.
-          </p>
-          <Link
-            href="/auth"
-            className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-lg"
-          >
-            Start Hiring Today
-            <ArrowRightIcon className="ml-2 h-5 w-5" />
-          </Link>
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Ready to Transform Your Business?
+            </h2>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of companies already using BlytzHire to find world-class virtual assistants.
+            </p>
+            <Link
+              href="/auth"
+              className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-lg"
+            >
+              Start Hiring Today
+              <ArrowRightIcon className="ml-2 h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </section>
     </div>
