@@ -14,11 +14,11 @@ const firebaseConfig = {
 };
 
 // Debug logging
-console.log('Firebase config:', {
-  apiKey: firebaseConfig.apiKey ? 'SET' : 'NOT_SET',
-  authDomain: firebaseConfig.authDomain ? 'SET' : 'NOT_SET',
-  projectId: firebaseConfig.projectId ? 'SET' : 'NOT_SET',
-  window: typeof window !== 'undefined' ? 'BROWSER' : 'SERVER',
+console.log('🔥 Firebase Config Check:', {
+  apiKey: firebaseConfig.apiKey ? '✅ SET' : '❌ NOT_SET',
+  authDomain: firebaseConfig.authDomain ? '✅ SET' : '❌ NOT_SET', 
+  projectId: firebaseConfig.projectId ? '✅ SET' : '❌ NOT_SET',
+  window: typeof window !== 'undefined' ? '🌐 BROWSER' : '🖥️ SERVER',
 });
 
 // Initialize Firebase
@@ -26,20 +26,17 @@ let app: ReturnType<typeof initializeApp> | null = null;
 let auth: ReturnType<typeof getAuth> | null = null;
 
 try {
-  if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'placeholder_key') {
-    console.log('Initializing Firebase with config...');
+  if (typeof window !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== '') {
+    console.log('🚀 Initializing Firebase...');
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    console.log('Firebase initialized successfully');
+    console.log('✅ Firebase initialized successfully');
   } else {
-    console.log('Firebase not initialized:', {
-      window: typeof window,
-      apiKey: firebaseConfig.apiKey,
-      isPlaceholder: firebaseConfig.apiKey === 'placeholder_key'
-    });
+    console.log('⚠️ Firebase not initialized - Missing configuration');
+    console.log('📋 Please add Firebase config to .env.local file');
   }
 } catch (error) {
-  console.error('Firebase initialization error:', error);
+  console.error('❌ Firebase initialization error:', error);
 }
 
 // Export auth instance directly - not wrappers
@@ -48,10 +45,10 @@ export { auth };
 // Export individual functions that work with auth instance
 export const useAuthStateListener = (callback: (user: FirebaseUser | null) => void) => {
   if (!auth) {
-    console.log('Auth not available, returning empty unsubscribe');
+    console.log('⚠️ Auth not available, returning empty unsubscribe');
     return () => {}; // Return empty unsubscribe function
   }
-  console.log('Setting up auth state listener');
+  console.log('👂 Setting up auth state listener');
   return onAuthStateChanged(auth, callback);
 };
 
@@ -78,10 +75,7 @@ export type { FirebaseUser };
 // Helper function to check if Firebase is available
 export const isFirebaseAvailable = () => {
   const available = typeof window !== 'undefined' && auth !== null;
-  console.log('Firebase availability check:', available, {
-    window: typeof window,
-    auth: auth !== null
-  });
+  console.log('🔍 Firebase availability check:', available ? '✅ AVAILABLE' : '❌ NOT AVAILABLE');
   return available;
 };
 
