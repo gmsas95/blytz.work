@@ -4,11 +4,9 @@ import { useState } from 'react';
 import { auth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from '@/lib/firebase-v10';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { 
   ArrowRightOnRectangleIcon,
   UserPlusIcon,
-  EnvelopeIcon,
   LockClosedIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -20,10 +18,8 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'va' | 'company'>('va');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [role, setRole] = useState<'va' | 'company'>('va');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -51,11 +47,6 @@ export default function AuthPage() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
     if (!auth) {
       setError('Firebase not available');
       return;
@@ -80,44 +71,32 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4">
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative w-full max-w-md"
-      >
-        {/* Glass card */}
-        <div className="glass rounded-2xl p-8 shadow-strong border border-white/20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-primary-600 mb-4">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 mb-4">
               <span className="text-white font-bold text-lg">B</span>
             </div>
-            <h1 className="text-heading mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {isLogin ? 'Welcome back' : 'Create account'}
             </h1>
-            <p className="text-body">
+            <p className="text-gray-600">
               {isLogin ? 'Sign in to your BlytzHire account' : 'Join the VA marketplace'}
             </p>
           </div>
 
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"
-            >
+            <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
               {error}
-            </motion.div>
+            </div>
           )}
 
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="btn-outline w-full mb-6 group"
+            className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 mb-6 disabled:opacity-50"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -130,7 +109,7 @@ export default function AuthPage() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white text-gray-500">Or continue with email</span>
@@ -138,19 +117,19 @@ export default function AuthPage() {
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleEmailSubmit} className="space-y-6">
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="label mb-3 block">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   I am a
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setRole('va')}
-                    className={`flex items-center justify-center px-4 py-3 border rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center justify-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
                       role === 'va'
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -160,9 +139,9 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setRole('company')}
-                    className={`flex items-center justify-center px-4 py-3 border rounded-xl text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center justify-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
                       role === 'company'
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -174,31 +153,27 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label htmlFor="email" className="label block mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
-              <div className="relative">
-                <EnvelopeIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-11"
-                  placeholder="you@example.com"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                placeholder="you@example.com"
+              />
             </div>
 
             <div>
-              <label htmlFor="password" className="label block mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
-                <LockClosedIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   id="password"
                   name="password"
@@ -207,13 +182,13 @@ export default function AuthPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-11 pr-11"
-                  placeholder="•••••••••"
+                  className="input pr-10"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-4 w-4" />
@@ -224,43 +199,10 @@ export default function AuthPage() {
               </div>
             </div>
 
-            {!isLogin && (
-              <div>
-                <label htmlFor="confirmPassword" className="label block mb-2">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input pl-11 pr-11"
-                    placeholder="•••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-4 w-4" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full group"
+              className="btn-primary w-full"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -271,7 +213,7 @@ export default function AuthPage() {
                 <div className="flex items-center justify-center">
                   {isLogin ? (
                     <>
-                      <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2 group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
                       Sign In
                     </>
                   ) : (
@@ -288,7 +230,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors"
+                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
               >
                 {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
@@ -299,20 +241,12 @@ export default function AuthPage() {
         <div className="text-center mt-6">
           <Link
             href="/"
-            className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+            className="text-gray-600 hover:text-gray-700 text-sm"
           >
             ← Back to Home
           </Link>
         </div>
-      </motion.div>
-
-      <style jsx>{`
-        .bg-grid-pattern {
-          background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-          background-size: 50px 50px;
-        }
-      `}</style>
+      </div>
     </div>
   );
 }

@@ -1,23 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/components/AuthProvider';
 import { AlertContainer } from '@/components/ui/Alert';
-
-// Modern font stack
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'BlytzHire - Professional VA Marketplace',
@@ -33,16 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-white text-gray-900`}>
+    <html lang="en">
+      <body>
         <Providers>
           <AuthProvider>
             <AlertContainer>
-              <div className="relative min-h-screen">
+              <div className="min-h-screen bg-white">
                 <Navbar />
-                <main className="flex-1">
-                  {children}
-                </main>
+                <main>{children}</main>
               </div>
             </AlertContainer>
           </AuthProvider>
