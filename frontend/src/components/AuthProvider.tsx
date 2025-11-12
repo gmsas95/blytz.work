@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithEmailAndPassword = async (email: string, password: string): Promise<AuthUser> => {
+  const signInWithEmailAndPasswordFunc = async (email: string, password: string): Promise<AuthUser> => {
     console.log('AuthProvider: Starting email sign in...');
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createUserWithEmailAndPassword = async (email: string, password: string, role: string): Promise<AuthUser> => {
+  const createUserWithEmailAndPasswordFunc = async (email: string, password: string, role: string): Promise<AuthUser> => {
     console.log('AuthProvider: Starting user creation...');
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
@@ -214,8 +214,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     signInWithGoogle,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword: signInWithEmailAndPasswordFunc,
+    createUserWithEmailAndPassword: createUserWithEmailAndPasswordFunc,
     sendEmailVerification,
     sendPasswordReset,
     signOut,
