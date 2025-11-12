@@ -24,31 +24,37 @@ console.log('🔥 BlytzHire Production Config:', {
 // Initialize Firebase
 let app: ReturnType<typeof initializeApp> | null = null;
 let auth: ReturnType<typeof getAuth> | null = null;
+let firebaseInitialized = false;
 
-try {
-  if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
+const initializeFirebase = () => {
+  if (firebaseInitialized || !typeof window !== 'undefined' || !firebaseConfig.apiKey) {
+    return auth;
+  }
+
+  try {
     console.log('🚀 Initializing Firebase for BlytzHire...');
     console.log('🌐 Auth Domain:', firebaseConfig.authDomain);
     console.log('📦 Project ID:', firebaseConfig.projectId);
     
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    firebaseInitialized = true;
     console.log('✅ Firebase initialized successfully - Ready for authentication!');
-  } else {
-    console.log('⚠️ Firebase initialization failed:');
-    console.log('   Window type:', typeof window !== 'undefined' ? 'Browser ✅' : 'Server ❌');
-    console.log('   API Key:', firebaseConfig.apiKey ? 'Present ✅' : 'Missing ❌');
-    console.log('   Project ID:', firebaseConfig.projectId || 'Missing ❌');
-    
-    if (!firebaseConfig.apiKey) {
-      console.log('🚨 CRITICAL: NEXT_PUBLIC_FIREBASE_API_KEY not found in environment');
-      console.log('📋 For Dokploy: Add to Secret Manager');
-      console.log('📋 For Local: Add to .env file');
-    }
+  } catch (error) {
+    console.error('❌ Firebase initialization error:', error);
+    firebaseInitialized = true; // Prevent retry loops
   }
-} catch (error) {
-  console.error('❌ Firebase initialization error:', error);
+  
+  return auth;
+};
+
+// Auto-initialize on client-side
+if (typeof window !== 'undefined') {
+  initializeFirebase();
 }
+
+// Also provide manual initialization function
+export { initializeFirebase };
 
 // Export auth instance
 export { auth };
@@ -83,6 +89,11 @@ export type { FirebaseUser };
 
 // Check Firebase availability
 export const isFirebaseAvailable = () => {
+  // Try to initialize Firebase if not already done
+  if (!firebaseInitialized && typeof window !== 'undefined') {
+    initializeFirebase();
+  }
+  
   const available = typeof window !== 'undefined' && auth !== null;
   console.log('🔍 Firebase status:', available ? '✅ AVAILABLE' : '❌ NOT AVAILABLE');
   return available;
