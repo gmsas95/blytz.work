@@ -78,32 +78,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    // Implement Google sign-in here
-    throw new Error('Google sign-in not implemented');
+    
+    try {
+      const { signInWithPopup, GoogleAuthProvider } = await import('@/lib/firebase-v10');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth!, provider);
+      
+      const authUser: AuthUser = {
+        uid: result.user.uid,
+        email: result.user.email || '',
+        displayName: result.user.displayName || undefined,
+        role: 'va', // Default role - you should get this from backend
+        profileComplete: false,
+      };
+      
+      return authUser;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const signInWithEmailPassword = async (email: string, password: string): Promise<AuthUser> => {
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    // Implement email/password sign-in here
-    throw new Error('Email sign-in not implemented');
+    
+    try {
+      const { signInWithEmailAndPassword } = await import('@/lib/firebase-v10');
+      const result = await signInWithEmailAndPassword(auth!, email, password);
+      
+      const authUser: AuthUser = {
+        uid: result.user.uid,
+        email: result.user.email || '',
+        displayName: result.user.displayName || undefined,
+        role: 'va', // Default role - you should get this from backend
+        profileComplete: false,
+      };
+      
+      return authUser;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const createUserWithEmailPassword = async (email: string, password: string, role: string): Promise<AuthUser> => {
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    // Implement user creation here
-    throw new Error('User creation not implemented');
+    
+    try {
+      const { createUserWithEmailAndPassword } = await import('@/lib/firebase-v10');
+      const result = await createUserWithEmailAndPassword(auth!, email, password);
+      
+      const authUser: AuthUser = {
+        uid: result.user.uid,
+        email: result.user.email || '',
+        displayName: result.user.displayName || undefined,
+        role: role as 'va' | 'company',
+        profileComplete: false,
+      };
+      
+      return authUser;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const sendEmailVerification = async (): Promise<void> => {
     if (!isFirebaseAvailable()) {
       throw new Error('Firebase is not available');
     }
-    // Implement email verification here
-    throw new Error('Email verification not implemented');
+    
+    try {
+      const { sendEmailVerification } = await import('@/lib/firebase-v10');
+      await sendEmailVerification(auth!.currentUser!);
+    } catch (error) {
+      throw error;
+    }
   };
 
   const sendPasswordResetEmail = async (email: string): Promise<void> => {
