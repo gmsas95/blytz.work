@@ -5,11 +5,22 @@ node_modules/
 # Build outputs
 dist/
 build/
+*.tsbuildinfo
 
 # Environment files
-.env
-.env.local
-.env.production
+.env*
+!.env.example
+
+# Security - keys and certificates
+*.key
+*.pem
+*.p12
+*.crt
+*.cer
+*.pfx
+ssh-keys/
+ssl/
+certificates/
 
 # Logs
 logs/
@@ -48,12 +59,6 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.dokploy
-.env.frontend
-.env.nginx
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -98,3 +103,44 @@ Thumbs.db
 
 # Prisma
 prisma/migrations/node_modules/
+
+# Docker
+.dockerignore
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# Backup files
+backup/
+backups/
+
+# CI/CD
+.github/workflows/tmp/
+
+# Test files
+test-results/
+playwright-report/
+test-results.xml
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Deployment
+*.pid
+*.sock
+
+# Monitoring and metrics
+*.metrics
+monitoring/
