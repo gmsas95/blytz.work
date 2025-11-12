@@ -405,8 +405,8 @@ export default async function companyProfileRoutes(app: FastifyInstance) {
           { totalSpent: 'desc' },
           { name: 'asc' }
         ],
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+        take: Number(limit),
+        skip: (Number(page) - 1) * Number(limit)
       });
 
       const total = await prisma.company.count({ where: whereClause });
@@ -416,10 +416,10 @@ export default async function companyProfileRoutes(app: FastifyInstance) {
         data: {
           companyProfiles,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: Number(page),
+            limit: Number(limit),
             total,
-            totalPages: Math.ceil(total / parseInt(limit))
+            totalPages: Math.ceil(total / Number(limit))
           }
         }
       };

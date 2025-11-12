@@ -136,7 +136,7 @@ export default async function vaRoutes(app: FastifyInstance) {
           userId: user.uid,
           responseRate: 0,
           averageRating: 0,
-          totalReviews: true,
+          totalReviews: 0,
           featuredProfile: false,
           profileViews: 0
         },
