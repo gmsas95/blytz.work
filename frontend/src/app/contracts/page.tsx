@@ -1,8 +1,7 @@
 'use client';
 
-import { AlertContainer } from "@/components/ui/Alert";
 import { useState, useEffect } from 'react';
-import { useAlert } from "@/components/ui/Alert";
+import { useImprovedAlert } from '@/contexts/ImprovedAlertContext';
 import { useAuth } from '@/components/AuthProvider';
 import { 
   FileText, 
@@ -33,7 +32,7 @@ export default function ContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   
   const { user } = useAuth();
-  const { addAlert, removeAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
 
   useEffect(() => {
     loadContracts();
@@ -84,7 +83,6 @@ export default function ContractsPage() {
 
   return (
     <>
-      <AlertContainer />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}

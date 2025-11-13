@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { AlertContainer, useAlert } from "@/components/ui/Alert";
+import { useImprovedAlert } from "@/contexts/ImprovedAlertContext";
 import Navbar from "@/components/Navbar";
 
 interface VAProfileData {
@@ -62,7 +62,7 @@ const languageLevels = ['basic', 'conversational', 'fluent', 'native'];
 export default function CreateVAProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [customSkill, setCustomSkill] = useState('');
@@ -223,7 +223,6 @@ export default function CreateVAProfile() {
 
   return (
     <>
-      <AlertContainer />
       <Navbar />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

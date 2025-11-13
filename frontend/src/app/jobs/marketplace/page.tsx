@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { AlertContainer, useAlert } from "@/components/ui/Alert";
+import { useImprovedAlert } from "@/contexts/ImprovedAlertContext";
 import Navbar from "@/components/Navbar";
 
 interface JobPosting {
@@ -70,7 +70,7 @@ const commonSkills = [
 export default function JobMarketplace() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -194,7 +194,6 @@ export default function JobMarketplace() {
 
   return (
     <>
-      <AlertContainer />
       <Navbar />
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
