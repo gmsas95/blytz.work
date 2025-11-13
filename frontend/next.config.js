@@ -1,9 +1,13 @@
 /** @type {import('next').NextConfig} */
+
+// Disable Turbopack for production builds to fix distDirRoot error
+const isProduction = process.env.NODE_ENV === 'production';
+
 const nextConfig = {
-  // Fix Turbopack workspace root detection
-  turbopack: {
-    root: '/home/sas/blytz-hire/frontend',
-  },
+  // Only use Turbopack in development
+  ...(isProduction ? {} : {
+    turbo: {}
+  }),
   
   reactStrictMode: true,
   images: {
@@ -28,9 +32,6 @@ const nextConfig = {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
   },
-  
-  // Removed standalone output to fix Turbopack build issue
-  // output: 'standalone',
 };
 
 export default nextConfig;
