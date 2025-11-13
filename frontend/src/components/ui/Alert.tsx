@@ -130,6 +130,9 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
   );
 }
 
+// Named exports for convenience
+export { AlertContainer as Toast, AlertContainer as NotificationProvider, Alert };
+
 // Default export
 export default AlertContainer;
 

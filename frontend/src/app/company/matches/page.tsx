@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { AlertContainer, useAlert } from "@/components/ui/Alert";
+import { AlertContainer, useAlert, Alert } from "@/components/ui/Alert";
 import Navbar from "@/components/Navbar";
 
 interface VAMatch {
