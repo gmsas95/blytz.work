@@ -78,19 +78,10 @@ const mockProfile: VAProfile = {
 const mockAnalytics: Analytics = {
   conversionRate: 15,
   averageResponseTime: 2.5,
-  averageRating: 4.8,
-  satisfactionScore: 92,
   trends: [
     { date: '2024-01', views: 120, matches: 18 },
     { date: '2024-02', views: 150, matches: 22 }
-  ],
-  performance: {
-    completedJobs: 25,
-    totalHours: 1000,
-    averageRating: 4.8,
-    totalEarned: 25000,
-    skillsUsed: ['Email Management', 'Calendar Management', 'Data Entry']
-  }
+  ]
 };
 
 export default function VAProfile() {
@@ -161,12 +152,12 @@ export default function VAProfile() {
       if (!response.ok) {
         // Handle API errors gracefully
         console.warn('Analytics API not available, using mock data');
-        setAnalytics(mockAnalytics.performance);
+        setAnalytics(mockAnalytics);
         return;
       }
       
       const result = await response.json();
-      setAnalytics(result.data.performance);
+      setAnalytics(result.data);
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
     }
