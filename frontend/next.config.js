@@ -9,6 +9,7 @@ const nextConfig = {
   } : {}),
   
   reactStrictMode: true,
+  output: 'standalone',
   images: {
     remotePatterns: [{ hostname: "firebasestorage.googleapis.com" }],
   },
