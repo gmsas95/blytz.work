@@ -29,8 +29,8 @@ const nextConfig = {
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
   },
   
-  // Standalone output for Docker
-  output: 'standalone',
+  // Removed standalone output to fix Turbopack build issue
+  // output: 'standalone',
 };
 
 export default nextConfig;
