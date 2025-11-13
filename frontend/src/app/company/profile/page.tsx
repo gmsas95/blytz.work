@@ -116,7 +116,7 @@ export default function CompanyProfile() {
       setCompany(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      addAlert(error.message || 'Failed to fetch profile', 'error');
+      addAlert({ message: error.message || 'Failed to fetch profile', type: 'error' });
     } finally {
       setLoading(false);
     }

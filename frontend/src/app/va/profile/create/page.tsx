@@ -164,7 +164,7 @@ export default function CreateVAProfile() {
     if (validateStep(currentStep)) {
       setCurrentStep(Math.min(currentStep + 1, 4));
     } else {
-      addAlert('Please fill in all required fields for this step', 'error');
+      addAlert({ message: 'Please fill in all required fields for this step', type: 'error' });
     }
   };
 

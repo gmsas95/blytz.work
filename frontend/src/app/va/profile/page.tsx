@@ -100,7 +100,7 @@ export default function VAProfile() {
       setProfile(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      addAlert(error.message || 'Failed to fetch profile', 'error');
+      addAlert({ message: error.message || 'Failed to fetch profile', type: 'error' });
     } finally {
       setLoading(false);
     }
