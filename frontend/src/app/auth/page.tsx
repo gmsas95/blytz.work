@@ -13,6 +13,12 @@ import {
   User,
   Building,
 } from 'lucide-react';
+import { Button } from '@/components/ui-shadcn/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui-shadcn/card';
+import { Input } from '@/components/ui-shadcn/input';
+import { Label } from '@/components/ui-shadcn/label';
+import { Separator } from '@/components/ui-shadcn/separator';
+import { Alert, AlertDescription } from '@/components/ui-shadcn/alert';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -71,166 +77,182 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="auth-header">
-            <div className="auth-logo">
-              <span className="text-white font-bold text-lg">B</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4">
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-2xl bg-white/10 backdrop-blur-lg">
+          <CardHeader className="text-center space-y-4 pb-6">
+            <div className="mx-auto w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+              <span className="text-gray-900 font-bold text-lg">B</span>
             </div>
-            <h1 className="auth-title">
+            <CardTitle className="text-2xl font-bold text-white">
               {isLogin ? 'Welcome back' : 'Create account'}
-            </h1>
-            <p className="auth-subtitle">
+            </CardTitle>
+            <CardDescription className="text-gray-300">
               {isLogin ? 'Sign in to your BlytzHire account' : 'Join the VA marketplace'}
-            </p>
-          </div>
+            </CardDescription>
+          </CardHeader>
 
-          {error && (
-            <div className="auth-error">
-              {error}
-            </div>
-          )}
-
-          {/* Google Sign In */}
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="auth-google-btn"
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Continue with Google
-          </button>
-
-          <div className="auth-divider">
-            <div className="auth-divider-line"></div>
-            <span className="auth-divider-text">Or continue with email</span>
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSubmit} className="auth-form">
-            {!isLogin && (
-              <div className="auth-role-section">
-                <label className="auth-label">
-                  I am a
-                </label>
-                <div className="auth-role-buttons">
-                  <button
-                    type="button"
-                    onClick={() => setRole('va')}
-                    className={`auth-role-btn ${role === 'va' ? 'auth-role-active' : ''}`}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    VA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('company')}
-                    className={`auth-role-btn ${role === 'company' ? 'auth-role-active' : ''}`}
-                  >
-                    <Building className="h-4 w-4 mr-2" />
-                    Company
-                  </button>
-                </div>
-              </div>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert className="border-red-500 bg-red-500/10 text-red-200">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
-            <div className="auth-field">
-              <label htmlFor="email" className="auth-label">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="auth-input"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div className="auth-field">
-              <label htmlFor="password" className="auth-label">
-                Password
-              </label>
-              <div className="auth-input-wrapper">
-                <Lock className="auth-input-icon" />
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={isLogin ? "current-password" : "new-password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="auth-input auth-input-with-icon"
-                  placeholder="•••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="auth-input-toggle"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
+            {/* Google Sign In */}
+            <Button
+              onClick={handleGoogleSignIn}
               disabled={loading}
-              className="auth-submit-btn"
+              variant="outline"
+              className="w-full bg-white text-gray-900 hover:bg-gray-50 border-gray-300"
             >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="auth-spinner"></div>
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  {isLogin ? (
-                    <>
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Create Account
-                    </>
-                  )}
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </Button>
+
+            <div className="relative">
+              <Separator className="bg-gray-600" />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800 px-2 text-xs text-gray-400">
+                Or continue with email
+              </span>
+            </div>
+
+            {/* Email/Password Form */}
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label className="text-gray-200">
+                    I am a
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setRole('va')}
+                      variant={role === 'va' ? 'default' : 'outline'}
+                      className={`${
+                        role === 'va' 
+                          ? 'bg-yellow-400 text-gray-900 hover:bg-yellow-300' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      VA
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setRole('company')}
+                      variant={role === 'company' ? 'default' : 'outline'}
+                      className={`${
+                        role === 'company' 
+                          ? 'bg-yellow-400 text-gray-900 hover:bg-yellow-300' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Building className="h-4 w-4 mr-2" />
+                      Company
+                    </Button>
+                  </div>
                 </div>
               )}
-            </button>
 
-            <div className="auth-toggle">
-              <button
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-200">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="bg-gray-700/50 border-gray-600 text-white placeholder-gray-400"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-200">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="•••••••••"
+                    className="pl-10 bg-gray-700/50 border-gray-600 text-white placeholder-gray-400"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-yellow-400 text-gray-900 hover:bg-yellow-300 font-semibold"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
+                    {isLogin ? 'Signing in...' : 'Creating account...'}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    {isLogin ? (
+                      <>
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Create Account
+                      </>
+                    )}
+                  </div>
+                )}
+              </Button>
+
+              <Button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="auth-toggle-link"
+                variant="ghost"
+                className="w-full text-gray-300 hover:text-white hover:bg-gray-700/50"
               >
                 {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-              </button>
-            </div>
-          </form>
-        </div>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        <div className="auth-back-link">
+        <div className="text-center mt-6">
           <Link
             href="/"
-            className="auth-back-text"
+            className="text-gray-400 hover:text-white transition-colors"
           >
             ← Back to Home
           </Link>
