@@ -73,7 +73,7 @@ const commonSkills = [
 export default function CompanyMatches() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert, Alert } = useAlert();
+  const { addAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<VAMatch[]>([]);
   const [savedVAs, setSavedVAs] = useState<string[]>([]);
