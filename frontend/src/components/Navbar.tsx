@@ -11,6 +11,7 @@ import {
   SparklesIcon,
   BuildingOfficeIcon,
   BriefcaseIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -36,6 +37,8 @@ export function Navbar() {
   const navigation = [
     { name: 'Discover', href: '/company/discover', icon: SparklesIcon, role: 'company' },
     { name: 'Jobs', href: '/company/jobs', icon: BriefcaseIcon, role: 'company' },
+    { name: 'Jobs', href: '/va/jobs', icon: BriefcaseIcon, role: 'va' },
+    { name: 'Profile', href: '/va/profile', icon: UserCircleIcon, role: 'va' },
     { name: 'Matches', href: '/va/matches', icon: SparklesIcon, role: 'va' },
     { name: 'Contracts', href: '/contracts', icon: DocumentTextIcon, role: 'all' },
   ];
