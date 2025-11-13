@@ -76,7 +76,7 @@ export default function HomePage() {
             <div className="social-proof">
               <div className="stars">
                 {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} style={{width: '20px', height: '20px', color: '#fbbf24'}} fill="currentColor" />
+                  <Star key={i} style={{width: '20px', height: '20px', color: '#fbbf24'}} fill="currentColor" />
                 ))}
                 <span className="rating-text">4.9/5</span>
               </div>
