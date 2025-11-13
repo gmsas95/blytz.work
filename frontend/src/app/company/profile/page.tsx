@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { AlertContainer, useAlert } from "@/components/ui/Alert";
+import { useImprovedAlert } from "@/contexts/ImprovedAlertContext";
 import Navbar from "@/components/Navbar";
 
 interface Company {
@@ -63,7 +63,7 @@ const commonTechStack = [
 export default function CompanyProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -252,7 +252,6 @@ export default function CompanyProfile() {
   if (loading && !company) {
     return (
       <>
-        <AlertContainer />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -266,7 +265,6 @@ export default function CompanyProfile() {
   if (!company) {
     return (
       <>
-        <AlertContainer />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Company Profile Not Found</h1>
@@ -285,7 +283,6 @@ export default function CompanyProfile() {
 
   return (
     <>
-      <AlertContainer />
       <Navbar />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
