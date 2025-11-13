@@ -62,7 +62,7 @@ const languageLevels = ['basic', 'conversational', 'fluent', 'native'];
 export default function CreateVAProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert, Alert } = useAlert();
+  const { addAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [customSkill, setCustomSkill] = useState('');
@@ -176,7 +176,7 @@ export default function CreateVAProfile() {
     e.preventDefault();
     
     if (!validateStep(currentStep)) {
-      addAlert('Please fill in all required fields', 'error');
+      addAlert({ message: 'Please fill in all required fields', type: 'error' });
       return;
     }
 
@@ -197,7 +197,7 @@ export default function CreateVAProfile() {
         throw new Error(result.error || 'Failed to create profile');
       }
 
-      addAlert('Profile created successfully!', 'success');
+      addAlert({ message: 'Profile created successfully!', type: 'success' });
       
       // Update user profile completion status
       await fetch('/api/user/profile-complete', {
@@ -211,7 +211,7 @@ export default function CreateVAProfile() {
         router.push('/va/profile');
       }, 2000);
     } catch (error: any) {
-      addAlert(error.message || 'Failed to create profile', 'error');
+      addAlert({ message: error.message || 'Failed to create profile', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -687,7 +687,6 @@ export default function CreateVAProfile() {
           </div>
         </div>
       </div>
-      <Alert />
     </>
   );
 }

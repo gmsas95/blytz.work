@@ -70,7 +70,7 @@ const commonSkills = [
 export default function JobMarketplace() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert, Alert } = useAlert();
+  const { addAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -569,7 +569,6 @@ export default function JobMarketplace() {
           )}
         </div>
       </div>
-      <Alert />
     </>
   );
 }

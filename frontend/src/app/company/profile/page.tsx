@@ -62,7 +62,7 @@ const commonTechStack = [
 export default function CompanyProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert, Alert } = useAlert();
+  const { addAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -156,9 +156,9 @@ export default function CompanyProfile() {
 
       setCompany(result.data);
       setEditing(false);
-      addAlert('Profile updated successfully!', 'success');
+      addAlert({ message: 'Profile updated successfully!', type: 'success' });
     } catch (error: any) {
-      addAlert(error.message || 'Failed to update profile', 'error');
+      addAlert({ message: error.message || 'Failed to update profile', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -198,10 +198,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to save logo');
       }
 
-      addAlert('Logo uploaded successfully!', 'success');
+      addAlert({ message: 'Logo uploaded successfully!', type: 'success' });
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      addAlert(error.message || 'Failed to upload logo', 'error');
+      addAlert({ message: error.message || 'Failed to upload logo', type: 'error' });
     } finally {
       setUploadingLogo(false);
     }
@@ -223,10 +223,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to upgrade verification');
       }
 
-      addAlert(`Verification upgrade to ${level} level submitted!`, 'success');
+      addAlert({ message: `Verification upgrade to ${level} level submitted!`, type: 'success' });
       fetchProfile();
     } catch (error: any) {
-      addAlert(error.message || 'Failed to upgrade verification', 'error');
+      addAlert({ message: error.message || 'Failed to upgrade verification', type: 'error' });
     }
   };
 
@@ -679,7 +679,6 @@ export default function CompanyProfile() {
           </div>
         </div>
       </div>
-      <Alert />
     </>
   );
 }

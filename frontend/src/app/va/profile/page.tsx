@@ -51,7 +51,7 @@ interface Analytics {
 export default function VAProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert, Alert } = useAlert();
+  const { addAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState<VAProfile | null>(null);
@@ -140,9 +140,9 @@ export default function VAProfile() {
 
       setProfile(result.data);
       setEditing(false);
-      addAlert('Profile updated successfully!', 'success');
+      addAlert({ message: 'Profile updated successfully!', type: 'success' });
     } catch (error: any) {
-      addAlert(error.message || 'Failed to update profile', 'error');
+      addAlert({ message: error.message || 'Failed to update profile', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -183,10 +183,10 @@ export default function VAProfile() {
         throw new Error(result.error || `Failed to upload ${type}`);
       }
 
-      addAlert(`${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, 'success');
+      addAlert({ message: `${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, type: 'success' });
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      addAlert(error.message || `Failed to upload ${type}`, 'error');
+      addAlert({ message: error.message || `Failed to upload ${type}`, type: 'error' });
     } finally {
       setUploadingFile(null);
     }
@@ -206,7 +206,7 @@ export default function VAProfile() {
         });
 
         if (response.ok) {
-          addAlert(`Skills assessment for ${skill} completed!`, 'success');
+          addAlert({ message: `Skills assessment for ${skill} completed!`, type: 'success' });
         }
       } catch (error) {
         console.error(`Failed to assess ${skill}:`, error);
@@ -498,7 +498,6 @@ export default function VAProfile() {
           </div>
         </div>
       </div>
-      <Alert />
     </>
   );
 }
