@@ -1,13 +1,12 @@
 /** @type {import('next').NextConfig} */
 
-// Disable Turbopack for production builds to fix distDirRoot error
-const isProduction = process.env.NODE_ENV === 'production';
-
 const nextConfig = {
-  // Only use Turbopack in development
-  ...(isProduction ? {} : {
-    turbo: {}
-  }),
+  // Disable Turbopack completely for CI/CD compatibility
+  ...(process.env.NODE_ENV === 'production' ? { 
+    webpack: (config, { dev }) => {
+      return config
+    }
+  } : {}),
   
   reactStrictMode: true,
   images: {
