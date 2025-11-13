@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   icon?: React.ReactNode;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -65,7 +65,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && icon && (
           <span className="flex-shrink-0">{icon}</span>
         )}
-        <span className="truncate">{children}</span>
+        {children && <span className="truncate">{children}</span>}
       </MotionButton>
     );
   }

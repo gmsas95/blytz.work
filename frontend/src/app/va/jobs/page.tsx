@@ -111,7 +111,8 @@ export default function VAJobsPage() {
                     size="sm"
                     icon={<ExternalLink className="h-4 w-4" />}
                     onClick={() => window.open(`/jobs/marketplace?id=${job.id}`, '_blank')}
-                  />
+                  >
+                  </Button>
                 </div>
               </div>
             ))}
