@@ -89,7 +89,7 @@ export default function HomePage() {
           <div className="hero-image">
             <div className="floating-card floating-card-top">
               <div className="avatar-small avatar-green">
-                <CheckCircleIcon style={{width: '20px', height: '20px', color: '#16a34a'}} />
+                <CheckCircle style={{width: '20px', height: '20px', color: '#16a34a'}} />
               </div>
               <div>
                 <p style={{fontSize: '14px', fontWeight: '500', color: '#111827', margin: '0 0 2px 0'}}>New VA Match</p>
