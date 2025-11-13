@@ -123,7 +123,7 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
               onClose={() => removeAlert(alert.id)}
             >
             {alert.message}
-          </Alert>
+          </AlertComponent>
         ))}
       </div>
     </AlertContext.Provider>
