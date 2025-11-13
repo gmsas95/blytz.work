@@ -135,7 +135,7 @@ export default function HomePage() {
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
-              <ShieldCheckIcon style={{width: '24px', height: '24px'}} />
+              <Shield style={{width: '24px', height: '24px'}} />
             </div>
             <h3 className="feature-title">Vetted Professionals</h3>
             <p className="feature-description">
@@ -144,7 +144,7 @@ export default function HomePage() {
           </div>
           <div className="feature-card">
             <div className="feature-icon">
-              <RocketLaunchIcon style={{width: '24px', height: '24px'}} />
+              <Rocket style={{width: '24px', height: '24px'}} />
             </div>
             <h3 className="feature-title">Transparent Pricing</h3>
             <p className="feature-description">
@@ -153,7 +153,7 @@ export default function HomePage() {
           </div>
           <div className="feature-card">
             <div className="feature-icon">
-              <SparklesIcon style={{width: '24px', height: '24px'}} />
+              <Sparkles style={{width: '24px', height: '24px'}} />
             </div>
             <h3 className="feature-title">Quick Matching</h3>
             <p className="feature-description">
@@ -174,7 +174,7 @@ export default function HomePage() {
           className="btn btn-white"
         >
           Start Hiring Today
-          <ArrowRightIcon style={{width: '20px', height: '20px', marginLeft: '8px'}} />
+          <ArrowRight style={{width: '20px', height: '20px', marginLeft: '8px'}} />
         </Link>
       </section>
     </div>
