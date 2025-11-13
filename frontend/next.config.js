@@ -2,7 +2,7 @@
 const nextConfig = {
   // Fix Turbopack workspace root detection
   turbopack: {
-    root: './',
+    root: '/home/sas/blytz-hire/frontend',
   },
   
   reactStrictMode: true,
@@ -31,16 +31,6 @@ const nextConfig = {
   
   // Standalone output for Docker
   output: 'standalone',
-  
-  // Build optimizations
-  swcMinify: true,
-  
-  // Development vs Production
-  development: {
-    env: {
-      NEXT_PUBLIC_ENVIRONMENT: 'development',
-    }
-  }
 };
 
 export default nextConfig;

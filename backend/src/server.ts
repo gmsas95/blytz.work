@@ -9,6 +9,8 @@ import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import contractRoutes from "./routes/contracts.js";
+import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
+import paymentRoutes from "./routes/payments.js";
 
 // Import utilities
 import { createRateLimiter } from "./utils/response.js";
@@ -60,6 +62,8 @@ app.register(healthRoutes);
 app.register(authRoutes, { prefix: "/api" });
 app.register(uploadRoutes, { prefix: "/api" });
 app.register(contractRoutes, { prefix: "/api" });
+app.register(jobMarketplaceRoutes, { prefix: "/api" });
+app.register(paymentRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, request, reply) => {

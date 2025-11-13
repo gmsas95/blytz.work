@@ -408,3 +408,26 @@ model Payment {
   @@map("payments")
   @@schema("blytz_hire")
 }
+
+model Invoice {
+  id              String   @id @default(cuid())
+  contractId      String
+  userId          String   // Company user who created the invoice
+  receiverId      String   // VA user who receives the invoice
+  invoiceNumber   String
+  items           Json[]
+  subtotal        Float
+  taxRate         Float
+  taxAmount       Float
+  discount        Float
+  totalAmount     Float
+  dueDate         DateTime
+  currency        String   @default("USD")
+  status          String   @default("pending") // "pending" | "paid" | "overdue" | "cancelled"
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("invoices")
+  @@schema("blytz_hire")
+}

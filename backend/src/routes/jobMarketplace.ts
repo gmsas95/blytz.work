@@ -230,7 +230,6 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
               logoUrl: true,
               country: true,
               verificationLevel: true,
-              totalReviews: true,
             }
           },
           _count: {
@@ -244,8 +243,8 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
           { urgency: 'desc' },
           { createdAt: 'desc' }
         ],
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+        take: parseInt(String(limit)),
+        skip: (parseInt(String(page)) - 1) * parseInt(String(limit))
       });
 
       const total = await prisma.jobPosting.count({ where: whereClause });
@@ -255,10 +254,10 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         data: {
           jobs: jobPostings,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: parseInt(String(page)),
+            limit: parseInt(String(limit)),
             total,
-            totalPages: Math.ceil(total / parseInt(limit))
+            totalPages: Math.ceil(total / parseInt(String(limit)))
           }
         }
       };
@@ -287,7 +286,6 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
               logoUrl: true,
               country: true,
               verificationLevel: true,
-              totalReviews: true,
               description: true,
               foundedYear: true,
               companySize: true,
@@ -580,7 +578,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       // Increment proposal count
       await prisma.jobPosting.update({
         where: { id: data.jobPostingId },
-        data: { proposals: { increment: 1 } }
+        data: { proposalCount: { increment: 1 } }
       });
 
       return reply.code(201).send({
@@ -747,7 +745,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       // Decrement proposal count
       await prisma.jobPosting.update({
         where: { id: proposal.jobPostingId },
-        data: { proposals: { decrement: 1 } }
+        data: { proposalCount: { decrement: 1 } }
       });
 
       return {

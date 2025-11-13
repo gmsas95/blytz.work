@@ -205,9 +205,12 @@ export default async function paymentRoutes(app: FastifyInstance) {
           updatedAt: new Date()
         },
         include: {
-          contract: true,
-          milestone: { include: { job: { select: { id: true, title: true } } }, },
-          job: true
+          contract: {
+            select: { id: true, status: true }
+          },
+          job: {
+            select: { id: true, title: true, status: true }
+          }
         }
       });
 
@@ -246,10 +249,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         where: { id: paymentId },
         include: {
           contract: {
-            select: { id: true, title: true, status: true }
-          },
-          milestone: {
-            select: { id: true, title: true, status: true }
+            select: { id: true, status: true }
           },
           job: {
             select: { id: true, title: true, status: true }
@@ -330,18 +330,15 @@ export default async function paymentRoutes(app: FastifyInstance) {
         where: whereClause,
         include: {
           contract: {
-            select: { id: true, title: true, status: true }
-          },
-          milestone: {
-            select: { id: true, title: true, status: true }
+            select: { id: true, status: true }
           },
           job: {
             select: { id: true, title: true, status: true }
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+        take: parseInt(String(limit)),
+        skip: (parseInt(String(page)) - 1) * parseInt(String(limit))
       });
 
       const total = await prisma.payment.count({ where: whereClause });
@@ -351,10 +348,10 @@ export default async function paymentRoutes(app: FastifyInstance) {
         data: {
           payments,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: parseInt(String(page)),
+            limit: parseInt(String(limit)),
             total,
-            totalPages: Math.ceil(total / parseInt(limit))
+            totalPages: Math.ceil(total / parseInt(String(limit)))
           }
         }
       };
@@ -412,7 +409,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         return reply.code(400).send({ 
           error: "Refund failed",
           code: "REFUND_FAILED",
-          details: refund.error
+          details: refund
         });
       }
 
@@ -424,8 +421,10 @@ export default async function paymentRoutes(app: FastifyInstance) {
           refundAmount: Math.round((amount || (payment.amount / 100)) * 100),
           refundedAt: new Date(),
           updatedAt: new Date(),
-          metadata: {
-            ...payment.metadata,
+          metadata: payment.metadata ? {
+            ...(payment.metadata as any),
+            refundReason: reason
+          } : {
             refundReason: reason
           }
         }
@@ -460,7 +459,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         where: { stripePaymentIntentId: data.paymentId },
         include: {
           contract: true,
-          milestone: true
+          job: true
         }
       });
 
@@ -486,10 +485,10 @@ export default async function paymentRoutes(app: FastifyInstance) {
         await processDisputeRefund(payment, data.reason, data.amount);
       } else if (data.type === 'escalate') {
         // Create dispute record and notify admin
-        await createDisputeRecord(payment, user.uid, data.reason, data.description);
+        await createDisputeRecord(payment, user.uid, data.reason, data.description || '');
       } else if (data.type === 'resolve') {
         // Mark dispute as resolved
-        await resolveDispute(payment, user.uid, data.resolution);
+        await resolveDispute(payment, user.uid, data.resolution || '');
       }
 
       return {
@@ -546,9 +545,9 @@ export default async function paymentRoutes(app: FastifyInstance) {
       });
 
       // Calculate totals
-      const totalSent = sentPayments.reduce((sum, p) => sum + (p.amount - p.platformFee), 0) / 100;
-      const totalReceived = receivedPayments.reduce((sum, p) => sum + (p.amount - p.stripeFee - p.platformFee), 0) / 100;
-      const totalPlatformFees = [...sentPayments, ...receivedPayments].reduce((sum, p) => sum + p.platformFee, 0) / 100;
+      const totalSent = sentPayments.reduce((sum, p) => sum + (p.amount - (p.platformFee || 0)), 0) / 100;
+      const totalReceived = receivedPayments.reduce((sum, p) => sum + (p.amount - (p.stripeFee || 0) - (p.platformFee || 0)), 0) / 100;
+      const totalPlatformFees = [...sentPayments, ...receivedPayments].reduce((sum, p) => sum + (p.platformFee || 0), 0) / 100;
 
       // Get user earnings
       let userEarnings = 0;
