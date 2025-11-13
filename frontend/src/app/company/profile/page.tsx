@@ -32,6 +32,7 @@ interface Company {
   verificationLevel: string;
   totalSpent?: number;
   completionPercentage?: number;
+  logoUrl?: string;
   jobPostings?: any[];
 }
 
