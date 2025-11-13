@@ -69,7 +69,9 @@ const mockProfile: VAProfile = {
   }],
   education: [{
     institution: 'Demo University',
-    degree: 'Bachelor of Business Administration'
+    degree: 'Bachelor of Business Administration',
+    startDate: '2020-09-01',
+    endDate: '2024-06-01'
   }]
 };
 
