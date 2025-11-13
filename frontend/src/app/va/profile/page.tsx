@@ -178,7 +178,7 @@ export default function VAProfile() {
 
       if (!response.ok) {
         // Handle API errors gracefully
-        addAlert({ message: 'Profile update API not available, but local state updated', type: 'info' });
+        addAlert('Profile update API not available, but local state updated', 'info');
         setProfile(editForm);
         setEditing(false);
         return;
