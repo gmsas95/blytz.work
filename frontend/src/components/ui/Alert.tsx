@@ -36,7 +36,7 @@ interface AlertProps {
   className?: string;
 }
 
-export function Alert({ 
+export function AlertComponent({ 
   type = 'info', 
   title, 
   children, 
@@ -116,12 +116,12 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
       {children}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
         {alerts.map(alert => (
-          <Alert
-            key={alert.id}
-            type={alert.type}
-            title={alert.title}
-            onClose={() => removeAlert(alert.id)}
-          >
+            <AlertComponent
+              key={alert.id}
+              type={alert.type}
+              title={alert.title}
+              onClose={() => removeAlert(alert.id)}
+            >
             {alert.message}
           </Alert>
         ))}
@@ -131,7 +131,7 @@ export function AlertContainer({ children }: { children?: React.ReactNode }) {
 }
 
 // Named exports for convenience
-export { AlertContainer as Toast, AlertContainer as NotificationProvider, Alert };
+export { AlertContainer as Toast, AlertContainer as NotificationProvider, AlertComponent as Alert };
 
 // Default export
 export default AlertContainer;
