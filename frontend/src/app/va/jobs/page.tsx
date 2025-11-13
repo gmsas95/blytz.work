@@ -5,7 +5,6 @@ import { Briefcase, MapPin, DollarSign, Calendar, ExternalLink } from 'lucide-re
 import api from '@/lib/api';
 import { JobPosting } from '@/types';
 import { AlertContainer, useAlert } from '@/components/ui/Alert';
-import Navbar from '@/components/Navbar';
 
 export default function VAJobsPage() {
   const { data: jobs, isLoading } = useQuery({
@@ -22,7 +21,6 @@ export default function VAJobsPage() {
     return (
       <>
         <AlertContainer />
-        <Navbar />
         <div className="flex justify-center py-8">Loading jobs...</div>
       </>
     );
@@ -31,7 +29,6 @@ export default function VAJobsPage() {
   return (
     <>
       <AlertContainer />
-      <Navbar />
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto py-8 px-4">
           {/* Header */}
