@@ -3,7 +3,8 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { AuthProvider } from '@/components/AuthProvider';
-import { ImprovedAlertContainer, useImprovedAlert } from '@/contexts/ImprovedAlertContext';
+import { useImprovedAlert } from '@/contexts/ImprovedAlertContext';
+import { ImprovedAlertContainer } from '@/components/ui/ImprovedAlert';
 import { EnvironmentStatus } from '@/components/EnvironmentStatus';
 
 export const metadata: Metadata = {
@@ -20,14 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   function LayoutWrapper({ children }: { children: React.ReactNode }) {
-    const { alerts } = useImprovedAlert();
+    const { alerts, removeAlert } = useImprovedAlert();
     
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
         <main>{children}</main>
         <EnvironmentStatus />
-        <ImprovedAlertContainer alerts={alerts} onClose={(id) => {}} />
+        <ImprovedAlertContainer alerts={alerts} onClose={removeAlert} />
       </div>
     );
   }

@@ -117,7 +117,7 @@ export default function CompanyProfile() {
       setCompany(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to fetch profile', type: 'error' });
+      addAlert(error.message || 'Failed to fetch profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -157,9 +157,9 @@ export default function CompanyProfile() {
 
       setCompany(result.data);
       setEditing(false);
-      addAlert({ message: 'Profile updated successfully!', type: 'success' });
+      addAlert('Profile updated successfully!', 'success');
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to update profile', type: 'error' });
+      addAlert(error.message || 'Failed to update profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -199,10 +199,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to save logo');
       }
 
-      addAlert({ message: 'Logo uploaded successfully!', type: 'success' });
+      addAlert('Logo uploaded successfully!', 'success');
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to upload logo', type: 'error' });
+      addAlert(error.message || 'Failed to upload logo', 'error');
     } finally {
       setUploadingLogo(false);
     }
@@ -224,10 +224,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to upgrade verification');
       }
 
-      addAlert({ message: `Verification upgrade to ${level} level submitted!`, type: 'success' });
+      addAlert(`Verification upgrade to ${level} level submitted!`, 'success');
       fetchProfile();
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to upgrade verification', type: 'error' });
+      addAlert(error.message || 'Failed to upgrade verification', 'error');
     }
   };
 

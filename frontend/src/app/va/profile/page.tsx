@@ -139,7 +139,7 @@ export default function VAProfile() {
       setProfile(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to fetch profile', type: 'error' });
+      addAlert(error.message || 'Failed to fetch profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -187,9 +187,9 @@ export default function VAProfile() {
       const result = await response.json();
       setProfile(result.data);
       setEditing(false);
-      addAlert({ message: 'Profile updated successfully!', type: 'success' });
+      addAlert('Profile updated successfully!', 'success');
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to update profile', type: 'error' });
+      addAlert(error.message || 'Failed to update profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -230,10 +230,10 @@ export default function VAProfile() {
         throw new Error(result.error || `Failed to upload ${type}`);
       }
 
-      addAlert({ message: `${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, type: 'success' });
+      addAlert(`${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, 'success');
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      addAlert({ message: error.message || `Failed to upload ${type}`, type: 'error' });
+      addAlert(error.message || `Failed to upload ${type}`, 'error');
     } finally {
       setUploadingFile(null);
     }
@@ -253,7 +253,7 @@ export default function VAProfile() {
         });
 
         if (response.ok) {
-          addAlert({ message: `Skills assessment for ${skill} completed!`, type: 'success' });
+          addAlert(`Skills assessment for ${skill} completed!`, 'success');
         }
       } catch (error) {
         console.error(`Failed to assess ${skill}:`, error);

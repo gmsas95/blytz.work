@@ -125,7 +125,7 @@ export default function JobMarketplace() {
         throw new Error(result.error || 'Failed to fetch jobs');
       }
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to fetch jobs', type: 'error' });
+      addAlert(error.message || 'Failed to fetch jobs', 'error');
     } finally {
       setLoading(false);
     }

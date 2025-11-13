@@ -66,3 +66,6 @@ export function ImprovedAlertProvider({ children }: ImprovedAlertProviderProps) 
     </ImprovedAlertContext.Provider>
   );
 }
+
+// Export all components for easier imports
+export { ImprovedAlertContainer } from '@/components/ui/ImprovedAlert';

@@ -124,7 +124,7 @@ export default function CompanyMatches() {
         throw new Error(result.error || 'Failed to fetch matches');
       }
     } catch (error: any) {
-      addAlert({ message: error.message || 'Failed to fetch matches', type: 'error' });
+      addAlert(error.message || 'Failed to fetch matches', 'error');
     } finally {
       setLoading(false);
     }

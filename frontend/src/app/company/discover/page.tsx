@@ -3,8 +3,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AlertContainer } from '@/components/ui/Alert';
-import { useAlert } from '@/components/ui/Alert';
+import { useImprovedAlert } from '@/contexts/ImprovedAlertContext';
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Mock VA data
@@ -38,7 +37,7 @@ const mockRecommendations = [
 ];
 
 export default function DiscoverPage() {
-  const { addAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [recommendations, setRecommendations] = useState(mockRecommendations);
   const [savedVAs, setSavedVAs] = useState<number[]>([]);
@@ -49,11 +48,7 @@ export default function DiscoverPage() {
     if (direction === 'right') {
       setSavedVAs([...savedVAs, currentVA.id]);
       // Show success notification
-      addAlert({
-        type: 'success',
-        title: 'VA Saved',
-        message: `${currentVA.name} has been saved to your favorites`
-      });
+      addAlert(`${currentVA.name} has been saved to your favorites`, 'success');
     }
     
     if (currentIndex < recommendations.length - 1) {
@@ -75,17 +70,12 @@ export default function DiscoverPage() {
     } else {
       setSavedVAs([...savedVAs, vaId]);
       // Show save notification
-      addAlert({
-        type: 'success',
-        title: 'VA Saved',
-        message: `${currentVA.name} added to favorites`
-      });
+      addAlert(`${currentVA.name} added to favorites`, 'success');
     }
   };
 
   return (
     <>
-      <AlertContainer />
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">Discover Virtual Assistants</h1>
