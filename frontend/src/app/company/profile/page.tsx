@@ -62,7 +62,7 @@ const commonTechStack = [
 export default function CompanyProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { showAlert, Alert } = useAlert();
+  const { addAlert, Alert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -116,7 +116,7 @@ export default function CompanyProfile() {
       setCompany(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      showAlert(error.message || 'Failed to fetch profile', 'error');
+      addAlert(error.message || 'Failed to fetch profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -156,9 +156,9 @@ export default function CompanyProfile() {
 
       setCompany(result.data);
       setEditing(false);
-      showAlert('Profile updated successfully!', 'success');
+      addAlert('Profile updated successfully!', 'success');
     } catch (error: any) {
-      showAlert(error.message || 'Failed to update profile', 'error');
+      addAlert(error.message || 'Failed to update profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -198,10 +198,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to save logo');
       }
 
-      showAlert('Logo uploaded successfully!', 'success');
+      addAlert('Logo uploaded successfully!', 'success');
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      showAlert(error.message || 'Failed to upload logo', 'error');
+      addAlert(error.message || 'Failed to upload logo', 'error');
     } finally {
       setUploadingLogo(false);
     }
@@ -223,10 +223,10 @@ export default function CompanyProfile() {
         throw new Error(result.error || 'Failed to upgrade verification');
       }
 
-      showAlert(`Verification upgrade to ${level} level submitted!`, 'success');
+      addAlert(`Verification upgrade to ${level} level submitted!`, 'success');
       fetchProfile();
     } catch (error: any) {
-      showAlert(error.message || 'Failed to upgrade verification', 'error');
+      addAlert(error.message || 'Failed to upgrade verification', 'error');
     }
   };
 

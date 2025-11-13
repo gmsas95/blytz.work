@@ -73,7 +73,7 @@ const commonSkills = [
 export default function CompanyMatches() {
   const router = useRouter();
   const { user } = useAuth();
-  const { showAlert, Alert } = useAlert();
+  const { addAlert, Alert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<VAMatch[]>([]);
   const [savedVAs, setSavedVAs] = useState<string[]>([]);
@@ -125,7 +125,7 @@ export default function CompanyMatches() {
         throw new Error(result.error || 'Failed to fetch matches');
       }
     } catch (error: any) {
-      showAlert(error.message || 'Failed to fetch matches', 'error');
+      addAlert(error.message || 'Failed to fetch matches', 'error');
     } finally {
       setLoading(false);
     }

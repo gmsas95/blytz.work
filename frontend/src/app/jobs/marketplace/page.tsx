@@ -70,7 +70,7 @@ const commonSkills = [
 export default function JobMarketplace() {
   const router = useRouter();
   const { user } = useAuth();
-  const { showAlert, Alert } = useAlert();
+  const { addAlert, Alert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -125,7 +125,7 @@ export default function JobMarketplace() {
         throw new Error(result.error || 'Failed to fetch jobs');
       }
     } catch (error: any) {
-      showAlert(error.message || 'Failed to fetch jobs', 'error');
+      addAlert(error.message || 'Failed to fetch jobs', 'error');
     } finally {
       setLoading(false);
     }

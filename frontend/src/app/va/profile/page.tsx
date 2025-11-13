@@ -51,7 +51,7 @@ interface Analytics {
 export default function VAProfile() {
   const router = useRouter();
   const { user } = useAuth();
-  const { showAlert, Alert } = useAlert();
+  const { addAlert, Alert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState<VAProfile | null>(null);
@@ -100,7 +100,7 @@ export default function VAProfile() {
       setProfile(result.data);
       setEditForm(result.data);
     } catch (error: any) {
-      showAlert(error.message || 'Failed to fetch profile', 'error');
+      addAlert(error.message || 'Failed to fetch profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -140,9 +140,9 @@ export default function VAProfile() {
 
       setProfile(result.data);
       setEditing(false);
-      showAlert('Profile updated successfully!', 'success');
+      addAlert('Profile updated successfully!', 'success');
     } catch (error: any) {
-      showAlert(error.message || 'Failed to update profile', 'error');
+      addAlert(error.message || 'Failed to update profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -183,10 +183,10 @@ export default function VAProfile() {
         throw new Error(result.error || `Failed to upload ${type}`);
       }
 
-      showAlert(`${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, 'success');
+      addAlert(`${type === 'resume' ? 'Resume' : 'Video'} uploaded successfully!`, 'success');
       fetchProfile(); // Refresh profile data
     } catch (error: any) {
-      showAlert(error.message || `Failed to upload ${type}`, 'error');
+      addAlert(error.message || `Failed to upload ${type}`, 'error');
     } finally {
       setUploadingFile(null);
     }
@@ -206,7 +206,7 @@ export default function VAProfile() {
         });
 
         if (response.ok) {
-          showAlert(`Skills assessment for ${skill} completed!`, 'success');
+          addAlert(`Skills assessment for ${skill} completed!`, 'success');
         }
       } catch (error) {
         console.error(`Failed to assess ${skill}:`, error);
