@@ -5,14 +5,14 @@ import { auth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  ArrowRightOnRectangleIcon,
-  UserPlusIcon,
-  LockClosedIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  UserCircleIcon,
-  BuildingOfficeIcon,
-} from '@heroicons/react/24/outline';
+  LogIn,
+  UserPlus,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Building,
+} from 'lucide-react';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -125,7 +125,7 @@ export default function AuthPage() {
                     onClick={() => setRole('va')}
                     className={`auth-role-btn ${role === 'va' ? 'auth-role-active' : ''}`}
                   >
-                    <UserCircleIcon className="h-4 w-4 mr-2" />
+                    <User className="h-4 w-4 mr-2" />
                     VA
                   </button>
                   <button
@@ -133,7 +133,7 @@ export default function AuthPage() {
                     onClick={() => setRole('company')}
                     className={`auth-role-btn ${role === 'company' ? 'auth-role-active' : ''}`}
                   >
-                    <BuildingOfficeIcon className="h-4 w-4 mr-2" />
+                    <Building className="h-4 w-4 mr-2" />
                     Company
                   </button>
                 </div>
@@ -162,7 +162,7 @@ export default function AuthPage() {
                 Password
               </label>
               <div className="auth-input-wrapper">
-                <LockClosedIcon className="auth-input-icon" />
+                <Lock className="auth-input-icon" />
                 <input
                   id="password"
                   name="password"
@@ -180,9 +180,9 @@ export default function AuthPage() {
                   className="auth-input-toggle"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <EyeIcon className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
@@ -202,12 +202,12 @@ export default function AuthPage() {
                 <div className="flex items-center justify-center">
                   {isLogin ? (
                     <>
-                      <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+                      <LogIn className="h-4 w-4 mr-2" />
                       Sign In
                     </>
                   ) : (
                     <>
-                      <UserPlusIcon className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-4 w-4 mr-2" />
                       Create Account
                     </>
                   )}

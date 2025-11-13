@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { 
-  ArrowRightIcon,
-  PlayIcon,
-  CheckCircleIcon,
-  StarIcon,
-  SparklesIcon,
-  ShieldCheckIcon,
-  RocketLaunchIcon,
-} from '@heroicons/react/24/outline';
+  ArrowRight,
+  Play,
+  CheckCircle,
+  Star,
+  Sparkles,
+  Shield,
+  Rocket,
+} from 'lucide-react';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -45,7 +45,7 @@ export default function HomePage() {
         <div className="hero-content">
           <div className="hero-text">
             <div className="badge">
-              <SparklesIcon style={{width: '16px', height: '16px', marginRight: '8px'}} />
+              <Sparkles style={{width: '16px', height: '16px', marginRight: '8px'}} />
               Trusted by 500+ companies
             </div>
             
@@ -64,11 +64,11 @@ export default function HomePage() {
                 className="btn btn-primary"
               >
                 Get Started
-                <ArrowRightIcon style={{width: '20px', height: '20px', marginLeft: '8px'}} />
+                <ArrowRight style={{width: '20px', height: '20px', marginLeft: '8px'}} />
               </Link>
               
               <button className="btn btn-secondary">
-                <PlayIcon style={{width: '20px', height: '20px', marginRight: '8px'}} />
+                <Play style={{width: '20px', height: '20px', marginRight: '8px'}} />
                 Watch Demo
               </button>
             </div>

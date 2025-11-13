@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
+import { ImprovedAlertProvider } from '@/contexts/ImprovedAlertContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +20,9 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <ImprovedAlertProvider>
+        {children}
+      </ImprovedAlertProvider>
     </QueryClientProvider>
   );
 }

@@ -4,15 +4,15 @@ import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  Bars3Icon,
-  XMarkIcon,
-  ArrowRightOnRectangleIcon,
-  DocumentTextIcon,
-  SparklesIcon,
-  BuildingOfficeIcon,
-  BriefcaseIcon,
-  UserCircleIcon,
-} from '@heroicons/react/24/outline';
+  Menu,
+  X,
+  LogOut,
+  FileText,
+  Sparkles,
+  Building,
+  Briefcase,
+  User,
+} from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 
 export function Navbar() {
@@ -35,12 +35,12 @@ export function Navbar() {
   }
 
   const navigation = [
-    { name: 'Discover', href: '/company/discover', icon: SparklesIcon, role: 'company' },
-    { name: 'Jobs', href: '/company/jobs', icon: BriefcaseIcon, role: 'company' },
-    { name: 'Jobs', href: '/va/jobs', icon: BriefcaseIcon, role: 'va' },
-    { name: 'Profile', href: '/va/profile', icon: UserCircleIcon, role: 'va' },
-    { name: 'Matches', href: '/va/matches', icon: SparklesIcon, role: 'va' },
-    { name: 'Contracts', href: '/contracts', icon: DocumentTextIcon, role: 'all' },
+    { name: 'Discover', href: '/company/discover', icon: Sparkles, role: 'company' },
+    { name: 'Jobs', href: '/company/jobs', icon: Briefcase, role: 'company' },
+    { name: 'Jobs', href: '/va/jobs', icon: Briefcase, role: 'va' },
+    { name: 'Profile', href: '/va/profile', icon: User, role: 'va' },
+    { name: 'Matches', href: '/va/matches', icon: Sparkles, role: 'va' },
+    { name: 'Contracts', href: '/contracts', icon: FileText, role: 'all' },
   ];
 
   return (
@@ -101,7 +101,7 @@ export function Navbar() {
                   onClick={handleSignOut}
                   className="navbar-btn navbar-btn-secondary"
                 >
-                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                  <LogOut className="h-4 w-4" />
                 </button>
               </div>
             ) : (
@@ -129,9 +129,9 @@ export function Navbar() {
             >
               <span className="sr-only">Open main menu</span>
               {mobileMenuOpen ? (
-                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                <X className="h-6 w-6" aria-hidden="true" />
               ) : (
-                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+                <Menu className="h-6 w-6" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -167,7 +167,7 @@ export function Navbar() {
                 onClick={handleSignOut}
                 className="navbar-mobile-btn"
               >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                <LogOut className="h-5 w-5" />
                 <span className="text-base">Sign Out</span>
               </button>
             </div>

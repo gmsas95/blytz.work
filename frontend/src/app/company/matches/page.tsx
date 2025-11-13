@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { AlertContainer, useAlert, Alert } from "@/components/ui/Alert";
-import Navbar from "@/components/Navbar";
+import { useImprovedAlert } from "@/contexts/ImprovedAlertContext";
 
 interface VAMatch {
   id: string;
@@ -73,7 +72,7 @@ const commonSkills = [
 export default function CompanyMatches() {
   const router = useRouter();
   const { user } = useAuth();
-  const { addAlert } = useAlert();
+  const { addAlert } = useImprovedAlert();
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<VAMatch[]>([]);
   const [savedVAs, setSavedVAs] = useState<string[]>([]);
@@ -214,7 +213,6 @@ export default function CompanyMatches() {
   if (!user) {
     return (
       <>
-        <AlertContainer />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
@@ -227,8 +225,6 @@ export default function CompanyMatches() {
 
   return (
     <>
-      <AlertContainer />
-      <Navbar />
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b">
