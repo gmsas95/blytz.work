@@ -665,7 +665,7 @@ export default function CompanyMatches() {
           )}
         </div>
       </div>
-      <AlertComponent />
+      <Alert />
     </>
   );
 }
