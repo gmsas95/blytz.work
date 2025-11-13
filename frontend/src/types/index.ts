@@ -34,8 +34,22 @@ export interface JobPosting {
   title: string;
   description: string;
   rateRange: string;
-  isActive: boolean;
+  budget?: number;
+  location?: string;
+  remote: boolean;
+  category?: string;
+  tags: string[];
+  experienceLevel?: string;
+  jobType?: string;
+  duration?: string;
+  urgency?: string;
+  skillsRequired: string[];
+  status: string;
   createdAt: string;
+  views: number;
+  proposalCount: number;
+  featured: boolean;
+  isActive: boolean;
   company?: Company;
 }
 
