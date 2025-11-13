@@ -135,7 +135,3 @@ export { AlertContainer as Toast, AlertContainer as NotificationProvider, AlertC
 
 // Default export
 export default AlertContainer;
-
-// Additional named exports
-export { AlertContainer as Toast };
-export { AlertContainer as NotificationProvider };
