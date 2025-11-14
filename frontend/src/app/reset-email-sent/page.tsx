@@ -6,10 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function EmailSentPage() {
-  const [email] = useState("user@example.com"); // This would come from URL params or localStorage
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    // Get email from URL params or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

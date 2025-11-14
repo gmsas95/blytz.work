@@ -12,12 +12,39 @@ import { useState } from "react";
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle password reset request
-    console.log("Password reset requested for:", email);
-    setIsSubmitted(true);
+    
+    // Basic email validation
+    if (!email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+    
+      try {
+      // API call to check if email exists and send reset
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setIsSubmitted(true);
+        setError("");
+      } else {
+        setError(data.message || "Failed to send reset link");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      console.error("Password reset error:", err);
+    }
   };
 
   return (
@@ -52,6 +79,12 @@ export default function ForgotPasswordPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && (
+                    <div className="text-red-600 text-sm mb-4 p-3 bg-red-50 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-medium text-gray-700">
                       Email Address
