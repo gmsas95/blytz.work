@@ -2,21 +2,29 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json();
 
-    // TODO: Replace with actual database check
-    // For now, we'll simulate checking if email exists
-    // In a real implementation, this would query your user database
-    
-    // Simulated user database
-    const registeredEmails = [
-      "user@example.com",
-      "admin@blytzhire.com",
-      "test@hyred.blytz.app",
-      // Add more registered emails as needed
-    ];
+    if (!email || !email.includes('@')) {
+      return Response.json(
+        { 
+          message: "Please enter a valid email address" 
+        },
+        { status: 400 }
+      );
+    }
 
-    const emailExists = registeredEmails.includes(email.toLowerCase());
+    // Import Prisma to check if email exists in actual database
+    const { prisma } = await import("@/utils/prisma");
 
-    if (!emailExists) {
+    // Check if user exists in database
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email: email.toLowerCase(),
+      },
+      select: {
+        email: true,
+      }
+    });
+
+    if (!existingUser) {
       return Response.json(
         { 
           message: "No account found with this email address. Please check your email or sign up for a new account." 
@@ -25,8 +33,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Send actual password reset email
-    // For now, we'll just return success
+    // TODO: Replace with actual email sending service
+    // For now, just return success
+    console.log(`Password reset requested for existing user: ${existingUser.email}`);
+    
     return Response.json(
       { 
         message: "Password reset link sent to your email address.",
