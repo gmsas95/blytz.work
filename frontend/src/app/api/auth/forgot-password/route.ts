@@ -11,36 +11,40 @@ export async function POST(request: Request) {
       );
     }
 
-    // Forward to backend API which has Firebase Admin
-    const backendUrl = process.env.BACKEND_URL || 'https://hyred-api.blytz.app';
-    console.log("Calling backend API:", `${backendUrl}/auth/forgot-password`);
+    // Use client-side Firebase Auth to check if email exists
+    const { getAuth } = await import('firebase/auth');
+    const auth = getAuth();
     
-    const backendResponse = await fetch(`${backendUrl}/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!backendResponse.ok) {
-      const errorText = await backendResponse.text();
-      console.error("Backend API error:", backendResponse.status, errorText);
+    // Check if user exists by trying to send reset password
+    try {
+      await auth.sendPasswordResetEmail(email.toLowerCase());
       
       return Response.json(
         { 
-          message: "Failed to connect to authentication service. Please try again later." 
+          message: "Password reset link sent to your email address.",
+          success: true 
         },
-        { status: backendResponse.status }
+        { status: 200 }
+      );
+    } catch (error: any) {
+      console.error("Firebase reset password error:", error);
+      
+      if (error.code === 'auth/user-not-found') {
+        return Response.json(
+          { 
+            message: "No account found with this email address. Please check your email or sign up for a new account." 
+          },
+          { status: 404 }
+        );
+      }
+      
+      return Response.json(
+        { 
+          message: "An error occurred while processing your request. Please try again later." 
+        },
+        { status: 500 }
       );
     }
-
-    const data = await backendResponse.json();
-    console.log("Backend response:", data);
-
-    return Response.json(data, {
-      status: 200
-    });
     
   } catch (error) {
     console.error("Password reset API error:", error);
