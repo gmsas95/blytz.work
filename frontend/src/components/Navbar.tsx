@@ -116,9 +116,8 @@ export function Navbar() {
                 </Link>
                 <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
                   <Button
-                    variant="yellow"
+                    className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md w-full"
                     size="sm"
-                    className="text-black hover:bg-[#FFD600]/90 w-full"
                   >
                     Get Started
                   </Button>
