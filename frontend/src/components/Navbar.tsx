@@ -84,7 +84,7 @@ export function Navbar() {
               ) : (
                 <button
                   key={index}
-                  onClick={() => scrollToSection(link.id)}
+                  onClick={() => scrollToSection(link.id!)}
                   className="text-gray-600 hover:text-black transition-colors"
                 >
                   {link.label}
@@ -169,7 +169,7 @@ export function Navbar() {
                 ) : (
                   <button
                     key={index}
-                    onClick={() => scrollToSection(link.id)}
+                    onClick={() => scrollToSection(link.id!)}
                     className="text-gray-600 hover:text-black transition-colors px-2 text-left"
                   >
                     {link.label}
