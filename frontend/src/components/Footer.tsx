@@ -21,7 +21,7 @@ export function Footer() {
     <footer className="py-16 bg-black text-gray-400 border-t border-gray-900">
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <Link to="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg bg-[#FFD600] flex items-center justify-center">
               <Zap className="w-7 h-7 text-black" fill="black" />
             </div>
