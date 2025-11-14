@@ -11,13 +11,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use client-side Firebase Auth to check if email exists
-    const { getAuth } = await import('firebase/auth');
-    const auth = getAuth();
+    // Use client-side Firebase Auth to send reset password
+    const { getAuth, sendPasswordResetEmail } = await import('firebase/auth');
     
-    // Check if user exists by trying to send reset password
     try {
-      await auth.sendPasswordResetEmail(email.toLowerCase());
+      await sendPasswordResetEmail(email.toLowerCase());
       
       return Response.json(
         { 
