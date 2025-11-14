@@ -116,12 +116,8 @@ const mockJobs: JobPosting[] = [
     company: {
       id: '1',
       name: 'TechCorp',
-      logoUrl: 'https://via.placeholder.com/40x40/FFD600/000000?text=TC',
-      country: 'United States',
-      verificationLevel: 'professional',
-      totalReviews: 24
-    },
-    _count: { proposals: 12 }
+      country: 'United States'
+    }
   },
   {
     id: '2',
@@ -146,11 +142,8 @@ const mockJobs: JobPosting[] = [
     company: {
       id: '2',
       name: 'StartupXYZ',
-      country: 'Canada',
-      verificationLevel: 'basic',
-      totalReviews: 5
-    },
-    _count: { proposals: 8 }
+      country: 'Canada'
+    }
   },
   {
     id: '3',
@@ -175,11 +168,8 @@ const mockJobs: JobPosting[] = [
     company: {
       id: '3',
       name: 'TechBlog Inc',
-      country: 'United Kingdom',
-      verificationLevel: 'professional',
-      totalReviews: 18
-    },
-    _count: { proposals: 5 }
+      country: 'United Kingdom'
+    }
   }
 ];
 
