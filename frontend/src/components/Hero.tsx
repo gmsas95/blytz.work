@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "./ui/button";
 import { Zap } from "lucide-react";
 import { motion } from "framer-motion";

@@ -1,3 +1,5 @@
+"use client";
+
 import { Smartphone, Sparkles, RocketIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
