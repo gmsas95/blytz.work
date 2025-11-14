@@ -74,9 +74,8 @@ export function Navbar() {
             </Link>
             <Link href="/auth">
               <Button
-                variant="yellow"
+                className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md"
                 size="sm"
-                className="text-black hover:bg-[#FFD600]/90 shadow-md"
               >
                 Get Started
               </Button>
