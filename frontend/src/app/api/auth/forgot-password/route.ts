@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     // Import Prisma to check if email exists in actual database
-    const { prisma } = await import("@/utils/prisma");
+    const { prisma } = await import("../../../backend/src/utils/prisma");
 
     // Check if user exists in database
     const existingUser = await prisma.user.findUnique({
