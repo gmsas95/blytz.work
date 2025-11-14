@@ -1,24 +1,11 @@
 import { Zap } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import Link from "next/link";
 
 export function Footer() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const scrollToSection = (sectionId: string) => {
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100);
-    } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
