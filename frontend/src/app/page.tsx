@@ -1,47 +1,26 @@
-'use client';
+import { Navbar } from "@/components/Navbar";
+import { Hero } from "@/components/Hero";
+import { HowItWorks } from "@/components/HowItWorks";
+import { WhyBlytz } from "@/components/WhyBlytz";
+import { ForEmployers } from "@/components/ForEmployers";
+import { ForVAs } from "@/components/ForVAs";
+import { Testimonials } from "@/components/Testimonials";
+import { Pricing } from "@/components/Pricing";
+import { CTA } from "@/components/CTA";
+import { Footer } from "@/components/Footer";
 
-import { useAuth } from '@/components/AuthProvider';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { LandingNavbar } from '@/components/LandingNavbar';
-import { Hero } from '@/components/Hero';
-import { HowItWorks } from '@/components/HowItWorks';
-import { WhyBlytz } from '@/components/WhyBlytz';
-import { Footer } from '@/components/Footer';
-
-export default function HomePage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  // Only redirect when NOT loading and user exists
-  useEffect(() => {
-    if (!loading && user) {
-      router.push(user.role === 'company' ? '/company/discover' : '/va/matches');
-    }
-  }, [user, loading, router]);
-
-  // Show loading ONLY during initial auth check
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ALWAYS show landing page for unauthenticated users
+export default function Home() {
   return (
-    <div className="min-h-screen bg-white text-black">
-      <LandingNavbar />
-      <main>
-        <Hero />
-        <HowItWorks />
-        <WhyBlytz />
-      </main>
+    <div className="min-h-screen">
+      <Navbar />
+      <Hero />
+      <HowItWorks />
+      <WhyBlytz />
+      <ForEmployers />
+      <ForVAs />
+      <Testimonials />
+      <Pricing />
+      <CTA />
       <Footer />
     </div>
   );

@@ -1,192 +1,134 @@
 'use client';
 
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  Menu,
-  X,
-  LogOut,
-  FileText,
-  Sparkles,
-  Building,
-  Briefcase,
-  User,
-} from 'lucide-react';
-import { useAuth } from '@/components/AuthProvider';
+import { Button } from "./ui/button";
+import { Zap, Menu } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Sign out error:', error);
+  const scrollToSection = (sectionId: string) => {
+    if (!isLandingPage) {
+      // Navigate to landing page first, then scroll
+      window.location.href = "/";
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
+    setMobileMenuOpen(false);
   };
 
-  // Don't show navbar on auth page
-  if (pathname === '/auth') {
-    return null;
-  }
-
-  const navigation = [
-    { name: 'Discover', href: '/company/discover', icon: Sparkles, role: 'company' },
-    { name: 'Jobs', href: '/company/jobs', icon: Briefcase, role: 'company' },
-    { name: 'Jobs', href: '/va/jobs', icon: Briefcase, role: 'va' },
-    { name: 'Profile', href: '/va/profile', icon: User, role: 'va' },
-    { name: 'Matches', href: '/va/matches', icon: Sparkles, role: 'va' },
-    { name: 'Contracts', href: '/contracts', icon: FileText, role: 'all' },
+  const navLinks = [
+    { label: "How It Works", id: "how" },
+    { label: "Pricing", id: "pricing" },
+    { label: "For VAs", id: "vas" },
   ];
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <div className="navbar-content">
-          {/* Logo */}
-          <div>
-            <Link href="/" className="navbar-logo">
-              <div className="navbar-logo-group">
-                <div className="navbar-logo-box">
-                  <span className="text-white font-bold text-sm">B</span>
-                </div>
-                <div>
-                  <h1 className="navbar-logo-text">BlytzHire</h1>
-                  <p className="navbar-logo-subtext">VA Marketplace</p>
-                </div>
-              </div>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+              <Zap
+                className="w-6 h-6 text-[#FFD600]"
+                fill="#FFD600"
+              />
+            </div>
+            <span className="text-xl text-black tracking-tight">
+              Blytz Hire
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link, index) => (
+              <button
+                key={index}
+                onClick={() => scrollToSection(link.id)}
+                className="text-gray-600 hover:text-black transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
+            <Link href="/auth">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-black text-black hover:bg-gray-50"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/auth">
+              <Button
+                variant="yellow"
+                size="sm"
+                className="text-black hover:bg-[#FFD600]/90 shadow-md"
+              >
+                Get Started
+              </Button>
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="navbar-desktop-nav">
-            {user && navigation.map((item) => {
-              const isActive = pathname === item.href;
-              if (item.role !== 'all' && item.role !== user.role) return null;
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`navbar-nav-link ${
-                    isActive ? 'navbar-nav-link-active' : 'navbar-nav-link-inactive'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <Menu className="w-6 h-6 text-black" />
+          </button>
+        </div>
 
-          {/* Right side */}
-          <div className="navbar-desktop-actions">
-            {user ? (
-              <div className="navbar-user-info">
-                <div className="navbar-user-info">
-                  <div className="navbar-user-avatar">
-                    <span className="text-white text-sm font-medium">
-                      {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                  <span className="navbar-user-name">
-                    {user.displayName || user.email?.split('@')[0]}
-                  </span>
-                </div>
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link, index) => (
                 <button
-                  onClick={handleSignOut}
-                  className="navbar-btn navbar-btn-secondary"
+                  key={index}
+                  onClick={() => scrollToSection(link.id)}
+                  className="text-gray-600 hover:text-black transition-colors px-2 text-left"
                 >
-                  <LogOut className="h-4 w-4" />
+                  {link.label}
                 </button>
-              </div>
-            ) : (
-              <Link
-                href="/auth"
-                className="navbar-btn navbar-btn-primary"
-              >
-                Get Started
-              </Link>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="navbar-mobile-section">
-            {user && (
-              <div className="navbar-user-avatar">
-                <span className="text-white text-sm font-medium">
-                  {user.email?.charAt(0).toUpperCase() || user.displayName?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-            )}
-            <button 
-              className="navbar-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <span className="sr-only">Open main menu</span>
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu panel */}
-      {mobileMenuOpen && (
-        <div className={`navbar-mobile-menu show`}>
-          <div className="navbar-mobile-content">
-            {user && navigation.map((item) => {
-              const isActive = pathname === item.href;
-              if (item.role !== 'all' && item.role !== user.role) return null;
-              
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`navbar-mobile-link ${
-                    isActive ? 'navbar-mobile-link-active' : ''
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="text-base">{item.name}</span>
+              ))}
+              <div className="flex flex-col gap-2 pt-2">
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-black text-black hover:bg-gray-50 w-full"
+                  >
+                    Sign In
+                  </Button>
                 </Link>
-              );
-            })}
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button
+                    variant="yellow"
+                    size="sm"
+                    className="text-black hover:bg-[#FFD600]/90 w-full"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
-          
-          {user && (
-            <div className="navbar-mobile-divider">
-              <button
-                onClick={handleSignOut}
-                className="navbar-mobile-btn"
-              >
-                <LogOut className="h-5 w-5" />
-                <span className="text-base">Sign Out</span>
-              </button>
-            </div>
-          )}
-
-          {!user && (
-            <div className="navbar-mobile-divider">
-              <Link
-                href="/auth"
-                className="navbar-mobile-btn navbar-btn-primary"
-              >
-                Get Started
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </nav>
   );
 }
-
-export default Navbar;

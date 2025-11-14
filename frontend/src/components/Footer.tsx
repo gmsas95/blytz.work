@@ -1,29 +1,40 @@
-'use client';
-
 import { Zap } from "lucide-react";
-import Link from "next/link";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export function Footer() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
   const links = [
-    { label: "About", type: "link" as const, href: "/about" as const },
-    { label: "Pricing", type: "scroll" as const, sectionId: "pricing" as const },
-    { label: "FAQ", type: "link" as const, href: "/faq" as const },
-    { label: "Terms", type: "link" as const, href: "/terms" as const },
-    { label: "Privacy", type: "link" as const, href: "/privacy" as const },
+    { label: "About", type: "link", to: "/about" },
+    { label: "Pricing", type: "scroll", sectionId: "pricing" },
+    { label: "FAQ", type: "link", to: "/faq" },
+    { label: "Terms", type: "link", to: "/terms" },
+    { label: "Privacy", type: "link", to: "/privacy" },
   ];
 
   return (
     <footer className="py-16 bg-black text-gray-400 border-t border-gray-900">
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <Link href="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg bg-[#FFD600] flex items-center justify-center">
               <Zap className="w-7 h-7 text-black" fill="black" />
             </div>
@@ -35,7 +46,7 @@ export function Footer() {
               link.type === "link" ? (
                 <Link
                   key={index}
-                  href={link.href}
+                  to={link.to}
                   className="hover:text-[#FFD600] transition-colors"
                 >
                   {link.label}

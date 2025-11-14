@@ -1,7 +1,6 @@
-'use client';
-
-import { Button } from '@/components/ui-shadcn/button';
+import { Button } from "./ui/button";
 import { Zap } from "lucide-react";
+import { motion } from "motion/react";
 
 export function Hero() {
   const mockVAs = [
@@ -20,7 +19,12 @@ export function Hero() {
       
       <div className="relative container mx-auto px-6 max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8">
+          <motion.div 
+            className="space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <div className="inline-flex items-center gap-2 bg-black text-[#FFD600] px-4 py-2 rounded-full">
               <Zap className="w-4 h-4" fill="#FFD600" />
               <span>Blytz Speed Hiring</span>
@@ -41,17 +45,22 @@ export function Hero() {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black text-lg px-8 shadow-lg hover:shadow-xl transition-all">
+              <Button variant="yellow" size="lg" className="text-lg px-8 shadow-lg hover:shadow-xl transition-all">
                 Get Matches Now
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] transition-all">
+              <Button variant="outline" size="lg" className="text-lg px-8 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] transition-all">
                 See How It Works
               </Button>
             </div>
-          </div>
+          </motion.div>
           
-          {/* Phone Mockup */}
-          <div className="relative">
+          {/* Swipe Interface Mockup */}
+          <motion.div 
+            className="relative"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className="relative max-w-md mx-auto">
               {/* Phone Frame */}
               <div className="relative bg-black rounded-[3rem] p-4 shadow-2xl">
@@ -76,12 +85,17 @@ export function Hero() {
                     {/* VA Cards Stack */}
                     <div className="relative h-[400px]">
                       {mockVAs.map((va, index) => (
-                        <div
+                        <motion.div
                           key={index}
                           className="absolute w-full"
-                          style={{
-                            transform: `scale(${1 - index * 0.05}) translateY(${index * 10}px)`,
-                            opacity: 1 - index * 0.3,
+                          initial={{ scale: 1 - index * 0.05, y: index * 10, opacity: 1 - index * 0.3 }}
+                          animate={{ 
+                            scale: 1 - index * 0.05, 
+                            y: index * 10,
+                            rotate: index === 0 ? [-1, 1, -1] : 0
+                          }}
+                          transition={{ 
+                            rotate: { duration: 2, repeat: Infinity, ease: "easeInOut" }
                           }}
                         >
                           <div className="bg-white rounded-2xl border-2 border-gray-200 p-6 shadow-xl">
@@ -100,27 +114,39 @@ export function Hero() {
                               <span className="text-sm text-gray-500">{va.timezone}</span>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                     
                     {/* Swipe Actions */}
                     <div className="flex justify-center gap-6 pt-4">
-                      <button className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl hover:scale-110 transition-transform">
+                      <motion.button 
+                        className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         ✕
-                      </button>
-                      <button className="w-16 h-16 rounded-full bg-[#FFD600] flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition-transform">
+                      </motion.button>
+                      <motion.button 
+                        className="w-16 h-16 rounded-full bg-[#FFD600] flex items-center justify-center text-2xl shadow-lg"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         ⚡
-                      </button>
-                      <button className="w-14 h-14 rounded-full bg-black flex items-center justify-center text-2xl text-white hover:scale-110 transition-transform">
+                      </motion.button>
+                      <motion.button 
+                        className="w-14 h-14 rounded-full bg-black flex items-center justify-center text-2xl text-white"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         ♥
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
