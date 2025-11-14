@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, ShieldCheck, DollarSign, FileText, RefreshCw } from "lucide-react";
+import { Zap, ShieldCheck, DollarSign, FileText, RefreshCw, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function WhyBlytz() {
@@ -39,6 +39,13 @@ export function WhyBlytz() {
       title: "Flexible Hours",
       description:
         "Part-time or full-time, you choose.",
+    },
+    {
+      icon: Headphones,
+      emoji: "🎧",
+      title: "24/7 Support",
+      description:
+        "Dedicated support team whenever you need us.",
     },
   ];
 
