@@ -208,7 +208,7 @@ export default function PaymentsPage() {
 
   const filteredTransactions = transactions.filter(transaction => {
     if (selectedType === 'all') return true;
-    return transaction.type === selectedType;
+    return transaction.type === selectedType.slice(0, -1); // Remove 's' from plural form
   });
 
   const formatDate = (dateString: string) => {
