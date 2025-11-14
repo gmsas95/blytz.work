@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, ShieldCheck, Gamepad2 } from "lucide-react";
+import { Zap, ShieldCheck, DollarSign, FileText, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function WhyBlytz() {
@@ -8,23 +8,37 @@ export function WhyBlytz() {
     {
       icon: Zap,
       emoji: "⚡",
-      title: "Speed",
+      title: "Fastest Matching",
       description:
-        "Swipe-based hiring — find your VA in minutes, not weeks.",
+        "Most clients get a VA in less than 24 hours.",
     },
     {
       icon: ShieldCheck,
-      emoji: "🤝",
-      title: "Trust",
+      emoji: "🛡",
+      title: "Vetted Talent",
       description:
-        "Every VA is verified, pre-vetted, and time-zone ready.",
+        "Verified skills and reliability checks.",
     },
     {
-      icon: Gamepad2,
-      emoji: "🎮",
-      title: "Experience",
+      icon: DollarSign,
+      emoji: "💳",
+      title: "Hassle-Free Payments",
       description:
-        "A fun, intuitive interface that makes hiring feel human.",
+        "Weekly invoicing, transparent rates.",
+    },
+    {
+      icon: FileText,
+      emoji: "📄",
+      title: "We Handle Paperwork",
+      description:
+        "Contracts, time tracking, compliance.",
+    },
+    {
+      icon: RefreshCw,
+      emoji: "🔄",
+      title: "Flexible Hours",
+      description:
+        "Part-time or full-time, you choose.",
     },
   ];
 
@@ -39,11 +53,11 @@ export function WhyBlytz() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-5xl lg:text-6xl text-black tracking-tight">
-            Why founders love Blytz Hire.
+            Speed Meets Quality
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (

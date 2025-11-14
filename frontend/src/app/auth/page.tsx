@@ -32,15 +32,22 @@ export default function AuthPage() {
         toast.success(`Welcome back!`, {
           description: "Successfully signed in to your account",
         });
-        // Redirect to dashboard or homepage after successful login
-        router.push("/");
+        // Check if user has role selected, redirect accordingly
+        const existingRole = localStorage.getItem("userRole");
+        if (existingRole === "employer") {
+          router.push("/employer/dashboard");
+        } else if (existingRole === "va") {
+          router.push("/va/dashboard");
+        } else {
+          router.push("/select-role");
+        }
       } else {
         await registerUser(formData.email, formData.password, formData.name);
         toast.success(`Account created!`, {
           description: "Welcome to Blytz Hire",
         });
-        // Redirect to role selection or dashboard after registration
-        router.push("/");
+        // Redirect to role selection after registration
+        router.push("/select-role");
       }
     } catch (err: any) {
       const errorMessage = getAuthErrorMessage(err);

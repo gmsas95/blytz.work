@@ -7,20 +7,20 @@ export function Testimonials() {
   const testimonials = [
     {
       quote:
-        "Found my e-commerce VA in 30 minutes. Game changer.",
+        "We got our VA within hours. The fastest hiring experience ever.",
       author: "Chris M.",
-      role: "DTC brand owner (Los Angeles)",
+      role: "DTC Brand Owner, LA",
     },
     {
       quote: "Better than Upwork — I just swiped and hired.",
       author: "Jenny R.",
-      role: "SaaS startup founder (Austin)",
+      role: "SaaS Founder, Austin",
     },
     {
       quote:
-        "The speed is unreal. Blytz saved me weeks of interviewing.",
+        "Blytz saved me weeks of interviewing. Unreal speed.",
       author: "Marcus T.",
-      role: "E-commerce Entrepreneur (NYC)",
+      role: "E-commerce Entrepreneur, NYC",
     },
   ];
 
@@ -35,9 +35,9 @@ export function Testimonials() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-5xl lg:text-6xl tracking-tight">
-            Trusted by founders who move{" "}
+            {" "}
             <span className="relative inline-block">
-              <span className="relative z-10">fast.</span>
+              <span className="relative z-10">Trust Boosters</span>
               <span className="absolute bottom-2 left-0 w-full h-4 bg-[#FFD600] -z-0" />
             </span>
           </h2>

@@ -33,26 +33,33 @@ export function Hero() {
             </div>
             
             <h1 className="text-6xl lg:text-7xl tracking-tight text-black leading-[1.1]">
-              Hire your next VA in under{" "}
+              Hire a VA in Under{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">5 minutes.</span>
+                <span className="relative z-10">24 Hours</span>
                 <span className="absolute bottom-2 left-0 w-full h-4 bg-[#FFD600] -z-0" />
               </span>
+              {" — Seriously."}
             </h1>
             
             <p className="text-xl text-gray-600 max-w-xl leading-relaxed">
-              Pre-vetted Southeast Asian virtual assistants, ready for short-term weekly contracts.
+              Pre-vetted Southeast Asian virtual assistants.
               <br />
-              No interviews. No recruiter fees. Just <strong className="text-black">speed, trust, and experience</strong> — powered by Blytz.
+              No interviews. No recruiter fees. Just <strong className="text-black">speed, trust, and results</strong>.
             </p>
             
             <div className="flex flex-wrap gap-4">
               <Button size="lg" className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black text-lg px-8 shadow-lg hover:shadow-xl transition-all">
-                Get Matches Now
+                Get Matched Now
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] transition-all">
                 See How It Works
               </Button>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-gray-700 italic">
+                "Start working with your first VA faster than you expected."
+              </p>
             </div>
           </motion.div>
           

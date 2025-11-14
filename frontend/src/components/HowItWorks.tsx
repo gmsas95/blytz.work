@@ -9,20 +9,20 @@ export function HowItWorks() {
     {
       icon: Smartphone,
       number: "1",
-      title: "Swipe",
-      description: "Discover pre-vetted VAs by role, skill, and timezone. Our swipe interface makes shortlisting feel effortless.",
+      title: "Tell Us What You Need",
+      description: "2-minute form. Skills, timezone, hours, budget. Done.",
     },
     {
       icon: Sparkles,
       number: "2",
-      title: "Match",
-      description: "Our AI recommends your top fits instantly. No endless interviews — just clear matches that fit your workflow.",
+      title: "We Match You Instantly",
+      description: "AI + human verification finds the perfect VA in under 24 hours.",
     },
     {
       icon: RocketIcon,
       number: "3",
-      title: "Hire",
-      description: "Start a weekly contract — no recruiter, no delay. We handle the logistics so you can focus on running your business.",
+      title: "Hire & Start Today",
+      description: "Approve, start, and focus on growth — we handle contracts and payments.",
     },
   ];
 
@@ -37,9 +37,9 @@ export function HowItWorks() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-5xl lg:text-6xl tracking-tight">
-            How hiring works —{" "}
+            3 Simple Steps to{" "}
             <span className="relative inline-block">
-              <span className="relative z-10 no-underline text-[64px]">at Blytz speed.</span>
+              <span className="relative z-10 no-underline text-[64px]">Hire Faster.</span>
               <span className="absolute bottom-2 left-0 w-full h-2 bg-[#FFD600] -z-0" />
             </span>
           </h2>
@@ -80,7 +80,7 @@ export function HowItWorks() {
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           <Button size="lg" className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black text-lg px-10 shadow-xl hover:shadow-2xl transition-all">
-            Start Matching
+            Start Matching Now
           </Button>
         </motion.div>
       </div>

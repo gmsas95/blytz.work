@@ -2,10 +2,8 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { WhyBlytz } from "@/components/WhyBlytz";
-import { ForEmployers } from "@/components/ForEmployers";
-import { ForVAs } from "@/components/ForVAs";
+import { RolesWeFill } from "@/components/RolesWeFill";
 import { Testimonials } from "@/components/Testimonials";
-import { Pricing } from "@/components/Pricing";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 
@@ -16,10 +14,8 @@ export default function Home() {
       <Hero />
       <HowItWorks />
       <WhyBlytz />
-      <ForEmployers />
-      <ForVAs />
+      <RolesWeFill />
       <Testimonials />
-      <Pricing />
       <CTA />
       <Footer />
     </div>
