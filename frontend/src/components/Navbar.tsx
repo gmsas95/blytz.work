@@ -1,15 +1,24 @@
 'use client';
 
 import { Button } from "./ui/button";
-import { Zap, Menu } from "lucide-react";
+import { Zap, Menu, User } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+    setMobileMenuOpen(false);
+  };
 
   const scrollToSection = (sectionId: string) => {
     if (!isLandingPage) {
@@ -63,23 +72,43 @@ export function Navbar() {
                 {link.label}
               </button>
             ))}
-            <Link href="/auth">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-black text-black hover:bg-gray-50"
-              >
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/auth">
-              <Button
-                className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md"
-                size="sm"
-              >
-                Get Started
-              </Button>
-            </Link>
+            
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{user.displayName || user.email}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-black text-black hover:bg-gray-50"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link href="/auth">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-black text-black hover:bg-gray-50"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth">
+                  <Button
+                    className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md"
+                    size="sm"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,23 +134,42 @@ export function Navbar() {
                 </button>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-black text-black hover:bg-gray-50 w-full"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md w-full"
-                    size="sm"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2 text-gray-600 px-2">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">{user.displayName || user.email}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-black text-black hover:bg-gray-50 w-full"
+                      onClick={handleSignOut}
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-black text-black hover:bg-gray-50 w-full"
+                      >
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md w-full"
+                        size="sm"
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

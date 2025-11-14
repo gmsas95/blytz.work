@@ -6,24 +6,57 @@ import { Label } from "@/components/ui/label";
 import { Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
+import { toast } from "sonner";
 
 export default function AuthPage() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement Firebase auth
-    console.log(isLogin ? "Login:" : "Register:", formData);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        await signInUser(formData.email, formData.password);
+        toast.success(`Welcome back!`, {
+          description: "Successfully signed in to your account",
+        });
+        // Redirect to dashboard or homepage after successful login
+        router.push("/");
+      } else {
+        await registerUser(formData.email, formData.password, formData.name);
+        toast.success(`Account created!`, {
+          description: "Welcome to Blytz Hire",
+        });
+        // Redirect to role selection or dashboard after registration
+        router.push("/");
+      }
+    } catch (err: any) {
+      const errorMessage = getAuthErrorMessage(err);
+      setError(errorMessage);
+      toast.error("Authentication failed", {
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
     setFormData({ name: "", email: "", password: "" });
+    setError(null);
   };
 
   return (
@@ -47,6 +80,12 @@ export default function AuthPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                {error}
+              </div>
+            )}
+
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
@@ -58,6 +97,7 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                   required
+                  disabled={isLoading}
                 />
               </div>
             )}
@@ -81,6 +121,7 @@ export default function AuthPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -89,14 +130,15 @@ export default function AuthPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="•••••••"
+                placeholder="•••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                 required
+                disabled={isLoading}
               />
               {!isLogin && (
-                <p className="text-sm text-gray-500">At least 8 characters</p>
+                <p className="text-sm text-gray-500">At least 6 characters</p>
               )}
             </div>
 
@@ -104,8 +146,16 @@ export default function AuthPage() {
               type="submit"
               className="w-full bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-lg"
               size="lg"
+              disabled={isLoading}
             >
-              {isLogin ? "Sign In" : "Create Account"}
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  {isLogin ? "Signing in..." : "Creating account..."}
+                </div>
+              ) : (
+                isLogin ? "Sign In" : "Create Account"
+              )}
             </Button>
           </form>
 
@@ -113,7 +163,8 @@ export default function AuthPage() {
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button 
               onClick={toggleForm}
-              className="text-black hover:underline"
+              className="text-black hover:underline font-medium"
+              disabled={isLoading}
             >
               {isLogin ? "Sign up" : "Sign in"}
             </button>
