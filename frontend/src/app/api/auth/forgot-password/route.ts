@@ -12,7 +12,10 @@ export async function POST(request: Request) {
     }
 
     // Forward to backend API which has Firebase Admin
-    const backendResponse = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001'}/auth/forgot-password`, {
+    const backendUrl = process.env.BACKEND_URL || 'https://hyred-api.blytz.app';
+    console.log("Calling backend API:", `${backendUrl}/auth/forgot-password`);
+    
+    const backendResponse = await fetch(`${backendUrl}/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -20,10 +23,23 @@ export async function POST(request: Request) {
       body: JSON.stringify({ email }),
     });
 
+    if (!backendResponse.ok) {
+      const errorText = await backendResponse.text();
+      console.error("Backend API error:", backendResponse.status, errorText);
+      
+      return Response.json(
+        { 
+          message: "Failed to connect to authentication service. Please try again later." 
+        },
+        { status: backendResponse.status }
+      );
+    }
+
     const data = await backendResponse.json();
+    console.log("Backend response:", data);
 
     return Response.json(data, {
-      status: backendResponse.status || 200
+      status: 200
     });
     
   } catch (error) {
