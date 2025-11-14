@@ -10,11 +10,11 @@ export function Footer() {
   };
 
   const links = [
-    { label: "About", type: "link", to: "/about" },
-    { label: "Pricing", type: "scroll", sectionId: "pricing" },
-    { label: "FAQ", type: "link", to: "/faq" },
-    { label: "Terms", type: "link", to: "/terms" },
-    { label: "Privacy", type: "link", to: "/privacy" },
+    { label: "About", type: "link" as const, to: "/about" as const },
+    { label: "Pricing", type: "scroll" as const, sectionId: "pricing" as const },
+    { label: "FAQ", type: "link" as const, to: "/faq" as const },
+    { label: "Terms", type: "link" as const, to: "/terms" as const },
+    { label: "Privacy", type: "link" as const, to: "/privacy" as const },
   ];
 
   return (
