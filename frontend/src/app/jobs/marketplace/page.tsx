@@ -95,11 +95,13 @@ const commonSkills = [
 const mockJobs: JobPosting[] = [
   {
     id: '1',
+    companyId: '1',
     title: 'Senior Full Stack Developer',
     description: 'Looking for an experienced full stack developer to join our team and work on exciting projects.',
     rateRange: '$50-80/hour',
     remote: true,
     category: 'Development',
+    tags: ['React', 'Node.js', 'TypeScript', 'Full Stack'],
     experienceLevel: 'senior',
     jobType: 'hourly',
     duration: '6 months',
@@ -110,6 +112,7 @@ const mockJobs: JobPosting[] = [
     views: 245,
     proposalCount: 12,
     featured: true,
+    isActive: true,
     company: {
       id: '1',
       name: 'TechCorp',
@@ -122,11 +125,13 @@ const mockJobs: JobPosting[] = [
   },
   {
     id: '2',
+    companyId: '2',
     title: 'Virtual Assistant for Administrative Tasks',
     description: 'Need a reliable VA to help with administrative tasks, email management, and scheduling.',
     rateRange: '$15-25/hour',
     remote: true,
     category: 'Virtual Assistant',
+    tags: ['Admin', 'Email', 'Scheduling'],
     experienceLevel: 'mid',
     jobType: 'hourly',
     duration: '3 months',
@@ -137,6 +142,7 @@ const mockJobs: JobPosting[] = [
     views: 132,
     proposalCount: 8,
     featured: false,
+    isActive: true,
     company: {
       id: '2',
       name: 'StartupXYZ',
@@ -148,11 +154,13 @@ const mockJobs: JobPosting[] = [
   },
   {
     id: '3',
+    companyId: '3',
     title: 'Content Writer for Tech Blog',
     description: 'Seeking talented content writer to create engaging articles about technology and software development.',
     rateRange: '$500-1000/project',
     remote: true,
     category: 'Writing',
+    tags: ['Writing', 'Content', 'SEO'],
     experienceLevel: 'mid',
     jobType: 'fixed',
     duration: '1 month',
@@ -163,6 +171,7 @@ const mockJobs: JobPosting[] = [
     views: 89,
     proposalCount: 5,
     featured: false,
+    isActive: true,
     company: {
       id: '3',
       name: 'TechBlog Inc',
