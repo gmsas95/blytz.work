@@ -33,7 +33,7 @@ export function Footer() {
               link.type === "link" ? (
                 <Link
                   key={index}
-                  to={link.to}
+                  href={link.to}
                   className="hover:text-[#FFD600] transition-colors"
                 >
                   {link.label}
