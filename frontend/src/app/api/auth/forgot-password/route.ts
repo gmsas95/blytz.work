@@ -11,20 +11,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Import Prisma to check if email exists in actual database
-    const { prisma } = await import("@/utils/prisma");
+    // Import Firebase Admin to check if email exists in Firebase Auth
+    const admin = require('firebase-admin');
+    const auth = admin.auth();
 
-    // Check if user exists in database
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email: email.toLowerCase(),
-      },
-      select: {
-        email: true,
-      }
-    });
+    // Check if user exists in Firebase Auth
+    const userRecord = await auth.getUserByEmail(email.toLowerCase())
+      .catch((error) => {
+        // User not found
+        if (error.code === 'auth/user-not-found') {
+          return null;
+        }
+        console.error("Error checking user:", error);
+        return null;
+      });
 
-    if (!existingUser) {
+    if (!userRecord) {
       return Response.json(
         { 
           message: "No account found with this email address. Please check your email or sign up for a new account." 
@@ -33,9 +35,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // TODO: Replace with actual email sending service
+    // TODO: Send actual password reset email using Firebase Auth
     // For now, just return success
-    console.log(`Password reset requested for existing user: ${existingUser.email}`);
+    console.log(`Password reset requested for Firebase user: ${userRecord.email}`);
     
     return Response.json(
       { 
