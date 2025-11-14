@@ -16,8 +16,8 @@ export default function PricingPage() {
       platformFee: "$4–$5",
       fastHireFee: "$20",
       popular: false,
+      notes: "Flexible, budget-friendly",
       features: [
-        "Flexible, budget-friendly",
         "Pre-vetted, verified VAs",
         "Weekly payments & invoicing",
         "Contracts, compliance & dispute support",
@@ -33,8 +33,8 @@ export default function PricingPage() {
       platformFee: "$6–$10",
       fastHireFee: "$25",
       popular: true,
+      notes: "Reliable, vetted, fast match",
       features: [
-        "Reliable, vetted, fast match",
         "All Part-Time features included",
         "Priority support",
         "Advanced filtering options",
@@ -49,8 +49,8 @@ export default function PricingPage() {
       platformFee: "$10–$15",
       fastHireFee: "$50",
       popular: false,
+      notes: "Specialized, urgent hire",
       features: [
-        "Specialized, urgent hire",
         "All Full-Time features included",
         "White-glove service",
         "Custom screening criteria",
