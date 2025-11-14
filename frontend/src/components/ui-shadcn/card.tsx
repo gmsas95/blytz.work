@@ -22,7 +22,7 @@ const cardVariants = cva(
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardVariants>
 >(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
