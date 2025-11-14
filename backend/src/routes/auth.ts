@@ -2,6 +2,7 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
+import admin from "firebase-admin";
 import { z } from "zod";
 
 // Validation schemas
