@@ -13,9 +13,10 @@ export async function POST(request: Request) {
 
     // Use client-side Firebase Auth to send reset password
     const { getAuth, sendPasswordResetEmail } = await import('firebase/auth');
+    const auth = getAuth();
     
     try {
-      await sendPasswordResetEmail(email.toLowerCase());
+      await sendPasswordResetEmail(auth, email.toLowerCase());
       
       return Response.json(
         { 
