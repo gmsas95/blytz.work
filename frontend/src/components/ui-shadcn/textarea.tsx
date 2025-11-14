@@ -21,7 +21,7 @@ const textareaVariants = cva(
 
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & VariantProps<typeof textareaVariants>
 >(({ className, variant, ...props }, ref) => (
   <textarea
     ref={ref}
