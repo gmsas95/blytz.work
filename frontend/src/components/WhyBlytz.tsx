@@ -70,7 +70,7 @@ export function WhyBlytz() {
             return (
               <motion.div
                 key={index}
-                className="relative p-10 rounded-2xl border-2 border-gray-200 hover:border-black transition-all bg-white group overflow-hidden"
+                className="relative p-6 rounded-xl border-2 border-gray-200 hover:border-black transition-all bg-white group overflow-hidden"
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -82,15 +82,19 @@ export function WhyBlytz() {
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-[#FFD600] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
 
-                <div className="text-6xl mb-6">
-                  {feature.emoji}
+                <div className="flex items-center gap-4">
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-black group-hover:bg-[#FFD600] flex items-center justify-center transition-all">
+                    <Icon className="w-6 h-6 text-[#FFD600] group-hover:text-black transition-all" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl mb-2 text-black tracking-tight">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-3xl mb-4 text-black tracking-tight">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-lg leading-relaxed">
-                  {feature.description}
-                </p>
 
                 <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#FFD600] rounded-full opacity-0 group-hover:opacity-10 transition-opacity blur-2xl" />
               </motion.div>
