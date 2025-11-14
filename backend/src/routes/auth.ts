@@ -2,8 +2,21 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
-import admin from "firebase-admin";
 import { z } from "zod";
+import admin from "firebase-admin";
+
+// Initialize Firebase Admin (ensure it's initialized)
+try {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+} catch (error: any) {
+  console.log("Firebase Admin already initialized or initialization error:", error);
+}
 
 // Validation schemas
 const updateProfileSchema = z.object({
