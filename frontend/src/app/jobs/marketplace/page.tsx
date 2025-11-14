@@ -401,7 +401,7 @@ export default function JobMarketplace() {
                         <Checkbox
                           id="urgent"
                           checked={filters.urgent}
-                          onCheckedChange={(checked) => handleFilterChange('urgent', checked)}
+                          onChange={(e) => handleFilterChange('urgent', e.target.checked)}
                         />
                         <label htmlFor="urgent" className="text-sm text-gray-200">
                           Urgent Only
@@ -414,7 +414,7 @@ export default function JobMarketplace() {
                         <Checkbox
                           id="featured"
                           checked={filters.featured}
-                          onCheckedChange={(checked) => handleFilterChange('featured', checked)}
+                          onChange={(e) => handleFilterChange('featured', e.target.checked)}
                         />
                         <label htmlFor="featured" className="text-sm text-gray-200">
                           Featured Only
