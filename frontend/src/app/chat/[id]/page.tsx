@@ -15,7 +15,7 @@ interface Message {
   timestamp: Date;
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage() {
   const [message, setMessage] = useState("");
   
   // Mock data - replace with Firebase Firestore
@@ -42,7 +42,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
   // Mock VA profile
   const vaProfile = {
-    id: params.id,
+    id: "123",
     name: "Maria Santos",
     role: "E-commerce Specialist",
     rating: 4.9,

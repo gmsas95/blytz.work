@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Calendar, Clock, DollarSign, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default function ContractPage({ params }: { params: { id: string } }) {
+export default async function ContractPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   // Mock contract data - replace with Firebase
   const contract = {
-    id: params.id,
+    id: "123",
     employer: "TechStart Inc.",
     va: "Maria Santos",
     role: "E-commerce Specialist",
