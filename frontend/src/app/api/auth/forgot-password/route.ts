@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     // Use existing Firebase app and auth from lib/firebase.ts
-    const { auth } = await import('../../lib/firebase');
+    const { auth } = await import('../../../lib/firebase');
     const { sendPasswordResetEmail } = await import('firebase/auth');
     
     try {
