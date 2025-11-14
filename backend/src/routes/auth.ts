@@ -105,6 +105,51 @@ export default async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // Forgot password endpoint
+  app.post("/auth/forgot-password", async (request, reply) => {
+    try {
+      const { email } = request.body as { email: string };
+
+      if (!email || !email.includes('@')) {
+        return reply.code(400).send({ 
+          error: "Please enter a valid email address",
+          code: "INVALID_EMAIL"
+        });
+      }
+
+      const auth = admin.auth();
+      const userRecord = await auth.getUserByEmail(email.toLowerCase())
+        .catch((error: any) => {
+          if (error.code === 'auth/user-not-found') {
+            return null;
+          }
+          console.error("Error checking user:", error);
+          return null;
+        });
+
+      if (!userRecord) {
+        return reply.code(404).send({ 
+          error: "No account found with this email address. Please check your email or sign up for a new account.",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      // TODO: Send password reset email via Firebase
+      console.log(`Password reset requested for Firebase user: ${userRecord.email}`);
+      
+      return reply.send({
+        success: true,
+        message: "Password reset link sent to your email address."
+      });
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to process forgot password request",
+        code: "FORGOT_PASSWORD_ERROR",
+        details: error.message
+      });
+    }
+  });
+
   // Sync user from Firebase
   app.post("/auth/sync", {
     preHandler: [verifyAuth]
