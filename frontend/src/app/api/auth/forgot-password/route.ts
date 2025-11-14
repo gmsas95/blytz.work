@@ -11,24 +11,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use existing Firebase app and auth from lib/firebase.ts
-    const { auth } = await import('../../../../lib/firebase');
-    const { sendPasswordResetEmail } = await import('firebase/auth');
+    // Use server-side Firebase Admin to check if user exists
+    const admin = require('firebase-admin');
     
     try {
-      await sendPasswordResetEmail(auth, email.toLowerCase());
-      
-      return Response.json(
-        { 
-          message: "Password reset link sent to your email address.",
-          success: true 
-        },
-        { status: 200 }
-      );
-    } catch (error: any) {
-      console.error("Firebase reset password error:", error);
-      
-      if (error.code === 'auth/user-not-found') {
+      // Check if user exists in Firebase Admin
+      const userRecord = await admin.auth().getUserByEmail(email.toLowerCase())
+        .catch((error: any) => {
+          if (error.code === 'auth/user-not-found') {
+            return null;
+          }
+          console.error("Error checking user:", error);
+          return null;
+        });
+
+      if (!userRecord) {
         return Response.json(
           { 
             message: "No account found with this email address. Please check your email or sign up for a new account." 
@@ -36,6 +33,19 @@ export async function POST(request: Request) {
           { status: 404 }
         );
       }
+
+      // Send password reset email using Firebase Admin
+      await admin.auth().sendPasswordResetEmail(email.toLowerCase());
+      
+      return Response.json(
+        { 
+          message: "If your email is registered with us, you will receive a password reset link shortly. Please check your email inbox (including spam folder).",
+          success: true 
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      console.error("Firebase Admin error:", error);
       
       return Response.json(
         { 
