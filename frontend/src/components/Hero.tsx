@@ -47,10 +47,10 @@ export function Hero() {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Button variant="yellow" size="lg" className="text-lg px-8 shadow-lg hover:shadow-xl transition-all">
+              <Button size="lg" className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black text-lg px-8 shadow-lg hover:shadow-xl transition-all">
                 Get Matches Now
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] transition-all">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] transition-all">
                 See How It Works
               </Button>
             </div>
