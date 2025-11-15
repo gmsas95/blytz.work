@@ -11,8 +11,10 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     environment:
-      - BACKEND_URL=${BACKEND_URL}
-      - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL:-blytz-hire-backend:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-blytz-hired-frontend-yeqzcm-frontend-1:3000}
+      - BACKEND_IP=${BACKEND_IP:-172.19.0.3}
+      - FRONTEND_IP=${FRONTEND_IP:-172.19.0.4}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
