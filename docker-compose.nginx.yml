@@ -23,7 +23,10 @@ services:
       start_period: 30s
     networks:
       - blytz-hired-postgres-0juejz_blytz-network
+      - dokploy-network
 
 networks:
   blytz-hired-postgres-0juejz_blytz-network:
+    external: true
+  dokploy-network:
     external: true
