@@ -1,0 +1,56 @@
+// Add these models to your existing schema.prisma
+
+model Contract {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  skills          String[]
+  experienceLevel String   @default("mid") // junior, mid, senior
+  duration        String   @default("short-term") // short-term, long-term, ongoing
+  budgetMin       Float
+  budgetMax       Float
+  workingHours    String   @default("flexible") // flexible, 9-5, evenings, weekends
+  timezone        String?
+  communication   String   @default("email")
+  tools           String?
+  additionalRequirements String?
+  status          String   @default("active") // active, closed, cancelled
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  employerId      String
+  employer        User     @relation("EmployerContracts", fields: [employerId], references: [id])
+  applications    Application[]
+  
+  @@map("contracts")
+}
+
+model Application {
+  id            String   @id @default(cuid())
+  contractId    String
+  vaId          String
+  message       String?
+  proposedRate  Float?
+  availability  String?
+  status        String   @default("pending") // pending, accepted, rejected
+  appliedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relationships
+  contract      Contract @relation(fields: [contractId], references: [id])
+  va            User     @relation("VAApplications", fields: [vaId], references: [id])
+  
+  @@map("applications")
+}
+
+// Update your existing User model to add these relationships
+model User {
+  // ... existing fields ...
+  
+  // Add these relationships
+  employerContracts Contract[] @relation("EmployerContracts")
+  vaApplications    Application[] @relation("VAApplications")
+  
+  // ... rest of existing fields ...
+}
