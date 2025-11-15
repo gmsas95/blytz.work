@@ -66,7 +66,7 @@ export function Navbar() {
               />
             </div>
             <span className="text-xl text-black tracking-tight">
-              Blytz Hire
+              BlytzWork
             </span>
           </Link>
 

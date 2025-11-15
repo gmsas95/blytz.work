@@ -3,7 +3,7 @@
 import { Zap, ShieldCheck, DollarSign, FileText, RefreshCw, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
 
-export function WhyBlytz() {
+export function WhyBlytzWork() {
   const features = [
     {
       icon: Zap,

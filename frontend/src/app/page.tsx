@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
-import { WhyBlytz } from "@/components/WhyBlytz";
+import { WhyBlytzWork } from "@/components/WhyBlytzWork";
 import { RolesWeFill } from "@/components/RolesWeFill";
 import { Testimonials } from "@/components/Testimonials";
 import { CTA } from "@/components/CTA";
@@ -13,7 +13,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <HowItWorks />
-      <WhyBlytz />
+      <WhyBlytzWork />
       <RolesWeFill />
       <Testimonials />
       <CTA />

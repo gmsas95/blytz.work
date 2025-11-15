@@ -27,7 +27,7 @@ export function Footer() {
             <div className="w-12 h-12 rounded-lg bg-[#FFD600] flex items-center justify-center">
               <Zap className="w-7 h-7 text-black" fill="black" />
             </div>
-            <span className="text-2xl text-white tracking-tight">Blytz Hire</span>
+            <span className="text-2xl text-white tracking-tight">BlytzWork</span>
           </Link>
 
           <nav className="flex flex-wrap justify-center gap-8">
@@ -54,7 +54,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-900 text-center text-gray-600">
-          <p>&copy; {new Date().getFullYear()} Blytz Hire. All rights reserved. Powered by Blytz speed ⚡</p>
+          <p>&copy; {new Date().getFullYear()} BlytzWork. All rights reserved. Powered by BlytzWork speed ⚡</p>
         </div>
       </div>
     </footer>

@@ -18,7 +18,7 @@ export function Testimonials() {
     },
     {
       quote:
-        "Blytz saved me weeks of interviewing. Unreal speed.",
+        "BlytzWork saved me weeks of interviewing. Unreal speed.",
       author: "Marcus T.",
       role: "E-commerce Entrepreneur, NYC",
     },
