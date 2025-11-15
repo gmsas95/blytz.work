@@ -1,8 +1,7 @@
-version: '3.8'
+# BlytzWork Production Docker Compose
+# Single file for all services - deploy with: docker compose up -d
 
-# BlytzWork Unified Docker Compose
-# All services in single network with proper orchestration
-# Deploy with: docker compose -f docker-compose.unified.yml up -d
+version: '3.8'
 
 services:
   # PostgreSQL Database
@@ -28,6 +27,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: blytz-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-your_redis_password_here}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blytz-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   # Backend API Service
   backend:
     build:
@@ -51,6 +68,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - blytz-network
     healthcheck:
@@ -59,24 +78,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Redis Cache Service
-  redis:
-    image: redis:7-alpine
-    container_name: blytz-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-your_redis_password_here}
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - blytz-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
 
   # Frontend React Application
   frontend:
@@ -93,7 +94,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-3003}:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - blytz-network
     healthcheck:
@@ -112,12 +114,12 @@ services:
       - "${HTTP_PORT:-8081}:80"
       - "${HTTPS_PORT:-8443}:443"
     volumes:
-      - ./nginx/nginx.unified.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/logs:/var/log/nginx
     environment:
-      - BACKEND_URL=${BACKEND_URL:-http://backend:3000}
-      - FRONTEND_URL=${FRONTEND_URL:-http://frontend:3000}
+      - BACKEND_URL=http://backend:3000
+      - FRONTEND_URL=http://frontend:3000
     depends_on:
       backend:
         condition: service_healthy

@@ -37,8 +37,8 @@ export function Testimonials() {
           <h2 className="text-5xl lg:text-6xl tracking-tight">
             {" "}
             <span className="relative inline-block">
-              <span className="relative z-10">Trust Boosters</span>
-              <span className="absolute bottom-2 left-0 w-full h-4 bg-[#FFD600] -z-0" />
+              <span className="relative z-10">See What Our Client Says</span>
+              <span className="absolute bottom-2 left-0 w-full h-2 bg-[#FFD600] -z-0" />
             </span>
           </h2>
         </motion.div>
