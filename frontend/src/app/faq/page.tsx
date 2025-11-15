@@ -5,8 +5,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export default function FAQPage() {
   const employerFAQs = [
     {
-      question: "How does Blytz Hire work?",
-      answer: "Blytz Hire is a speed hiring platform that connects you with pre-vetted Southeast Asian virtual assistants within minutes. Post your job requirements, get instant matches, review profiles, and start working together on weekly contracts — no lengthy interview process needed.",
+      question: "How does BlytzWork work?",
+      answer: "BlytzWork is a speed hiring platform that connects you with pre-vetted Southeast Asian virtual assistants within minutes. Post your job requirements, get instant matches, review profiles, and start working together on weekly contracts — no lengthy interview process needed.",
     },
     {
       question: "How are VAs vetted?",
@@ -65,7 +65,7 @@ export default function FAQPage() {
               </span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Everything you need to know about Blytz Hire
+              Everything you need to know about BlytzWork
             </p>
           </div>
 

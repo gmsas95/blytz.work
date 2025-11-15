@@ -29,7 +29,7 @@ export function Hero() {
           >
             <div className="inline-flex items-center gap-2 bg-black text-[#FFD600] px-4 py-2 rounded-full">
               <Zap className="w-4 h-4" fill="#FFD600" />
-              <span>Blytz Speed Hiring</span>
+              <span>BlytzWork Speed Hiring</span>
             </div>
             
             <h1 className="text-6xl lg:text-7xl tracking-tight text-black leading-[1.1]">

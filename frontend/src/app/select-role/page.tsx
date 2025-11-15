@@ -52,10 +52,10 @@ export default function SelectRolePage() {
             <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center">
               <Zap className="w-7 h-7 text-[#FFD600]" fill="#FFD600" />
             </div>
-            <span className="text-2xl text-black tracking-tight">Blytz Hire</span>
+            <span className="text-2xl text-black tracking-tight">BlytzWork</span>
           </a>
           <h1 className="text-5xl lg:text-6xl text-black tracking-tight">
-            What brings you to Blytz?
+            What brings you to BlytzWork?
           </h1>
           <p className="text-xl text-gray-600">Choose your role to get started</p>
         </div>

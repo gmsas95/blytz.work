@@ -71,7 +71,7 @@ export default function EmailSentPage() {
               
               <div className="space-y-3 pt-6">
                 <Button asChild variant="outline" className="w-full mb-3">
-                  <Link href="mailto:support@blytzhire.com">
+                  <Link href="mailto:support@blytzwork.com">
                     Contact Support
                   </Link>
                 </Button>

@@ -37,7 +37,7 @@ export default function AboutPage() {
             <h1 className="text-5xl lg:text-7xl text-black tracking-tight leading-tight">
               About{" "}
               <span className="relative inline-block">
-                <span className="relative z-10">Blytz Hire</span>
+                <span className="relative z-10">BlytzWork</span>
                 <span className="absolute bottom-2 left-0 w-full h-4 bg-[#FFD600] z-0" />
               </span>
             </h1>
@@ -52,7 +52,7 @@ export default function AboutPage() {
               <h2 className="text-3xl text-black tracking-tight mb-6">Our Story</h2>
               <div className="space-y-4 text-lg text-gray-700 leading-relaxed">
                 <p>
-                  Blytz Hire was born from a simple frustration: hiring virtual assistants was way too slow and complicated.
+                  BlytzWork was born from a simple frustration: hiring virtual assistants was way too slow and complicated.
                 </p>
                 <p>
                   As founders ourselves, we spent weeks posting jobs, screening resumes, and conducting endless interviews — just to find someone to handle basic tasks. Meanwhile, talented VAs in Southeast Asia were struggling to connect with international clients.
@@ -61,7 +61,7 @@ export default function AboutPage() {
                   We knew there had to be a better way. So we built it.
                 </p>
                 <p>
-                  Blytz Hire combines the speed of modern matching apps with the trust of a vetted talent network. Swipe through profiles, find your match, and start working — all in under 5 minutes.
+                  BlytzWork combines the speed of modern matching apps with the trust of a vetted talent network. Swipe through profiles, find your match, and start working — all in under 5 minutes.
                 </p>
               </div>
             </div>

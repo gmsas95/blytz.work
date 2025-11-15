@@ -85,7 +85,7 @@ export default function EmployerDashboard() {
               <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
                 <Zap className="w-6 h-6 text-[#FFD600]" fill="#FFD600" />
               </div>
-              <span className="text-xl text-black tracking-tight">Blytz Hire</span>
+              <span className="text-xl text-black tracking-tight">BlytzWork</span>
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="outline" size="sm" className="border-black text-black">
