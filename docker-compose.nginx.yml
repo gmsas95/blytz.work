@@ -23,5 +23,5 @@ services:
       - blytz-hire-network
 
 networks:
-  blytz-hire-network:
+  blytz-hired-postgres-0juejz_blytz-network:
     external: true
