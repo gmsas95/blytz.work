@@ -35,9 +35,9 @@ export function Testimonials() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-5xl lg:text-6xl tracking-tight">
-            {" "}
+            See What Our Client {" "}
             <span className="relative inline-block">
-              <span className="relative z-10">See What Our Client Says</span>
+              <span className="relative z-10">Says</span>
               <span className="absolute bottom-2 left-0 w-full h-2 bg-[#FFD600] -z-0" />
             </span>
           </h2>
