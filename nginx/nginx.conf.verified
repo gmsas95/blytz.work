@@ -1,0 +1,81 @@
+events {
+    worker_connections 1024;
+}
+
+# Rate limiting zones
+http {
+    # DNS resolver for Docker containers
+    resolver 127.0.0.11 valid=30s;
+    
+    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=general:10m rate=5r/s;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # Hide Nginx version
+    server_tokens off;
+
+    # Replace these with your actual deployed service URLs
+    # For Dokploy, these will be internal service names or IPs
+    upstream backend {
+        # ONLY direct IP - no container name references
+        server 172.19.0.3:3000 max_fails=3 fail_timeout=30s;
+    }
+
+    # Frontend upstream
+    upstream frontend {
+        server blytz-hired-frontend-yeqzcm-frontend-1:3000;
+    }
+
+    # Frontend (Next.js app)
+    server {
+        listen 80;
+        server_name localhost;
+
+        # Frontend routes
+        location / {
+            limit_req zone=general burst=10 nodelay;
+            proxy_pass http://frontend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Backend API routes
+        location /api/ {
+            proxy_pass http://backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Rate limiting for API endpoints
+            limit_req zone=api burst=20 nodelay;
+        }
+
+        # Health check
+        location /health {
+            proxy_pass http://backend/health;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Stripe webhook endpoint
+        location /webhooks/stripe {
+            proxy_pass http://backend/webhooks/stripe;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
+# UNIQUE ID: VERIFY_CI_CD_DEPLOYMENT_1763193885

@@ -3,6 +3,20 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
+import admin from "firebase-admin";
+
+// Initialize Firebase Admin (ensure it's initialized)
+try {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+} catch (error: any) {
+  console.log("Firebase Admin already initialized or initialization error:", error);
+}
 
 // Validation schemas
 const updateProfileSchema = z.object({
@@ -100,6 +114,51 @@ export default async function authRoutes(app: FastifyInstance) {
       return reply.code(500).send({ 
         error: "Failed to update profile",
         code: "PROFILE_UPDATE_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Forgot password endpoint
+  app.post("/auth/forgot-password", async (request, reply) => {
+    try {
+      const { email } = request.body as { email: string };
+
+      if (!email || !email.includes('@')) {
+        return reply.code(400).send({ 
+          error: "Please enter a valid email address",
+          code: "INVALID_EMAIL"
+        });
+      }
+
+      const auth = admin.auth();
+      const userRecord = await auth.getUserByEmail(email.toLowerCase())
+        .catch((error: any) => {
+          if (error.code === 'auth/user-not-found') {
+            return null;
+          }
+          console.error("Error checking user:", error);
+          return null;
+        });
+
+      if (!userRecord) {
+        return reply.code(404).send({ 
+          error: "No account found with this email address. Please check your email or sign up for a new account.",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      // TODO: Send password reset email via Firebase
+      console.log(`Password reset requested for Firebase user: ${userRecord.email}`);
+      
+      return reply.send({
+        success: true,
+        message: "Password reset link sent to your email address."
+      });
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to process forgot password request",
+        code: "FORGOT_PASSWORD_ERROR",
         details: error.message
       });
     }

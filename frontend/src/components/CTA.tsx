@@ -24,7 +24,7 @@ export function CTA() {
           <div className="inline-flex items-center gap-3 bg-black text-[#FFD600] px-6 py-3 rounded-full">
             <Zap className="w-5 h-5" fill="#FFD600" />
             <span className="text-lg">
-              Ready to experience Blytz speed?
+              Stop Wasting Time. Start Working.
             </span>
           </div>
 
@@ -45,7 +45,7 @@ export function CTA() {
                 size="lg"
                 className="bg-black text-[#FFD600] hover:bg-gray-900 text-xl px-12 py-7 shadow-2xl"
               >
-                Get Matches Now
+                Get Matched in Under 24 Hours
                 <ArrowRight className="w-6 h-6 ml-3" />
               </Button>
             </motion.div>
@@ -58,7 +58,7 @@ export function CTA() {
                 variant="outline"
                 className="text-xl px-12 py-7 border-2 border-black text-black hover:bg-black hover:text-[#FFD600] bg-white/50 backdrop-blur-sm"
               >
-                Apply as a VA
+                See Pricing
               </Button>
             </motion.div>
           </div>

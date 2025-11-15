@@ -1,15 +1,33 @@
 'use client';
 
 import { Button } from "./ui/button";
-import { Zap, Menu } from "lucide-react";
-import { useState } from "react";
+import { Zap, Menu, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    // Check user role from localStorage
+    const role = localStorage.getItem("userRole");
+    setUserRole(role);
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    localStorage.removeItem("userRole");
+    setUserRole(null);
+    toast.success("Signed out successfully");
+    setMobileMenuOpen(false);
+  };
 
   const scrollToSection = (sectionId: string) => {
     if (!isLandingPage) {
@@ -32,7 +50,7 @@ export function Navbar() {
 
   const navLinks = [
     { label: "How It Works", id: "how" },
-    { label: "Pricing", id: "pricing" },
+    { label: "Pricing", href: "/pricing" },
     { label: "For VAs", id: "vas" },
   ];
 
@@ -48,38 +66,81 @@ export function Navbar() {
               />
             </div>
             <span className="text-xl text-black tracking-tight">
-              Blytz Hire
+              BlytzWork
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link, index) => (
-              <button
-                key={index}
-                onClick={() => scrollToSection(link.id)}
-                className="text-gray-600 hover:text-black transition-colors"
-              >
-                {link.label}
-              </button>
+              link.href ? (
+                <Link
+                  key={index}
+                  href={link.href}
+                  className="text-gray-600 hover:text-black transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <button
+                  key={index}
+                  onClick={() => scrollToSection(link.id!)}
+                  className="text-gray-600 hover:text-black transition-colors"
+                >
+                  {link.label}
+                </button>
+              )
             ))}
-            <Link href="/auth">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-black text-black hover:bg-gray-50"
-              >
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/auth">
-              <Button
-                className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md"
-                size="sm"
-              >
-                Get Started
-              </Button>
-            </Link>
+            
+            {user ? (
+              <div className="flex items-center gap-4">
+                {userRole && (
+                  <Link 
+                    href={userRole === "employer" ? "/employer/dashboard" : "/va/dashboard"}
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-black text-black hover:bg-gray-50"
+                    >
+                      Dashboard
+                    </Button>
+                  </Link>
+                )}
+                <div className="flex items-center gap-2 text-gray-600">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{user.displayName || user.email}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-black text-black hover:bg-gray-50"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link href="/auth">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-black text-black hover:bg-gray-50"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth">
+                  <Button
+                    className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md"
+                    size="sm"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -96,32 +157,76 @@ export function Navbar() {
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="flex flex-col gap-4">
               {navLinks.map((link, index) => (
-                <button
-                  key={index}
-                  onClick={() => scrollToSection(link.id)}
-                  className="text-gray-600 hover:text-black transition-colors px-2 text-left"
-                >
-                  {link.label}
-                </button>
+                link.href ? (
+                  <Link
+                    key={index}
+                    href={link.href}
+                    className="text-gray-600 hover:text-black transition-colors px-2 text-left"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <button
+                    key={index}
+                    onClick={() => scrollToSection(link.id!)}
+                    className="text-gray-600 hover:text-black transition-colors px-2 text-left"
+                  >
+                    {link.label}
+                  </button>
+                )
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-black text-black hover:bg-gray-50 w-full"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md w-full"
-                    size="sm"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    {userRole && (
+                      <Link 
+                        href={userRole === "employer" ? "/employer/dashboard" : "/va/dashboard"}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-black text-black hover:bg-gray-50 w-full"
+                        >
+                          Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                    <div className="flex items-center gap-2 text-gray-600 px-2">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">{user.displayName || user.email}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-black text-black hover:bg-gray-50 w-full"
+                      onClick={handleSignOut}
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-black text-black hover:bg-gray-50 w-full"
+                      >
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black shadow-md w-full"
+                        size="sm"
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
