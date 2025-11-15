@@ -11,8 +11,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use server-side Firebase Admin to check if user exists
-    const admin = require('firebase-admin');
+    // Try to import Firebase Admin
+    let admin;
+    try {
+      const adminModule = await import('firebase-admin');
+      admin = adminModule.default || adminModule;
+    } catch (importError) {
+      console.error("Failed to import firebase-admin:", importError);
+      return Response.json(
+        { 
+          message: "Authentication service is currently unavailable. Please try again later." 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!admin) {
+      return Response.json(
+        { 
+          message: "Authentication service is currently unavailable. Please try again later." 
+        },
+        { status: 500 }
+      );
+    }
     
     try {
       // Check if user exists in Firebase Admin
