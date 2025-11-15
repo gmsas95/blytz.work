@@ -33,7 +33,7 @@ export function CTA() {
           </h2>
 
           <p className="text-3xl text-black/80 max-w-3xl mx-auto">
-            Swipe. Match. Hire. Done.
+            Just Blytz It.
           </p>
 
           <div className="flex flex-wrap justify-center gap-6 pt-8">
