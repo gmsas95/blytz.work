@@ -156,7 +156,7 @@ export default function PrivacyPage() {
                 <div>
                   <h3 className="text-xl font-semibold text-black mb-3">How to Exercise Your Rights</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Contact our privacy team at privacy@blytzhire.com.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Contact our privacy team at privacy@blytzwork.com.
                   </p>
                 </div>
               </CardContent>
@@ -178,11 +178,11 @@ export default function PrivacyPage() {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-black mb-1">Privacy Team</h4>
-                    <p className="text-gray-600">privacy@blytzhire.com</p>
+                    <p className="text-gray-600">privacy@blytzwork.com</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-black mb-1">Data Protection Officer</h4>
-                    <p className="text-gray-600">dpo@blytzhire.com</p>
+                    <p className="text-gray-600">dpo@blytzwork.com</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-black mb-1">Mailing Address</h4>

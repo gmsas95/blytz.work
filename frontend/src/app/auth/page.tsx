@@ -44,7 +44,7 @@ export default function AuthPage() {
       } else {
         await registerUser(formData.email, formData.password, formData.name);
         toast.success(`Account created!`, {
-          description: "Welcome to Blytz Hire",
+          description: "Welcome to BlytzWork",
         });
         // Redirect to role selection after registration
         router.push("/select-role");
@@ -76,7 +76,7 @@ export default function AuthPage() {
               <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center">
                 <Zap className="w-7 h-7 text-[#FFD600]" fill="#FFD600" />
               </div>
-              <span className="text-2xl text-black tracking-tight">Blytz Hire</span>
+              <span className="text-2xl text-black tracking-tight">BlytzWork</span>
             </Link>
             <h1 className="text-4xl text-black tracking-tight mb-2">
               {isLogin ? "Welcome back" : "Get started"}
