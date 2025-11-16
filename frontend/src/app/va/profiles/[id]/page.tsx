@@ -146,7 +146,7 @@ const VAProfileView = () => {
     }
   };
 
-  const getVerificationBadge = (level) => {
+  const getVerificationBadge = (level: 'basic' | 'professional' | 'premium') => {
     switch (level) {
       case 'premium':
         return <Badge className="bg-yellow-500 text-white">Premium</Badge>;
@@ -157,7 +157,7 @@ const VAProfileView = () => {
     }
   };
 
-  const getAvailabilityStatus = (available) => {
+  const getAvailabilityStatus = (available: boolean) => {
     return available ? (
       <Badge className="bg-green-500 text-white flex items-center gap-1">
         <CheckCircle className="h-3 w-3" />
