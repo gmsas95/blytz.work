@@ -18,6 +18,25 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Upload, X, Plus, Check, AlertCircle } from 'lucide-react';
 
+// Form field types
+interface VAProfileFormData {
+  name: string;
+  bio: string;
+  country: string;
+  timezone: string;
+  hourlyRate: number;
+  skills: string[];
+  availability: boolean;
+  email?: string;
+  phone?: string;
+  languages?: Array<{ language: string; proficiency: string }>;
+  workExperience?: Array<{ company: string; position: string; startDate: string; endDate?: string; current: boolean; description: string }>;
+  education?: Array<{ institution: string; degree: string; field: string; startDate: string; endDate?: string; current: boolean }>;
+  avatarUrl?: string;
+  resumeUrl?: string;
+  videoIntroUrl?: string;
+}
+
 // Comprehensive VA Profile Schema
 const vaProfileSchema = z.object({
   // Basic Information
@@ -87,7 +106,7 @@ const VAProfileCreation = () => {
     getValues,
     formState: { errors, isValid },
     trigger
-  } = useForm({
+  } = useForm<VAProfileFormData>({
     resolver: zodResolver(vaProfileSchema),
     defaultValues: {
       name: '',
