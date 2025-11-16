@@ -14,16 +14,16 @@ declare module 'fastify' {
 }
 
 // Production-ready Firebase Authentication
-import { FastifyReply, FastifyRequest } from "fastify";
-import { auth } from "firebase-admin";
+import FastifyReply, { FastifyRequest } from "fastify";
+import admin from "firebase-admin";
 import { prisma } from "../utils/prisma.js";
 
 // Initialize Firebase Admin SDK
-let firebaseAuth: auth.Auth;
+let firebaseAuth: admin.auth.Auth;
 
 try {
   // Check if Firebase is properly initialized
-  firebaseAuth = auth();
+  firebaseAuth = admin.auth();
 } catch (error) {
   console.error("❌ Firebase Admin not initialized:", error);
 }
