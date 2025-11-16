@@ -215,7 +215,7 @@ const VADashboard = () => {
                   <h1 className="text-2xl font-bold text-slate-900">
                     {profile?.name || 'Virtual Assistant'}
                   </h1>
-                  {getVerificationBadge(profile?.verificationLevel)}
+                  {getVerificationBadge(profile?.verificationLevel ?? 'basic')}
                 </div>
                 <p className="text-slate-600 mb-2">{profile?.bio}</p>
                 <div className="flex items-center gap-4 text-sm text-slate-600">
@@ -443,7 +443,7 @@ const VADashboard = () => {
               <div className="p-3 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium">Current Verification</span>
-                  {getVerificationBadge(profile?.verificationLevel)}
+                  {getVerificationBadge(profile?.verificationLevel ?? 'basic')}
                 </div>
                 <p className="text-sm text-slate-600">
                   {profile?.verificationLevel === 'basic' && 'Upgrade to Professional for more visibility and trust'}
