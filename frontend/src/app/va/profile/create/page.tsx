@@ -1185,7 +1185,7 @@ const VAProfileCreation = () => {
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="verificationLevel">Verification Level</Label>
-                  <Select value={watch('verificationLevel')} onValueChange={(value) => setValue('verificationLevel', value)}>
+                  <Select value={watch('verificationLevel')} onValueChange={(value) => setValue('verificationLevel', value as 'basic' | 'professional' | 'premium')}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select verification level" />
                     </SelectTrigger>
