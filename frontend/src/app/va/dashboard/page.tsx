@@ -195,8 +195,8 @@ const VADashboard = () => {
               <div className="relative">
                 {profile?.avatarUrl ? (
                   <img
-                    src={profile.avatarUrl}
-                    alt={profile.name}
+                    src={profile?.avatarUrl}
+                    alt={profile?.name || 'Virtual Assistant'}
                     className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
                   />
                 ) : (
@@ -387,9 +387,9 @@ const VADashboard = () => {
                       {skill}
                     </Badge>
                   ))}
-                  {profile?.skills?.length > 6 && (
+                  {(profile?.skills?.length || 0) > 6 && (
                     <Badge variant="outline">
-                      +{profile.skills.length - 6} more
+                      +{(profile?.skills?.length || 0) - 6} more
                     </Badge>
                   )}
                 </div>
