@@ -188,14 +188,14 @@ const VAProfileCreation = () => {
 
   const addSkill = (skill: string) => {
     if (skill && !watchedSkills.includes(skill)) {
-      setValue('skills', [...watchedSkills, skill]);
+      setValue('skills', [...watchedSkills, skill] as string[]);
       setNewSkills('');
       trigger('skills');
     }
   };
 
   const removeSkill = (skillToRemove: string) => {
-    setValue('skills', watchedSkills.filter(skill => skill !== skillToRemove));
+    setValue('skills', watchedSkills.filter((skill: string) => skill !== skillToRemove) as string[]);
     trigger('skills');
   };
 
