@@ -316,7 +316,7 @@ const VAProfileCreation = () => {
           setIsLoading(false);
           toast.success('Profile image uploaded successfully!');
         }, 2000);
-      } catch (error) {
+      } catch (error: any) {
         clearInterval(interval);
         setIsLoading(false);
         setUploadProgress(0);
@@ -351,7 +351,7 @@ const VAProfileCreation = () => {
           setIsLoading(false);
           toast.success('Resume uploaded successfully!');
         }, 2000);
-      } catch (error) {
+      } catch (error: any) {
         clearInterval(interval);
         setIsLoading(false);
         setUploadProgress(0);
@@ -409,7 +409,7 @@ const VAProfileCreation = () => {
         }
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Profile creation error:', error);
       toast.error(error.message || 'Failed to create profile. Please try again.');
     } finally {
