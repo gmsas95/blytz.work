@@ -70,7 +70,7 @@ const EmployerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [vaProfiles, setVaProfiles] = useState<VAProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<VAProfile[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [filters, setFilters] = useState({
     skills: [] as string[],
     hourlyRateMin: '',
