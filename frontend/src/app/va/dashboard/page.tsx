@@ -33,7 +33,7 @@ import { useRouter } from 'next/navigation';
 const VADashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<VAProfile | null>(null);
   const [analytics, setAnalytics] = useState({
     views: 0,
     contactRequests: 0,
