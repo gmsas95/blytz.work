@@ -20,7 +20,7 @@ const createVAProfileSchema = z.object({
   education: z.array(z.any()).optional(),
   responseRate: z.number().min(0).max(100).optional(),
   averageRating: z.number().min(1).max(5).optional(),
-  totalReviews: true,
+  totalReviews: z.number().min(0).default(0),
   featuredProfile: z.boolean().default(false),
   profileViews: z.number().min(0).default(0),
   resumeUrl: z.string().url().optional(),
@@ -49,7 +49,7 @@ const updateVAProfileSchema = z.object({
   education: z.array(z.any()).optional(),
   responseRate: z.number().min(0).max(100).optional(),
   averageRating: z.number().min(1).max(5).optional(),
-  totalReviews: true,
+  totalReviews: z.number().min(0).default(0),
   featuredProfile: z.boolean().optional(),
   profileViews: z.number().min(0).optional(),
   resumeUrl: z.string().url().optional(),
@@ -88,7 +88,32 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
       // Create VA profile
       const vaProfile = await prisma.vAProfile.create({
         data: {
-          ...data,
+          name: data.name,
+          country: data.country,
+          hourlyRate: data.hourlyRate,
+          bio: data.bio,
+          skills: data.skills,
+          availability: data.availability,
+          email: data.email,
+          phone: data.phone,
+          timezone: data.timezone,
+          languages: data.languages,
+          workExperience: data.workExperience,
+          education: data.education,
+          responseRate: data.responseRate,
+          averageRating: data.averageRating,
+          totalReviews: data.totalReviews,
+          featuredProfile: data.featuredProfile,
+          profileViews: data.profileViews,
+          resumeUrl: data.resumeUrl,
+          videoIntroUrl: data.videoIntroUrl,
+          skillsScore: data.skillsScore,
+          verificationLevel: data.verificationLevel,
+          backgroundCheckPassed: data.backgroundCheckPassed,
+          featured: data.featured,
+          earnedAmount: data.earnedAmount,
+          completedJobs: data.completedJobs,
+          avatarUrl: data.avatarUrl,
           userId: user.uid
         }
       });
@@ -176,8 +201,7 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
       const updatedProfile = await prisma.vAProfile.update({
         where: { userId: user.uid },
         data: {
-          ...data,
-          updatedAt: new Date()
+          ...data
         }
       });
 
@@ -282,7 +306,7 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
           education: true,
           responseRate: true,
           averageRating: true,
-          totalReviews: true,
+          totalReviews: z.number().min(0).default(0),
           featuredProfile: true,
           featured: true,
           earnedAmount: true,
@@ -364,8 +388,8 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
       }
       if (minRate || maxRate) {
         whereClause.hourlyRate = {};
-        if (minRate) whereClause.hourlyRate.gte = parseInt(minRate);
-        if (maxRate) whereClause.hourlyRate.lte = parseInt(maxRate);
+        if (minRate) whereClause.hourlyRate.gte = Number(minRate);
+        if (maxRate) whereClause.hourlyRate.lte = Number(maxRate);
       }
       if (search) {
         whereClause.OR = [
@@ -400,8 +424,8 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
           { averageRating: 'desc' },
           { completedJobs: 'desc' }
         ],
-        take: parseInt(limit),
-        skip: (parseInt(page) - 1) * parseInt(limit)
+        take: Number(limit),
+        skip: (Number(page) - 1) * Number(limit)
       });
 
       const total = await prisma.vAProfile.count({ where: whereClause });
@@ -411,10 +435,10 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
         data: {
           vaProfiles,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: Number(page),
+            limit: Number(limit),
             total,
-            totalPages: Math.ceil(total / parseInt(limit))
+            totalPages: Math.ceil(total / Number(limit))
           }
         }
       };

@@ -68,6 +68,7 @@ model VAProfile {
   proposals             Proposal[]
   contracts             Contract[]
   timesheets            Timesheet[]
+  matches               Match[]       // Add matches relation
 
   @@map("va_profiles")
   @@schema("blytz_hire")
@@ -237,6 +238,7 @@ model JobPosting {
   proposals    Proposal[]
   jobs         Job[]
   contracts    Contract[]
+  matches      Match[]       // Add matches relation
 
   @@map("job_postings")
   @@schema("blytz_hire")
@@ -385,6 +387,7 @@ model Payment {
   jobId                 String?  // For job payments
   contractId            String?  // For contract payments
   milestoneId           String?  // For milestone payments
+  matchId               String?  // For match unlock payments
   userId                String   // Payer (company user)
   receiverId            String   // Payee (VA user)
   stripePaymentIntentId String   @unique
@@ -403,6 +406,7 @@ model Payment {
 
   job           Job?       @relation(fields: [jobId], references: [id])
   contract      Contract?  @relation(fields: [contractId], references: [id])
+  match         Match?     @relation(fields: [matchId], references: [id])
   user          User       @relation(fields: [userId], references: [id])
 
   @@map("payments")
@@ -429,5 +433,36 @@ model Invoice {
   updatedAt       DateTime @updatedAt
 
   @@map("invoices")
+  @@schema("blytz_hire")
+}
+
+// Matching System Models (Disabled for now but added for test compatibility)
+model MatchVote {
+  id            String   @id @default(cuid())
+  jobPostingId  String
+  vaProfileId   String
+  userId        String   // User who voted (company or VA)
+  vote          Boolean  // true = like, false = pass
+  createdAt     DateTime @default(now())
+
+  @@unique([jobPostingId, vaProfileId, userId]) // One vote per user per VA per job
+  @@map("match_votes")
+  @@schema("blytz_hire")
+}
+
+model Match {
+  id            String   @id @default(cuid())
+  jobPostingId  String
+  vaProfileId   String
+  status        String   @default("active") // "active" | "archived" | "hired"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id])
+  vaProfile     VAProfile  @relation(fields: [vaProfileId], references: [id])
+  payments      Payment[]
+  matchVotes    MatchVote[]
+
+  @@map("matches")
   @@schema("blytz_hire")
 }

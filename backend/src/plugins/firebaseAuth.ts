@@ -13,10 +13,21 @@ declare module 'fastify' {
   }
 }
 
-// Simplified Firebase Authentication for MVP
+// Production-ready Firebase Authentication
 import { FastifyReply, FastifyRequest } from "fastify";
+import { auth } from "firebase-admin";
+import { prisma } from "../utils/prisma.js";
 
-// For development, use mock authentication
+// Initialize Firebase Admin SDK
+let firebaseAuth: auth.Auth;
+
+try {
+  // Check if Firebase is properly initialized
+  firebaseAuth = auth();
+} catch (error) {
+  console.error("❌ Firebase Admin not initialized:", error);
+}
+
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const authHeader = request.headers.authorization;
   
@@ -36,14 +47,72 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   }
 
   try {
-    // For development, create mock user
-    // In production, implement real Firebase verification
-    request.user = {
-      uid: 'dev-user-' + Math.random().toString(36).substr(2, 9),
-      email: 'dev@example.com',
-      role: 'company', // Default to company for now
-      profileComplete: false
-    };
+    // Production: Verify Firebase token
+    if (firebaseAuth && process.env.NODE_ENV === 'production') {
+      const decodedToken = await firebaseAuth.verifyIdToken(token);
+      
+      // Get user from database to get role and profile status
+      const user = await prisma.user.findUnique({
+        where: { email: decodedToken.email },
+        select: { id: true, role: true, profileComplete: true, email: true }
+      });
+
+      if (!user) {
+        return reply.code(401).send({ 
+          error: "User not found in database",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      request.user = {
+        uid: user.id,
+        email: user.email,
+        role: user.role as 'company' | 'va' | 'admin',
+        profileComplete: user.profileComplete
+      };
+    } 
+    // Development: Allow mock token with proper validation
+    else if (process.env.NODE_ENV === 'development') {
+      // Allow special development token for testing
+      if (token === 'dev-token-admin') {
+        request.user = {
+          uid: 'dev-admin-user',
+          email: 'admin@dev.com',
+          role: 'admin',
+          profileComplete: true
+        };
+      } 
+      else if (token === 'dev-token-company') {
+        request.user = {
+          uid: 'dev-company-user',
+          email: 'company@dev.com',
+          role: 'company',
+          profileComplete: false
+        };
+      }
+      else if (token === 'dev-token-va') {
+        request.user = {
+          uid: 'dev-va-user',
+          email: 'va@dev.com',
+          role: 'va',
+          profileComplete: false
+        };
+      }
+      else {
+        return reply.code(401).send({ 
+          error: "Invalid development token",
+          code: "INVALID_DEV_TOKEN",
+          hint: "Use: dev-token-admin, dev-token-company, or dev-token-va"
+        });
+      }
+    }
+    // Production fallback
+    else {
+      return reply.code(500).send({ 
+        error: "Firebase Admin not properly initialized",
+        code: "FIREBASE_NOT_INITIALIZED"
+      });
+    }
     
     return;
   } catch (error: any) {
