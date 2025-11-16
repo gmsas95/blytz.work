@@ -80,7 +80,7 @@ const VADashboard = () => {
         views: Math.floor(Math.random() * 1000) + 100,
         contactRequests: Math.floor(Math.random() * 50) + 5,
         responseRate: Math.floor(Math.random() * 30) + 70,
-        averageRating: (Math.random() * 2 + 3).toFixed(1),
+        averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
         totalReviews: Math.floor(Math.random() * 100) + 10,
         completedJobs: Math.floor(Math.random() * 50) + 5,
         earnedAmount: Math.floor(Math.random() * 10000) + 1000,
