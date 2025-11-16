@@ -205,7 +205,7 @@ const VADashboard = () => {
                   </div>
                 )}
                 <div className="absolute -bottom-1 -right-1">
-                  {getAvailabilityStatus(profile?.availability)}
+                  {getAvailabilityStatus(profile?.availability ?? false)}
                 </div>
               </div>
               
