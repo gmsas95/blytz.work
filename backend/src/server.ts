@@ -11,6 +11,8 @@ import uploadRoutes from "./routes/upload.js";
 import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
 import paymentRoutes from "./routes/payments.js";
 import vaProfileRoutes from "./routes/vaProfiles.js";
+import vaRoutes from "./routes/va.js";
+import companyRoutes from "./routes/company.js";
 
 // Import utilities
 import { createRateLimiter } from "./utils/response.js";
@@ -65,6 +67,8 @@ app.register(uploadRoutes, { prefix: "/api" });
 app.register(jobMarketplaceRoutes, { prefix: "/api" });
 app.register(paymentRoutes, { prefix: "/api" });
 app.register(vaProfileRoutes, { prefix: "/api" });
+app.register(vaRoutes, { prefix: "/api" });
+app.register(companyRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, request, reply) => {

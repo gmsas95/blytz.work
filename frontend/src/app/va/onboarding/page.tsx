@@ -15,6 +15,8 @@ export default function VAOnboardingPage() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
+    name: "",
+    country: "",
     bio: "",
     skills: "",
     hourlyRate: "",
@@ -27,6 +29,8 @@ export default function VAOnboardingPage() {
       await apiCall('/va/profile', {
         method: 'POST',
         body: JSON.stringify({
+          name: formData.name,
+          country: formData.country,
           bio: formData.bio,
           skills: formData.skills.split(',').map(skill => skill.trim()),
           hourlyRate: parseInt(formData.hourlyRate),
@@ -126,6 +130,26 @@ export default function VAOnboardingPage() {
             <CardContent className="space-y-6">
               {currentStep === 1 && (
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Country</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      placeholder="United States"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Professional Bio</label>
                     <textarea

@@ -15,7 +15,8 @@ export default function EmployerOnboardingPage() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    companyName: "",
+    name: "",
+    country: "",
     industry: "",
     description: "",
     website: "",
@@ -27,7 +28,8 @@ export default function EmployerOnboardingPage() {
       await apiCall('/company/profile', {
         method: 'POST',
         body: JSON.stringify({
-          companyName: formData.companyName,
+          name: formData.name,
+          country: formData.country,
           industry: formData.industry,
           description: formData.description,
           website: formData.website,
@@ -132,8 +134,18 @@ export default function EmployerOnboardingPage() {
                       type="text"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
                       placeholder="Acme Corp"
-                      value={formData.companyName}
-                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Country</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      placeholder="United States"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     />
                   </div>
                   <div>
