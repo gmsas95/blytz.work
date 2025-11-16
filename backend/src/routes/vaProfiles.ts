@@ -306,7 +306,7 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
           education: true,
           responseRate: true,
           averageRating: true,
-          totalReviews: z.number().min(0).default(0),
+          totalReviews: true,
           featuredProfile: true,
           featured: true,
           earnedAmount: true,
