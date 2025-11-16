@@ -69,7 +69,7 @@ export default function AuthPage() {
           
           console.log('Profile response status:', profileResponse.status);
           
-          if (profileResponse.ok) {
+          if (profileResponse.status === 200) {
             const userData = await profileResponse.json();
             const role = userData.data.role;
             console.log('User role from backend:', role);
@@ -81,7 +81,7 @@ export default function AuthPage() {
                 const companyResponse = await Promise.race([
                   apiCall('/company/profile'),
                   new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('API call timeout')), 3000)
+                    setTimeout(() => reject(new Error('API call timeout')), 2000)
                   )
                 ]) as Response;
                 
@@ -101,7 +101,7 @@ export default function AuthPage() {
                 const vaResponse = await Promise.race([
                   apiCall('/va/profile'),
                   new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('API call timeout')), 3000)
+                    setTimeout(() => reject(new Error('API call timeout')), 2000)
                   )
                 ]) as Response;
                 
@@ -116,31 +116,28 @@ export default function AuthPage() {
               }
             } else {
               // User exists but no role - send to role selection
+              console.log('User has no role, going to role selection');
               router.push("/select-role");
             }
-          } else {
-            console.log('Profile check failed, redirecting to role selection');
-            // Profile doesn't exist - user might be new or incomplete
-            router.push("/select-role");
-          }
-        } catch (error) {
-          console.error('Error checking user role:', error);
-          console.log('Using fallback role detection from localStorage');
-          
-          // For mock users or when backend is down, determine role from localStorage and redirect accordingly
-          const storedRole = localStorage.getItem('userRole');
-          console.log('Stored role:', storedRole);
-          
-          if (storedRole === 'employer') {
-            router.push("/employer/onboarding");
-          } else if (storedRole === 'va') {
-            router.push("/va/onboarding");
-          } else {
-            // Determine role from email and redirect to onboarding
+          } else if (profileResponse.status === 404) {
+            // User doesn't exist in backend - create fallback user
+            console.log('User not found in backend, using fallback...');
             const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
             localStorage.setItem('userRole', emailRole);
             router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+          } else {
+            // Other HTTP error - use fallback
+            throw new Error(`Backend returned ${profileResponse.status}`);
           }
+        } catch (error) {
+          console.error('Error checking user role:', error);
+          console.log('Backend is unavailable, using fallback...');
+          
+          // Backend is down - determine role from email and redirect to onboarding
+          const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
+          console.log('Determining role from email:', emailRole);
+          localStorage.setItem('userRole', emailRole);
+          router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
         }
       } else {
         let authUser;
