@@ -221,7 +221,7 @@ const VADashboard = () => {
                 <div className="flex items-center gap-4 text-sm text-slate-600">
                   <span className="flex items-center gap-1">
                     <Briefcase className="h-4 w-4" />
-                    {profile?.skills?.slice(0, 3).join(', ')}{profile?.skills?.length > 3 ? '...' : ''}
+                    {profile?.skills?.slice(0, 3).join(', ')}{(profile?.skills?.length || 0) > 3 ? '...' : ''}
                   </span>
                   <span className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
