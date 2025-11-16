@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { apiCall } from "@/lib/api";
 
 export default function SelectRolePage() {
   const router = useRouter();
@@ -19,14 +20,18 @@ export default function SelectRolePage() {
     }
 
     try {
-      // TODO: Store role preference in Firebase/Firestore
-      console.log("Selected role:", role);
+      // Update role in backend
+      const backendRole = role === 'employer' ? 'company' : 'va';
+      await apiCall('/auth/profile', {
+        method: 'PUT', 
+        body: JSON.stringify({ role: backendRole })
+      });
       
       toast.success(`Welcome as ${role === "employer" ? "Employer" : "Virtual Assistant"}!`, {
         description: "Redirecting to your dashboard...",
       });
 
-      // Store role in localStorage for now (will be replaced with Firebase)
+      // Store role in localStorage
       localStorage.setItem("userRole", role);
       
       // Redirect to appropriate dashboard
@@ -36,6 +41,7 @@ export default function SelectRolePage() {
         router.push("/va/dashboard");
       }
     } catch (error) {
+      console.error('Failed to set role:', error);
       toast.error("Failed to set role. Please try again.");
     }
   };

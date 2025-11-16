@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
+import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function AuthPage() {
@@ -32,34 +33,34 @@ export default function AuthPage() {
         toast.success(`Welcome back!`, {
           description: "Successfully signed in to your account",
         });
-        // Check if user has role selected, redirect accordingly
-        const existingRole = localStorage.getItem("userRole");
-        if (existingRole === "employer") {
-          router.push("/employer/dashboard");
-        } else if (existingRole === "va") {
-          // Check if VA has profile, redirect to creation if not
-          try {
-            const token = localStorage.getItem('authToken');
-            const profileResponse = await fetch('/api/va/profile', {
-              headers: {
-                'Authorization': `Bearer ${token}`
+        
+        // Check user role from backend
+        try {
+          const profileResponse = await apiCall('/auth/profile');
+          if (profileResponse.ok) {
+            const userData = await profileResponse.json();
+            const role = userData.data.role;
+            
+            if (role === 'company') {
+              localStorage.setItem("userRole", "employer");
+              router.push("/employer/dashboard");
+            } else if (role === 'va') {
+              localStorage.setItem("userRole", "va");
+              // Check if VA has profile
+              const vaResponse = await apiCall('/va/profile');
+              if (!vaResponse.ok) {
+                router.push("/va/profile/create");
+                return;
               }
-            });
-            
-            if (!profileResponse.ok) {
-              // No profile exists, redirect to creation
-              router.push("/va/profile/create");
-              return;
+              router.push("/va/dashboard");
+            } else {
+              router.push("/select-role");
             }
-            
-            // Profile exists, redirect to dashboard
-            router.push("/va/dashboard");
-          } catch (error) {
-            // Error checking profile, default to creation
-            router.push("/va/profile/create");
-            return;
+          } else {
+            router.push("/select-role");
           }
-        } else {
+        } catch (error) {
+          console.error('Error checking user role:', error);
           router.push("/select-role");
         }
       } else {
