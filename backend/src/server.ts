@@ -18,7 +18,7 @@ import { createRateLimiter } from "./utils/response.js";
 // Environment schema
 const envSchema = {
   type: "object",
-  required: ["DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY"],
+  required: ["DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY", "JWT_SECRET"],
   properties: {
     FIREBASE_PROJECT_ID: { type: "string" },
     FIREBASE_CLIENT_EMAIL: { type: "string" },
@@ -29,6 +29,7 @@ const envSchema = {
     PAYMENT_AMOUNT: { type: "string", default: "29.99" },
     PLATFORM_FEE_PERCENTAGE: { type: "string", default: "10" },
     PORT: { type: "string", default: "3000" },
+    JWT_SECRET: { type: "string" },
     NODE_ENV: { type: "string", default: "development" },
   },
 };

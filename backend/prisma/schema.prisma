@@ -445,6 +445,9 @@ model MatchVote {
   vote          Boolean  // true = like, false = pass
   createdAt     DateTime @default(now())
 
+  // Add opposite relation to Match
+  match         Match?     @relation(fields: [jobPostingId, vaProfileId], references: [jobPostingId, vaProfileId])
+
   @@unique([jobPostingId, vaProfileId, userId]) // One vote per user per VA per job
   @@map("match_votes")
   @@schema("blytz_hire")
