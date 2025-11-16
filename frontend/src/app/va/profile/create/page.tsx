@@ -98,7 +98,7 @@ const VAProfileCreation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeFile, setResumeFile] = useState<string | null>(null);
   const [newSkills, setNewSkills] = useState('');
   
   const {
