@@ -126,7 +126,7 @@ const VADashboard = () => {
     }
   };
 
-  const getAvailabilityStatus = (available) => {
+  const getAvailabilityStatus = (available: boolean) => {
     return available ? (
       <Badge variant="default" className="bg-green-500 text-white flex items-center gap-1">
         <CheckCircle className="h-3 w-3" />
