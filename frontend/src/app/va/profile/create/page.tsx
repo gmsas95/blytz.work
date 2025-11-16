@@ -419,7 +419,7 @@ const VAProfileCreation = () => {
 
   const nextStep = async () => {
     const currentFields = getStepFields(currentStep);
-    const isStepValid = await trigger(currentFields, { shouldFocus: true });
+    const isStepValid = await trigger(currentFields as any, { shouldFocus: true });
     
     if (isStepValid) {
       setCurrentStep(prev => Math.min(prev + 1, 7));
