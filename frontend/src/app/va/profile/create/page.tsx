@@ -1238,7 +1238,7 @@ const VAProfileCreation = () => {
                     <Checkbox
                       id="backgroundCheckPassed"
                       checked={watch('backgroundCheckPassed')}
-                      onCheckedChange={(checked) => setValue('backgroundCheckPassed', checked)}
+                      onCheckedChange={(checked) => setValue('backgroundCheckPassed', Boolean(checked))}
                     />
                     <Label htmlFor="backgroundCheckPassed" className="text-sm">
                       I consent to a background check (required for Professional & Premium verification)
@@ -1249,7 +1249,7 @@ const VAProfileCreation = () => {
                     <Checkbox
                       id="featuredProfile"
                       checked={watch('featuredProfile')}
-                      onCheckedChange={(checked) => setValue('featuredProfile', checked)}
+                      onCheckedChange={(checked) => setValue('featuredProfile', Boolean(checked))}
                     />
                     <Label htmlFor="featuredProfile" className="text-sm">
                       Feature my profile (additional $10/month for premium visibility)
