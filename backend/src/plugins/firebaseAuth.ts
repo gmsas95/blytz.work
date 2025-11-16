@@ -14,7 +14,7 @@ declare module 'fastify' {
 }
 
 // Production-ready Firebase Authentication
-import FastifyReply, { FastifyRequest } from "fastify";
+import { FastifyReply, FastifyRequest } from "fastify";
 import admin from "firebase-admin";
 import { prisma } from "../utils/prisma.js";
 
