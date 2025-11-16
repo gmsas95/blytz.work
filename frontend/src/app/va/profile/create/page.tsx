@@ -289,7 +289,7 @@ const VAProfileCreation = () => {
     trigger('education');
   };
 
-  const handleImageUpload = async (file) => {
+  const handleImageUpload = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setUploadProgress(0);
       setIsLoading(true);
@@ -632,7 +632,7 @@ const VAProfileCreation = () => {
                       <Input
                         placeholder="Type a skill and press Enter..."
                         value={newSkills}
-                        onChange={(e) => setNewSkills(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewSkills(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -861,7 +861,7 @@ const VAProfileCreation = () => {
                             <Input
                               placeholder="Company Name"
                               value={exp.company}
-                              onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateWorkExperience(index, 'company', e.target.value)}
                             />
                           </div>
                           
@@ -870,7 +870,7 @@ const VAProfileCreation = () => {
                             <Input
                               placeholder="Job Title"
                               value={exp.position}
-                              onChange={(e) => updateWorkExperience(index, 'position', e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateWorkExperience(index, 'position', e.target.value)}
                             />
                           </div>
                           
@@ -879,7 +879,7 @@ const VAProfileCreation = () => {
                             <Input
                               type="date"
                               value={exp.startDate}
-                              onChange={(e) => updateWorkExperience(index, 'startDate', e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateWorkExperience(index, 'startDate', e.target.value)}
                             />
                           </div>
                           
@@ -888,7 +888,7 @@ const VAProfileCreation = () => {
                             <Input
                               type="date"
                               value={exp.endDate}
-                              onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateWorkExperience(index, 'endDate', e.target.value)}
                               disabled={exp.current}
                             />
                           </div>
@@ -911,7 +911,7 @@ const VAProfileCreation = () => {
                             placeholder="Describe your responsibilities and achievements..."
                             rows={3}
                             value={exp.description}
-                            onChange={(e) => updateWorkExperience(index, 'description', e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateWorkExperience(index, 'description', e.target.value)}
                           />
                         </div>
                       </div>
@@ -980,7 +980,7 @@ const VAProfileCreation = () => {
                               <Input
                                 placeholder="University/College Name"
                                 value={edu.institution}
-                                onChange={(e) => updateEducation(index, 'institution', e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateEducation(index, 'institution', e.target.value)}
                               />
                             </div>
                             
@@ -989,7 +989,7 @@ const VAProfileCreation = () => {
                               <Input
                                 placeholder="Bachelor's, Master's, etc."
                                 value={edu.degree}
-                                onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateEducation(index, 'degree', e.target.value)}
                               />
                             </div>
                             
@@ -998,7 +998,7 @@ const VAProfileCreation = () => {
                               <Input
                                 placeholder="Computer Science, Business, etc."
                                 value={edu.field}
-                                onChange={(e) => updateEducation(index, 'field', e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateEducation(index, 'field', e.target.value)}
                               />
                             </div>
                             
@@ -1007,7 +1007,7 @@ const VAProfileCreation = () => {
                               <Input
                                 type="date"
                                 value={edu.startDate}
-                                onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateEducation(index, 'startDate', e.target.value)}
                               />
                             </div>
                             
@@ -1016,7 +1016,7 @@ const VAProfileCreation = () => {
                               <Input
                                 type="date"
                                 value={edu.endDate}
-                                onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => updateEducation(index, 'endDate', e.target.value)}
                                 disabled={edu.current}
                               />
                             </div>
@@ -1073,7 +1073,7 @@ const VAProfileCreation = () => {
                             <input
                               type="file"
                               accept="image/*"
-                              onChange={(e) => handleImageUpload(e.target.files[0])}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => handleImageUpload(e.target.files[0])}
                               className="hidden"
                               id="profile-image"
                             />
@@ -1118,7 +1118,7 @@ const VAProfileCreation = () => {
                             <input
                               type="file"
                               accept=".pdf,.doc,.docx"
-                              onChange={(e) => handleResumeUpload(e.target.files[0])}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement> || React.ChangeEvent<HTMLTextAreaElement>) => handleResumeUpload(e.target.files[0])}
                               className="hidden"
                               id="resume-file"
                             />
