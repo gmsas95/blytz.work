@@ -44,24 +44,33 @@ export default function AuthPage() {
             
             if (role === 'company') {
               localStorage.setItem("userRole", "employer");
+              // Check if company has profile
+              const companyResponse = await apiCall('/company/profile');
+              if (!companyResponse.ok) {
+                router.push("/employer/onboarding");
+                return;
+              }
               router.push("/employer/dashboard");
             } else if (role === 'va') {
               localStorage.setItem("userRole", "va");
               // Check if VA has profile
               const vaResponse = await apiCall('/va/profile');
               if (!vaResponse.ok) {
-                router.push("/va/profile/create");
+                router.push("/va/onboarding");
                 return;
               }
               router.push("/va/dashboard");
             } else {
+              // User exists but no role - send to role selection
               router.push("/select-role");
             }
           } else {
+            // Profile doesn't exist - user might be new or incomplete
             router.push("/select-role");
           }
         } catch (error) {
           console.error('Error checking user role:', error);
+          // Fall back to role selection for safety
           router.push("/select-role");
         }
       } else {
