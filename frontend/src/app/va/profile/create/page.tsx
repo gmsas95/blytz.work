@@ -446,7 +446,7 @@ const VAProfileCreation = () => {
   const isStepComplete = (step: number) => {
     const fields = getStepFields(step);
     return fields.every(field => {
-      const value = getValues(field);
+      const value = getValues(field as any);
       if (Array.isArray(value)) return value.length > 0;
       return value !== undefined && value !== '';
     });
