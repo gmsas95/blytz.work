@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://hyred.blytz.app:3010';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hyred.blytz.app:3010';
 
 export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('authToken');
