@@ -466,6 +466,7 @@ model Match {
   payments      Payment[]
   matchVotes    MatchVote[]
 
+  @@unique([jobPostingId, vaProfileId]) // Each job posting can only match with each VA once
   @@map("matches")
   @@schema("blytz_hire")
 }
