@@ -146,36 +146,7 @@ export default async function vaProfileRoutes(app: FastifyInstance) {
     }
   });
 
-  // Get VA Profile
-  app.get("/va/profile", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const user = request.user as any;
-
-    try {
-      const vaProfile = await prisma.vAProfile.findUnique({
-        where: { userId: user.uid }
-      });
-
-      if (!vaProfile) {
-        return reply.code(404).send({ 
-          error: "VA profile not found",
-          code: "PROFILE_NOT_FOUND"
-        });
-      }
-
-      return {
-        success: true,
-        data: vaProfile
-      };
-    } catch (error: any) {
-      return reply.code(500).send({ 
-        error: "Failed to fetch VA profile",
-        code: "PROFILE_FETCH_ERROR",
-        details: error.message
-      });
-    }
-  });
+  // Get VA Profile (moved to va.ts to avoid duplicate routes)
 
   // Update VA Profile
   app.put("/va/profile", {

@@ -82,7 +82,7 @@ services:
   # Frontend React Application
   frontend:
     build:
-      context: ./Hyred FIGMA
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: blytz-frontend
     restart: unless-stopped
