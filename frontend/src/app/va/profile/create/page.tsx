@@ -186,7 +186,7 @@ const VAProfileCreation = () => {
     { value: 'CST_CHINA', label: 'CST (China Standard Time)' }
   ];
 
-  const addSkill = (skill) => {
+  const addSkill = (skill: string) => {
     if (skill && !watchedSkills.includes(skill)) {
       setValue('skills', [...watchedSkills, skill]);
       setNewSkills('');
@@ -194,7 +194,7 @@ const VAProfileCreation = () => {
     }
   };
 
-  const removeSkill = (skillToRemove) => {
+  const removeSkill = (skillToRemove: string) => {
     setValue('skills', watchedSkills.filter(skill => skill !== skillToRemove));
     trigger('skills');
   };
@@ -205,14 +205,14 @@ const VAProfileCreation = () => {
     trigger('languages');
   };
 
-  const updateLanguage = (index, field, value) => {
+  const updateLanguage = (index: number, field: string, value: string) => {
     const updatedLanguages = [...(watchedLanguages || [])];
     updatedLanguages[index] = { ...updatedLanguages[index], [field]: value };
     setValue('languages', updatedLanguages);
     trigger('languages');
   };
 
-  const removeLanguage = (index) => {
+  const removeLanguage = (index: number) => {
     setValue('languages', watchedLanguages.filter((_, i) => i !== index));
     trigger('languages');
   };
@@ -230,14 +230,14 @@ const VAProfileCreation = () => {
     trigger('workExperience');
   };
 
-  const updateWorkExperience = (index, field, value) => {
+  const updateWorkExperience = (index: number, field: string, value: string) => {
     const updatedExperience = [...(watchedWorkExperience || [])];
     updatedExperience[index] = { ...updatedExperience[index], [field]: value };
     setValue('workExperience', updatedExperience);
     trigger('workExperience');
   };
 
-  const removeWorkExperience = (index) => {
+  const removeWorkExperience = (index: number) => {
     setValue('workExperience', watchedWorkExperience.filter((_, i) => i !== index));
     trigger('workExperience');
   };
@@ -255,14 +255,14 @@ const VAProfileCreation = () => {
     trigger('education');
   };
 
-  const updateEducation = (index, field, value) => {
+  const updateEducation = (index: number, field: string, value: string) => {
     const updatedEducation = [...(watchedEducation || [])];
     updatedEducation[index] = { ...updatedEducation[index], [field]: value };
     setValue('education', updatedEducation);
     trigger('education');
   };
 
-  const removeEducation = (index) => {
+  const removeEducation = (index: number) => {
     setValue('education', watchedEducation.filter((_, i) => i !== index));
     trigger('education');
   };
@@ -408,7 +408,7 @@ const VAProfileCreation = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const getStepFields = (step) => {
+  const getStepFields = (step: number) => {
     switch (step) {
       case 1: return ['name', 'bio'];
       case 2: return ['country', 'timezone', 'availability'];
@@ -421,7 +421,7 @@ const VAProfileCreation = () => {
     }
   };
 
-  const isStepComplete = (step) => {
+  const isStepComplete = (step: number) => {
     const fields = getStepFields(step);
     return fields.every(field => {
       const value = getValues(field);
