@@ -252,7 +252,7 @@ const VAProfileCreation = () => {
     trigger('workExperience');
   };
 
-  const updateWorkExperience = (index: number, field: string, value: string) => {
+  const updateWorkExperience = (index: number, field: string, value: string | boolean) => {
     const updatedExperience = [...(watchedWorkExperience || [])];
     updatedExperience[index] = { ...updatedExperience[index], [field]: value };
     setValue('workExperience', updatedExperience);
@@ -277,7 +277,7 @@ const VAProfileCreation = () => {
     trigger('education');
   };
 
-  const updateEducation = (index: number, field: string, value: string) => {
+  const updateEducation = (index: number, field: string, value: string | boolean) => {
     const updatedEducation = [...(watchedEducation || [])];
     updatedEducation[index] = { ...updatedEducation[index], [field]: value };
     setValue('education', updatedEducation);
@@ -579,7 +579,7 @@ const VAProfileCreation = () => {
                   <Checkbox
                     id="availability"
                     checked={watch('availability')}
-                    onCheckedChange={(checked) => setValue('availability', checked)}
+                    onCheckedChange={(checked) => setValue('availability', Boolean(checked))}
                   />
                   <Label htmlFor="availability" className="text-sm">
                     I am available for new projects
