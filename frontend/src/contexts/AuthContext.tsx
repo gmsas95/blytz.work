@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange, signOutUser } from '@/lib/auth';
+import { setupTokenRefresh } from '@/lib/auth-utils';
 
 interface AuthUser {
   uid: string;
@@ -23,7 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChange((firebaseUser: User | null) => {
+    // Set up token refresh monitoring
+    const unsubscribeTokenRefresh = setupTokenRefresh();
+    
+    // Set up auth state change monitoring
+    const unsubscribeAuth = onAuthStateChange((firebaseUser: User | null) => {
       if (firebaseUser) {
         setUser({
           uid: firebaseUser.uid,
@@ -36,12 +41,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      unsubscribeTokenRefresh();
+    };
   }, []);
 
   const signOut = async () => {
     await signOutUser();
     setUser(null);
+    // Clear localStorage tokens
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
   };
 
   return (

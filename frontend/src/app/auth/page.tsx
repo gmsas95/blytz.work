@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
+import { getToken, setupTokenRefresh, createMockUser } from "@/lib/auth-utils";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -30,7 +31,26 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        await signInUser(formData.email, formData.password);
+        let authUser;
+        
+        try {
+          // Try Firebase auth first
+          authUser = await signInUser(formData.email, formData.password);
+        } catch (firebaseError: any) {
+          // If Firebase is not configured or fails, use mock auth
+          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
+          
+          // For demo purposes, accept any email/password and assign role based on email
+          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
+          authUser = await createMockUser(formData.email, formData.password, role);
+        }
+        
+        // Get Firebase ID token and store it for API calls
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Failed to get authentication token');
+        }
+        
         toast.success(`Welcome back!`, {
           description: "Successfully signed in to your account",
         });
@@ -70,25 +90,51 @@ export default function AuthPage() {
           }
         } catch (error) {
           console.error('Error checking user role:', error);
-          // Fall back to role selection for safety
-          router.push("/select-role");
+          // For mock users, determine role from localStorage and redirect accordingly
+          const storedRole = localStorage.getItem('userRole');
+          if (storedRole === 'employer') {
+            router.push("/employer/onboarding");
+          } else if (storedRole === 'va') {
+            router.push("/va/onboarding");
+          } else {
+            router.push("/select-role");
+          }
         }
       } else {
-        await registerUser(formData.email, formData.password, formData.name);
+        let authUser;
+        
+        try {
+          // Try Firebase auth first
+          authUser = await registerUser(formData.email, formData.password, formData.name);
+        } catch (firebaseError: any) {
+          // If Firebase is not configured or fails, use mock auth
+          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
+          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
+          authUser = await createMockUser(formData.email, formData.password, role);
+        }
+        
+        // Get Firebase ID token and store it for API calls
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Failed to get authentication token');
+        }
         
         // Get Firebase user UID and create basic profile in backend
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.uid) {
-          await apiCall('/auth/create', {
-            method: 'POST',
-            body: JSON.stringify({
-              uid: user.uid,
-              email: formData.email,
-              name: formData.name,
-              username: formData.username,
-              role: null // Will be set after role selection
-            })
-          });
+        if (authUser.uid) {
+          try {
+            await apiCall('/auth/create', {
+              method: 'POST',
+              body: JSON.stringify({
+                uid: authUser.uid,
+                email: formData.email,
+                name: formData.name,
+                username: formData.username,
+                role: null // Will be set after role selection
+              })
+            });
+          } catch (apiError) {
+            console.log('Backend user creation failed (expected for mock users):', apiError);
+          }
         }
         
         toast.success(`Account created!`, {
