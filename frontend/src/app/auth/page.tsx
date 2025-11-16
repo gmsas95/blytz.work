@@ -55,49 +55,91 @@ export default function AuthPage() {
           description: "Successfully signed in to your account",
         });
         
-        // Check user role from backend
+        // Check user role from backend with timeout
         try {
-          const profileResponse = await apiCall('/auth/profile');
+          console.log('Checking user profile...');
+          
+          // Add timeout to prevent infinite loading  
+          const profileResponse = await Promise.race([
+            apiCall('/auth/profile'),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('API call timeout')), 3000)
+            )
+          ]) as Response;
+          
+          console.log('Profile response status:', profileResponse.status);
+          
           if (profileResponse.ok) {
             const userData = await profileResponse.json();
             const role = userData.data.role;
+            console.log('User role from backend:', role);
             
             if (role === 'company') {
               localStorage.setItem("userRole", "employer");
-              // Check if company has profile
-              const companyResponse = await apiCall('/company/profile');
-              if (!companyResponse.ok) {
+              // Check if company has profile with timeout
+              try {
+                const companyResponse = await Promise.race([
+                  apiCall('/company/profile'),
+                  new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('API call timeout')), 3000)
+                  )
+                ]) as Response;
+                
+                if (!companyResponse.ok) {
+                  router.push("/employer/onboarding");
+                  return;
+                }
+                router.push("/employer/dashboard");
+              } catch {
                 router.push("/employer/onboarding");
                 return;
               }
-              router.push("/employer/dashboard");
             } else if (role === 'va') {
               localStorage.setItem("userRole", "va");
-              // Check if VA has profile
-              const vaResponse = await apiCall('/va/profile');
-              if (!vaResponse.ok) {
+              // Check if VA has profile with timeout
+              try {
+                const vaResponse = await Promise.race([
+                  apiCall('/va/profile'),
+                  new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('API call timeout')), 3000)
+                  )
+                ]) as Response;
+                
+                if (!vaResponse.ok) {
+                  router.push("/va/onboarding");
+                  return;
+                }
+                router.push("/va/dashboard");
+              } catch {
                 router.push("/va/onboarding");
                 return;
               }
-              router.push("/va/dashboard");
             } else {
               // User exists but no role - send to role selection
               router.push("/select-role");
             }
           } else {
+            console.log('Profile check failed, redirecting to role selection');
             // Profile doesn't exist - user might be new or incomplete
             router.push("/select-role");
           }
         } catch (error) {
           console.error('Error checking user role:', error);
-          // For mock users, determine role from localStorage and redirect accordingly
+          console.log('Using fallback role detection from localStorage');
+          
+          // For mock users or when backend is down, determine role from localStorage and redirect accordingly
           const storedRole = localStorage.getItem('userRole');
+          console.log('Stored role:', storedRole);
+          
           if (storedRole === 'employer') {
             router.push("/employer/onboarding");
           } else if (storedRole === 'va') {
             router.push("/va/onboarding");
           } else {
-            router.push("/select-role");
+            // Determine role from email and redirect to onboarding
+            const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
+            localStorage.setItem('userRole', emailRole);
+            router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
           }
         }
       } else {
