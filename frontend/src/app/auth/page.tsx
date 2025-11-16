@@ -18,6 +18,7 @@ export default function AuthPage() {
     name: "",
     email: "",
     password: "",
+    username: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +66,26 @@ export default function AuthPage() {
         }
       } else {
         await registerUser(formData.email, formData.password, formData.name);
+        
+        // Get Firebase user UID and create basic profile in backend
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.uid) {
+          await apiCall('/auth/create', {
+            method: 'POST',
+            body: JSON.stringify({
+              uid: user.uid,
+              email: formData.email,
+              name: formData.name,
+              username: formData.username,
+              role: null // Will be set after role selection
+            })
+          });
+        }
+        
         toast.success(`Account created!`, {
           description: "Welcome to BlytzWork",
         });
+        
         // Redirect to role selection after registration
         router.push("/select-role");
       }
@@ -84,7 +102,7 @@ export default function AuthPage() {
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
-    setFormData({ name: "", email: "", password: "" });
+    setFormData({ name: "", email: "", password: "", username: "" });
     setError(null);
   };
 
@@ -124,6 +142,22 @@ export default function AuthPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="johndoe"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                   required
                   disabled={isLoading}

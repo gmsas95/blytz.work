@@ -34,11 +34,11 @@ export default function SelectRolePage() {
       // Store role in localStorage
       localStorage.setItem("userRole", role);
       
-      // Redirect to appropriate dashboard
+      // Redirect to appropriate onboarding
       if (role === "employer") {
-        router.push("/employer/dashboard");
+        router.push("/employer/onboarding");
       } else {
-        router.push("/va/dashboard");
+        router.push("/va/onboarding");
       }
     } catch (error) {
       console.error('Failed to set role:', error);
