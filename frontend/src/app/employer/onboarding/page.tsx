@@ -210,7 +210,7 @@ export default function EmployerOnboardingPage() {
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm text-gray-600">Company Name:</span>
-                        <p className="text-sm">{formData.companyName || "Not provided"}</p>
+                        <p className="text-sm">{formData.name || "Not provided"}</p>
                       </div>
                       <div>
                         <span className="text-sm text-gray-600">Industry:</span>
