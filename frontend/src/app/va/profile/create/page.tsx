@@ -235,7 +235,7 @@ const VAProfileCreation = () => {
   };
 
   const removeLanguage = (index: number) => {
-    setValue('languages', watchedLanguages.filter((_, i) => i !== index));
+    setValue('languages', watchedLanguages.filter((_: any, i: number) => i !== index));
     trigger('languages');
   };
 
@@ -260,7 +260,7 @@ const VAProfileCreation = () => {
   };
 
   const removeWorkExperience = (index: number) => {
-    setValue('workExperience', watchedWorkExperience.filter((_, i) => i !== index));
+    setValue('workExperience', watchedWorkExperience.filter((_: any, i: number) => i !== index));
     trigger('workExperience');
   };
 
@@ -285,7 +285,7 @@ const VAProfileCreation = () => {
   };
 
   const removeEducation = (index: number) => {
-    setValue('education', watchedEducation.filter((_, i) => i !== index));
+    setValue('education', watchedEducation.filter((_: any, i: number) => i !== index));
     trigger('education');
   };
 
@@ -325,7 +325,7 @@ const VAProfileCreation = () => {
     }
   };
 
-  const handleResumeUpload = async (file) => {
+  const handleResumeUpload = async (file: File) => {
     if (file && (file.type === 'application/pdf' || file.type === 'application/msword')) {
       setUploadProgress(0);
       setIsLoading(true);
@@ -362,7 +362,7 @@ const VAProfileCreation = () => {
     }
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: VAProfileFormData) => {
     setIsLoading(true);
     
     try {
