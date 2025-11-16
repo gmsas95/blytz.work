@@ -35,6 +35,9 @@ interface VAProfileFormData {
   avatarUrl?: string;
   resumeUrl?: string;
   videoIntroUrl?: string;
+  verificationLevel: 'basic' | 'professional' | 'premium';
+  backgroundCheckPassed: boolean;
+  featuredProfile: boolean;
 }
 
 // Comprehensive VA Profile Schema
