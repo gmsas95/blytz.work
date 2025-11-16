@@ -115,7 +115,7 @@ const VADashboard = () => {
     router.push('/va/verification');
   };
 
-  const getVerificationBadge = (level) => {
+  const getVerificationBadge = (level: 'basic' | 'professional' | 'premium') => {
     switch (level) {
       case 'premium':
         return <Badge variant="default" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">Premium</Badge>;
