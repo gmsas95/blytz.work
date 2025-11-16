@@ -30,6 +30,39 @@ import {
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+// Type definitions for VA profile
+interface VAProfile {
+  id: string;
+  name: string;
+  bio: string;
+  country: string;
+  timezone: string;
+  hourlyRate: number;
+  skills: string[];
+  availability: boolean;
+  email?: string;
+  phone?: string;
+  languages?: Array<{ language: string; proficiency: string }>;
+  workExperience?: Array<{ company: string; position: string; startDate: string; endDate?: string; current: boolean; description: string }>;
+  education?: Array<{ institution: string; degree: string; field: string; startDate: string; endDate?: string; current: boolean }>;
+  avatarUrl?: string;
+  resumeUrl?: string;
+  videoIntroUrl?: string;
+  verificationLevel: 'basic' | 'professional' | 'premium';
+  backgroundCheckPassed: boolean;
+  featuredProfile: boolean;
+  responseRate?: number;
+  averageRating?: number;
+  totalReviews?: number;
+  completedJobs?: number;
+  earnedAmount?: number;
+  profileViews?: number;
+  profileCompleted?: boolean;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const VADashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
