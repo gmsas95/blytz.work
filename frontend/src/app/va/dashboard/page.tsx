@@ -1,234 +1,464 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Zap, MessageCircle, Clock, DollarSign, TrendingUp } from "lucide-react";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Users, 
+  DollarSign, 
+  TrendingUp, 
+  Calendar,
+  Eye,
+  Star,
+  FileText,
+  Briefcase,
+  Award,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  MessageSquare,
+  BarChart3,
+  Settings,
+  Edit,
+  Upload,
+  Video,
+  Linkedin
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
-export default function VADashboard() {
-  const { user, loading } = useAuth();
+const VADashboard = () => {
   const router = useRouter();
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  // Mock data - replace with real data from Firebase
-  const activeContracts = [
-    {
-      id: "1",
-      employerName: "TechStart Inc.",
-      role: "E-commerce Specialist",
-      rate: 12,
-      hoursThisWeek: 32,
-      status: "active",
-    },
-  ];
-
-  const totalEarningsThisWeek = activeContracts.reduce(
-    (sum, contract) => sum + contract.rate * contract.hoursThisWeek,
-    0
-  );
-
-  const stats = {
-    totalHours: 156,
-    totalEarnings: 1872,
-    activeClients: 1,
-    rating: 4.9,
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [analytics, setAnalytics] = useState({
+    views: 0,
+    contactRequests: 0,
+    responseRate: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    completedJobs: 0,
+    earnedAmount: 0,
+    profileViews: 0,
+    skillsPassed: 0,
+    skillsTotal: 0
+  });
 
   useEffect(() => {
-    if (!loading && !user) {
-      toast.error("Please sign in to access your dashboard");
-      router.push("/auth");
-      return;
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        router.push('/auth');
+        return;
+      }
+
+      // Fetch VA profile
+      const profileResponse = await fetch('/api/va/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setProfile(profileData.data);
+      } else {
+        // Profile doesn't exist, redirect to creation
+        router.push('/va/profile/create');
+        return;
+      }
+
+      // Fetch dashboard analytics (mock for now, will be real API)
+      const analyticsData = {
+        views: Math.floor(Math.random() * 1000) + 100,
+        contactRequests: Math.floor(Math.random() * 50) + 5,
+        responseRate: Math.floor(Math.random() * 30) + 70,
+        averageRating: (Math.random() * 2 + 3).toFixed(1),
+        totalReviews: Math.floor(Math.random() * 100) + 10,
+        completedJobs: Math.floor(Math.random() * 50) + 5,
+        earnedAmount: Math.floor(Math.random() * 10000) + 1000,
+        profileViews: Math.floor(Math.random() * 2000) + 200,
+        skillsPassed: Math.floor(Math.random() * 10) + 5,
+        skillsTotal: Math.floor(Math.random() * 5) + 10
+      };
+      
+      setAnalytics(analyticsData);
+
+    } catch (error) {
+      console.error('Dashboard data fetch error:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    // Check user role
-    const role = localStorage.getItem("userRole");
-    setUserRole(role);
+  const handleEditProfile = () => {
+    router.push('/va/profile/edit');
+  };
 
-    if (role && role !== "va") {
-      toast.error("This dashboard is for virtual assistants only");
-      router.push("/employer/dashboard");
-      return;
+  const handleViewApplications = () => {
+    router.push('/va/applications');
+  };
+
+  const handleViewAnalytics = () => {
+    router.push('/va/analytics');
+  };
+
+  const handleUpgradeVerification = () => {
+    router.push('/va/verification');
+  };
+
+  const getVerificationBadge = (level) => {
+    switch (level) {
+      case 'premium':
+        return <Badge variant="default" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">Premium</Badge>;
+      case 'professional':
+        return <Badge variant="default" className="bg-blue-500 text-white">Professional</Badge>;
+      default:
+        return <Badge variant="secondary">Basic</Badge>;
     }
+  };
 
-    // If no role set, redirect to role selection
-    if (!role && user) {
-      router.push("/select-role");
-      return;
-    }
-  }, [user, loading, router]);
+  const getAvailabilityStatus = (available) => {
+    return available ? (
+      <Badge variant="default" className="bg-green-500 text-white flex items-center gap-1">
+        <CheckCircle className="h-3 w-3" />
+        Available
+      </Badge>
+    ) : (
+      <Badge variant="secondary" className="flex items-center gap-1">
+        <Clock className="h-3 w-3" />
+        Unavailable
+      </Badge>
+    );
+  };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (!user || userRole !== "va") {
-    return null; // Will redirect in useEffect
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-                <Zap className="w-6 h-6 text-[#FFD600]" fill="#FFD600" />
-              </div>
-              <span className="text-xl text-black tracking-tight">Blytz Hire</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" className="border-black text-black">
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Messages
-              </Button>
-              <div className="w-10 h-10 rounded-full bg-[#FFD600] flex items-center justify-center text-black">
-                {user.displayName?.substring(0, 2) || user.email?.substring(0, 2) || "MS"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 max-w-7xl py-12">
-        <div className="space-y-8">
-          {/* Welcome Section */}
-          <div>
-            <h1 className="text-4xl text-black tracking-tight mb-2">Dashboard</h1>
-            <p className="text-gray-600 text-lg">Your VA workspace</p>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-6">
-            <Card className="p-6 border-2 border-gray-200">
-              <div className="space-y-2">
-                <p className="text-gray-600">This Week</p>
-                <p className="text-3xl text-black">${totalEarningsThisWeek}</p>
-                <div className="flex items-center gap-1 text-green-600 text-sm">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+12% from last week</span>
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header with Profile Info */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Profile Picture */}
+              <div className="relative">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-md">
+                    {profile?.name?.charAt(0) || 'V'}
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1">
+                  {getAvailabilityStatus(profile?.availability)}
                 </div>
               </div>
-            </Card>
-
-            <Card className="p-6 border-2 border-gray-200">
-              <div className="space-y-2">
-                <p className="text-gray-600">Hours This Week</p>
-                <p className="text-3xl text-black">
-                  {activeContracts.reduce((sum, c) => sum + c.hoursThisWeek, 0)}
-                </p>
+              
+              {/* Profile Info */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl font-bold text-slate-900">
+                    {profile?.name || 'Virtual Assistant'}
+                  </h1>
+                  {getVerificationBadge(profile?.verificationLevel)}
+                </div>
+                <p className="text-slate-600 mb-2">{profile?.bio}</p>
+                <div className="flex items-center gap-4 text-sm text-slate-600">
+                  <span className="flex items-center gap-1">
+                    <Briefcase className="h-4 w-4" />
+                    {profile?.skills?.slice(0, 3).join(', ')}{profile?.skills?.length > 3 ? '...' : ''}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    ${profile?.hourlyRate}/hr
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {profile?.country}
+                  </span>
+                </div>
               </div>
-            </Card>
-
-            <Card className="p-6 border-2 border-gray-200">
-              <div className="space-y-2">
-                <p className="text-gray-600">Active Clients</p>
-                <p className="text-3xl text-black">{stats.activeClients}</p>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-2 border-gray-200">
-              <div className="space-y-2">
-                <p className="text-gray-600">Rating</p>
-                <p className="text-3xl text-black">⭐ {stats.rating}</p>
-              </div>
-            </Card>
-          </div>
-
-          {/* Active Contracts */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl text-black tracking-tight">Active Contracts</h2>
             </div>
-
-            <div className="grid gap-4">
-              {activeContracts.map((contract) => (
-                <Card
-                  key={contract.id}
-                  className="p-6 border-2 border-gray-200 hover:border-black transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FFD600] to-[#FFB800] flex items-center justify-center text-black text-xl">
-                        {contract.employerName.substring(0, 2)}
-                      </div>
-                      <div>
-                        <h3 className="text-xl text-black mb-1">{contract.employerName}</h3>
-                        <p className="text-gray-600">{contract.role}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-8">
-                      <div className="text-right">
-                        <p className="text-gray-600 text-sm">This Week</p>
-                        <p className="text-2xl text-black">{contract.hoursThisWeek}h</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-600 text-sm">Rate</p>
-                        <p className="text-2xl text-black">${contract.rate}/hr</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="border-black text-black">
-                          <MessageCircle className="w-4 h-4" />
-                        </Button>
-                        <Button className="bg-black text-[#FFD600]" size="sm">
-                          View Contract
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-
-              {activeContracts.length === 0 && (
-                <Card className="p-12 border-2 border-dashed border-gray-300 text-center">
-                  <p className="text-gray-600 text-lg mb-4">No active contracts yet</p>
-                  <p className="text-gray-500 mb-6">
-                    Keep your profile updated and you'll get matched with employers soon!
-                  </p>
-                  <Link href="/va/profile">
-                    <Button className="bg-[#FFD600] hover:bg-[#FFD600]/90 text-black">
-                      Update Profile
-                    </Button>
-                  </Link>
-                </Card>
-              )}
+            
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleEditProfile}>
+                <Edit className="h-4 w-4 mr-1" />
+                Edit Profile
+              </Button>
+              <Button size="sm" onClick={handleViewApplications}>
+                <FileText className="h-4 w-4 mr-1" />
+                Applications
+              </Button>
             </div>
           </div>
+        </div>
 
-          {/* All Time Stats */}
-          <Card className="p-8 border-2 border-gray-200 bg-gradient-to-br from-black to-gray-900 text-white">
-            <h2 className="text-2xl mb-6 tracking-tight">All Time Stats</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div>
-                <p className="text-gray-400 mb-2">Total Hours</p>
-                <p className="text-4xl">{stats.totalHours}h</p>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.profileViews.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-green-600">+12%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contact Requests</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.contactRequests}</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-green-600">+8%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.responseRate}%</div>
+              <p className="text-xs text-muted-foreground">
+                Average response time: 2 hours
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <div className="text-2xl font-bold">{analytics.averageRating}</div>
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(analytics.averageRating)
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 mb-2">Total Earnings</p>
-                <p className="text-4xl text-[#FFD600]">${stats.totalEarnings}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 mb-2">Completed Contracts</p>
-                <p className="text-4xl">12</p>
-              </div>
-            </div>
+              <p className="text-xs text-muted-foreground">
+                {analytics.totalReviews} reviews
+              </p>
+            </CardContent>
           </Card>
         </div>
-      </main>
+
+        {/* Earnings & Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Earnings Overview
+              </CardTitle>
+              <CardDescription>Your total earnings and financial performance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Total Earned</span>
+                <span className="text-2xl font-bold text-green-600">
+                  ${analytics.earnedAmount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Completed Jobs</span>
+                <span className="text-xl font-semibold">{analytics.completedJobs}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Average per Job</span>
+                <span className="text-lg">
+                  ${analytics.completedJobs > 0 
+                    ? Math.round(analytics.earnedAmount / analytics.completedJobs)
+                    : 0
+                  }
+                </span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">This Month</span>
+                <span className="text-lg font-semibold text-green-600">
+                  +${Math.floor(Math.random() * 2000) + 500}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Skills & Performance
+              </CardTitle>
+              <CardDescription>Your skill assessments and performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-slate-600">Skills Assessed</span>
+                  <span className="text-lg font-semibold">
+                    {analytics.skillsPassed}/{analytics.skillsTotal}
+                  </span>
+                </div>
+                <Progress 
+                  value={(analytics.skillsPassed / analytics.skillsTotal) * 100} 
+                  className="h-2" 
+                />
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-medium">Top Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {profile?.skills?.slice(0, 6).map((skill, index) => (
+                    <Badge key={index} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {profile?.skills?.length > 6 && (
+                    <Badge variant="outline">
+                      +{profile.skills.length - 6} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Profile Completion</span>
+                <span className="text-lg font-semibold text-green-600">100%</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions & Upgrades */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full justify-start" variant="outline" onClick={handleEditProfile}>
+                <Edit className="h-4 w-4 mr-2" />
+                Update Profile Information
+              </Button>
+              <Button className="w-full justify-start" variant="outline" onClick={handleViewApplications}>
+                <FileText className="h-4 w-4 mr-2" />
+                View Job Applications
+              </Button>
+              <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Detailed Analytics
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <Video className="h-4 w-4 mr-2" />
+                Add Video Introduction
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Verification & Upgrades
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">Current Verification</span>
+                  {getVerificationBadge(profile?.verificationLevel)}
+                </div>
+                <p className="text-sm text-slate-600">
+                  {profile?.verificationLevel === 'basic' && 'Upgrade to Professional for more visibility and trust'}
+                  {profile?.verificationLevel === 'professional' && 'You have ID verification and background check'}
+                  {profile?.verificationLevel === 'premium' && 'You have full premium verification'}
+                </p>
+                {profile?.verificationLevel !== 'premium' && (
+                  <Button className="w-full mt-3" onClick={handleUpgradeVerification}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Upgrade Verification
+                  </Button>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Background Check</span>
+                  {profile?.backgroundCheckPassed ? (
+                    <Badge variant="default" className="bg-green-500 text-white flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Passed
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Not Verified
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Featured Profile</span>
+                  {profile?.featuredProfile ? (
+                    <Badge variant="default" className="bg-yellow-500 text-white">
+                      Active
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactive</Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default VADashboard;

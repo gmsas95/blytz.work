@@ -37,7 +37,28 @@ export default function AuthPage() {
         if (existingRole === "employer") {
           router.push("/employer/dashboard");
         } else if (existingRole === "va") {
-          router.push("/va/dashboard");
+          // Check if VA has profile, redirect to creation if not
+          try {
+            const token = localStorage.getItem('authToken');
+            const profileResponse = await fetch('/api/va/profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (!profileResponse.ok) {
+              // No profile exists, redirect to creation
+              router.push("/va/profile/create");
+              return;
+            }
+            
+            // Profile exists, redirect to dashboard
+            router.push("/va/dashboard");
+          } catch (error) {
+            // Error checking profile, default to creation
+            router.push("/va/profile/create");
+            return;
+          }
         } else {
           router.push("/select-role");
         }
