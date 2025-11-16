@@ -134,10 +134,10 @@ const VAProfileCreation = () => {
     mode: 'onChange'
   });
 
-  const watchedSkills: string[] = watch('skills');
-  const watchedLanguages: Array<{ language: string; proficiency: string }> = watch('languages');
-  const watchedWorkExperience: Array<{ company: string; position: string; startDate: string; endDate?: string; current: boolean; description: string }> = watch('workExperience');
-  const watchedEducation: Array<{ institution: string; degree: string; field: string; startDate: string; endDate?: string; current: boolean }> = watch('education');
+  const watchedSkills: string[] = watch('skills') || [];
+  const watchedLanguages: Array<{ language: string; proficiency: string }> = watch('languages') || [];
+  const watchedWorkExperience: Array<{ company: string; position: string; startDate: string; endDate?: string; current: boolean; description: string }> = watch('workExperience') || [];
+  const watchedEducation: Array<{ institution: string; degree: string; field: string; startDate: string; endDate?: string; current: boolean }> = watch('education') || [];
 
   // Common skills suggestions
   const commonSkills = [
