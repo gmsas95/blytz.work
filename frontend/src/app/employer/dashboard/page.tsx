@@ -195,7 +195,7 @@ const EmployerDashboard = () => {
     setFilteredProfiles(filtered);
   };
 
-  const handleSaveProfile = (profileId) => {
+  const handleSaveProfile = async (profileId: string) => {
     const newSaved = new Set(savedProfiles);
     if (newSaved.has(profileId)) {
       newSaved.delete(profileId);
@@ -207,11 +207,11 @@ const EmployerDashboard = () => {
     setSavedProfiles(newSaved);
   };
 
-  const handleContactVA = (profileId) => {
+  const handleContactVA = (profileId: string) => {
     router.push(`/messages/new?va=${profileId}`);
   };
 
-  const handleViewProfile = (profileId) => {
+  const handleViewProfile = (profileId: string) => {
     router.push(`/va/profiles/${profileId}`);
   };
 
