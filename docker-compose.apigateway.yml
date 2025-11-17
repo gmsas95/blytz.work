@@ -3,7 +3,7 @@ version: "3.8"
 
 services:
   # API Gateway Backend (with Firebase Auth)
-  api-gateway:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
