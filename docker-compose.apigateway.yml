@@ -20,15 +20,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3000:3000"
-    networks:
-      - blytz-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-
-networks:
-  blytz-network:
-    driver: bridge
