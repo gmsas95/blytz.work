@@ -37,7 +37,7 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
     console.error("❌ Firebase Admin initialization failed:", error);
   }
 } else {
-  console.warn("⚠️ Firebase credentials not provided, using development mode");
+  console.warn("⚠️ Firebase credentials not provided, authentication will not work in production");
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
@@ -60,7 +60,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
 
   try {
     // Production: Verify Firebase token
-    if (firebaseAuth && process.env.NODE_ENV === 'production') {
+    if (firebaseAuth) {
       const decodedToken = await firebaseAuth.verifyIdToken(token);
       
       // Get user from database to get role and profile status
@@ -118,7 +118,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
         });
       }
     }
-    // Production fallback
+    // Production fallback when Firebase is not initialized
     else {
       return reply.code(500).send({ 
         error: "Firebase Admin not properly initialized",
