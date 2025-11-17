@@ -110,12 +110,12 @@ const start = async () => {
     
     await app.ready();
     await app.listen({ 
-      port: parseInt(process.env.PORT || "3000"), 
+      port: parseInt(process.env.PORT || "3002"), // Use different port for database-only backend
       host: "0.0.0.0" 
     });
-    app.log.info(`Server listening on port ${process.env.PORT || 3000}`);
+    app.log.info(`Server listening on port ${process.env.PORT || 3002}`);
+    app.log.info(`🗄️ Database-only backend ready for operations`);
     app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
-    app.log.info(`🔐 Authentication system ready at /api/auth/*`);
     app.log.info(`👤 VA profiles system ready at /api/va/*`);
     app.log.info(`🏢 Company profiles system ready at /api/company/*`);
     app.log.info(`📁 File upload system ready at /api/upload/*`);
@@ -123,7 +123,7 @@ const start = async () => {
     app.log.info(`🤝 Contract management system ready at /api/contracts/*`);
     app.log.info(`💳 Payment system ready at /api/payments/*`);
     app.log.info(`🚀 Platform-first implementation complete`);
-    app.log.info(`🎯 MVP Marketplace Ready - Similar to Fiverr/Upwork`);
+    app.log.info(`🎯 MVP Database Backend Ready`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);
