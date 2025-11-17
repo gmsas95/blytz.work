@@ -65,7 +65,17 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   try {
     // Production: Verify Firebase token
     if (firebaseAuth) {
-      const decodedToken = await firebaseAuth.verifyIdToken(token);
+      console.log('🔍 Debug - Attempting Firebase token verification for:', token.substring(0, 50) + '...');
+      
+      const decodedToken = await firebaseAuth.verifyIdToken(token)
+        .catch(error => {
+          console.error('🔍 Debug - Firebase verification failed:', error.message);
+          console.error('🔍 Debug - Firebase verification error code:', error.code);
+          console.error('🔍 Debug - Firebase verification full error:', error);
+          throw error;
+        });
+      
+      console.log('🔍 Debug - Firebase token verified successfully for:', decodedToken.email);
       
       // Get user from database to get role and profile status
       const user = await prisma.user.findUnique({
