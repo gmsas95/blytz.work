@@ -21,9 +21,32 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3007:3000"
+    labels:
+      # Traefik labels for API Gateway
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-gateway.rule=Host(`gateway.blytz.app`)"
+      - "traefik.http.routers.api-gateway.entrypoints=web,websecure"
+      - "traefik.http.routers.api-gateway.tls=true"
+      - "traefik.http.routers.api-gateway.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api-gateway.loadbalancer.server.port=3000"
+      # CORS headers via Traefik
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowOrigin=https://hyred.blytz.app"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowCredentials=true"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Content-Type,Authorization"
+      - "traefik.http.routers.api-gateway.middlewares=api-cors"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - blytz-network
+      - dokploy-network
+
+networks:
+  blytz-network:
+    driver: bridge
+  dokploy-network:
+    external: true
