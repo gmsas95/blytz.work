@@ -38,7 +38,7 @@ services:
       PORT: "3002"
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "3002:3002"
+      - "3008:3002"
     depends_on:
       hire-postgres:
         condition: service_healthy

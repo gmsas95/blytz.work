@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-// Use environment variable for database URL - no hardcoded credentials
+// Use environment variable for database URL - managed by secrets
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {

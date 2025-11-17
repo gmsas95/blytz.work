@@ -11,6 +11,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
@@ -19,7 +20,8 @@ services:
       ALLOWED_ORIGINS: "https://hyred.blytz.app,https://gateway.blytz.app"
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "3005:3000"
+      - "3007:3000"
+    command: ["npm", "run", "start:gateway"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 30s
