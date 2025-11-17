@@ -21,7 +21,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3007:3000"
-    command: ["npm", "run", "start:gateway"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 30s
