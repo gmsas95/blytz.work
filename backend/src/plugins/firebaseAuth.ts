@@ -43,6 +43,11 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const authHeader = request.headers.authorization;
   
+  // Skip auth for OPTIONS preflight requests
+  if (request.method === 'OPTIONS') {
+    return reply.code(204).send();
+  }
+  
   console.log("🔍 Debug - Auth Header:", authHeader);
   
   if (!authHeader) {

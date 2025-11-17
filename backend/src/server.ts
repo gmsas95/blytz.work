@@ -53,6 +53,9 @@ app.register(cors, {
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://hyred.blytz.app"])
     : ["http://localhost:3000", "http://localhost:3001", "https://hyred.blytz.app", "https://gateway.blytz.app"],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range"],
+  exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"]
 });
 
 app.register(env, {
