@@ -277,8 +277,16 @@ http:
     # API CORS middleware
     api-cors:
       headers:
-        customResponseHeaders:
-          Access-Control-Allow-Origin: "https://hyred.blytz.app"
-          Access-Control-Allow-Methods: "GET, POST, PUT, DELETE, OPTIONS"
-          Access-Control-Allow-Headers: "Content-Type, Authorization"
-          Access-Control-Allow-Credentials: "true"
+        accessControlAllowOrigin:
+          - "https://hyred.blytz.app"
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "DELETE"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+        accessControlAllowCredentials:
+          "true"
