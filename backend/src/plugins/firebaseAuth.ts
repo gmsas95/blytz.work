@@ -43,6 +43,8 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const authHeader = request.headers.authorization;
   
+  console.log("🔍 Debug - Auth Header:", authHeader);
+  
   if (!authHeader) {
     return reply.code(401).send({ 
       error: "Missing authorization header",
@@ -51,6 +53,8 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   }
 
   const token = authHeader.split(" ")[1];
+  console.log("🔍 Debug - Token:", token ? `${token.substring(0, 20)}...` : 'null');
+  
   if (!token) {
     return reply.code(401).send({ 
       error: "Missing token",
@@ -128,6 +132,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     
     return;
   } catch (error: any) {
+    console.log("🔍 Debug - Token verification failed:", error.message);
     return reply.code(401).send({ 
       error: "Invalid or expired token",
       code: "INVALID_TOKEN",

@@ -7,14 +7,19 @@ export const getToken = async (): Promise<string | null> => {
     const auth = getAuth(app);
     const user = auth.currentUser;
     
+    console.log("🔍 Debug - Firebase user:", user);
+    
     if (user) {
       // Firebase user exists, get real token
-      return await user.getIdToken(true); // Force refresh
+      const token = await user.getIdToken(true); // Force refresh
+      console.log("🔍 Debug - Firebase token:", token ? `${token.substring(0, 20)}...` : 'null');
+      return token;
     }
     
+    console.log("🔍 Debug - No Firebase user found");
     return null; // No user logged in
   } catch (error) {
-    console.error('Error getting auth token:', error);
+    console.error('🔍 Debug - Error getting auth token:', error);
     return null; // Return null on error instead of dev tokens
   }
 };
