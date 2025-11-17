@@ -15,7 +15,6 @@ import companyRoutes from "./routes/company.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";
-import { execSync } from "child_process";
 
 // Environment schema
 const envSchema = {
@@ -101,18 +100,13 @@ app.setErrorHandler((error, _request, reply) => {
 // Start server
 const start = async () => {
   try {
-    // Ensure database is initialized
+    // Initialize database connection (with fallback)
     try {
-      app.log.info("🔄 Initializing database...");
-      execSync("npx prisma db push --skip-generate", { stdio: "inherit" });
-      app.log.info("✅ Database tables created/updated");
+      await prisma.$connect();
+      app.log.info("✅ Database connected successfully");
     } catch (dbError: any) {
-      app.log.error("❌ Database initialization failed:", dbError.message || dbError);
+      app.log.warn("⚠️ Database connection failed, continuing without database:", dbError.message);
     }
-    
-    // Initialize database connection
-    await prisma.$connect();
-    app.log.info("✅ Database connected successfully");
     
     await app.ready();
     await app.listen({ 
