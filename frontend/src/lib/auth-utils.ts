@@ -10,32 +10,12 @@ export const getToken = async (): Promise<string | null> => {
     if (user) {
       // Firebase user exists, get real token
       return await user.getIdToken(true); // Force refresh
-    } else {
-      // Check if we're in development mode without Firebase config
-      const storedUser = localStorage.getItem('user');
-      const storedRole = localStorage.getItem('userRole');
-      
-      if (storedUser && storedRole) {
-        // Use development token based on role
-        const userData = JSON.parse(storedUser);
-        if (storedRole === 'employer') {
-          return 'dev-token-company';
-        } else if (storedRole === 'va') {
-          return 'dev-token-va';
-        }
-      }
-      return null;
     }
+    
+    return null; // No user logged in
   } catch (error) {
     console.error('Error getting auth token:', error);
-    // Fallback to development tokens
-    const storedRole = localStorage.getItem('userRole');
-    if (storedRole === 'employer') {
-      return 'dev-token-company';
-    } else if (storedRole === 'va') {
-      return 'dev-token-va';
-    }
-    return null;
+    return null; // Return null on error instead of dev tokens
   }
 };
 
