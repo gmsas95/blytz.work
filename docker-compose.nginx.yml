@@ -22,11 +22,11 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - blytz-hired-backend-tnlned_blytz-network
+      - blytz-network
       - dokploy-network
 
 networks:
-  blytz-hired-backend-tnlned_blytz-network:
-    external: true
+  blytz-network:
+    driver: bridge
   dokploy-network:
     external: true
