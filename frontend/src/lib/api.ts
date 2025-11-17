@@ -1,6 +1,6 @@
 import { getToken } from './auth-utils';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hyred.blytz.app/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gateway.blytz.app/api';
 
 // Helper function to add timeout to fetch
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000): Promise<Response> => {
