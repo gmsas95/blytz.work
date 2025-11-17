@@ -5,18 +5,7 @@ import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin (ensure it's initialized)
-try {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
-} catch (error: any) {
-  console.log("Firebase Admin already initialized or initialization error:", error);
-}
+// Get Firebase Auth instance (initialized in firebaseAuth.ts)
 
 // Validation schemas
 const updateProfileSchema = z.object({
@@ -131,8 +120,8 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       }
 
-      const auth = admin.auth();
-      const userRecord = await auth.getUserByEmail(email.toLowerCase())
+      const authInstance = admin.auth();
+      const userRecord = await authInstance.getUserByEmail(email.toLowerCase())
         .catch((error: any) => {
           if (error.code === 'auth/user-not-found') {
             return null;
@@ -168,8 +157,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/sync", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
-    const user = request.user as any;
-    const { uid, email, photoURL } = request.body as any;
+    const { uid, email } = request.body as any;
 
     try {
       let userProfile = await prisma.user.findUnique({
@@ -205,8 +193,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/create", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
-    const user = request.user as any;
-    const { uid, email, role, photoURL } = request.body as any;
+    const { uid, email, role } = request.body as any;
 
     try {
       // Check if user already exists

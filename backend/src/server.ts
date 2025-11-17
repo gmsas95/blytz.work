@@ -15,12 +15,12 @@ import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 
 // Import utilities
-import { createRateLimiter } from "./utils/response.js";
+// import { createRateLimiter } from "./utils/response.js";
 
 // Environment schema
 const envSchema = {
   type: "object",
-  required: ["DATABASE_URL", "FIREBASE_PROJECT_ID", "STRIPE_SECRET_KEY", "JWT_SECRET"],
+  required: ["DATABASE_URL", "JWT_SECRET"],
   properties: {
     FIREBASE_PROJECT_ID: { type: "string" },
     FIREBASE_CLIENT_EMAIL: { type: "string" },
@@ -71,7 +71,7 @@ app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
 
 // Error handler
-app.setErrorHandler((error, request, reply) => {
+app.setErrorHandler((error, _request, reply) => {
   app.log.error(error);
   
   if (error.validation) {

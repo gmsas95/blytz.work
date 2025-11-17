@@ -249,10 +249,10 @@ export default async function vaRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { resumeUrl, fileName } = request.body as any;
+    const { resumeUrl } = request.body as any;
 
     try {
-      const profile = await prisma.vAProfile.update({
+      await prisma.vAProfile.update({
         where: { userId: user.uid },
         data: { resumeUrl }
       });
@@ -276,10 +276,10 @@ export default async function vaRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { videoUrl, fileName } = request.body as any;
+    const { videoUrl } = request.body as any;
 
     try {
-      const profile = await prisma.vAProfile.update({
+      await prisma.vAProfile.update({
         where: { userId: user.uid },
         data: { videoIntroUrl: videoUrl }
       });

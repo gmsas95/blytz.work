@@ -19,13 +19,25 @@ import admin from "firebase-admin";
 import { prisma } from "../utils/prisma.js";
 
 // Initialize Firebase Admin SDK
-let firebaseAuth: admin.auth.Auth;
+let firebaseAuth: admin.auth.Auth | null = null;
 
-try {
-  // Check if Firebase is properly initialized
-  firebaseAuth = admin.auth();
-} catch (error) {
-  console.error("❌ Firebase Admin not initialized:", error);
+// Initialize Firebase Admin if credentials are available
+if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      }),
+    });
+    firebaseAuth = admin.auth();
+    console.log("✅ Firebase Admin initialized successfully");
+  } catch (error) {
+    console.error("❌ Firebase Admin initialization failed:", error);
+  }
+} else {
+  console.warn("⚠️ Firebase credentials not provided, using development mode");
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
