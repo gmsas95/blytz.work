@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: blytz-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${BACKEND_PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      PLATFORM_FEE_PERCENTAGE: ${PLATFORM_FEE_PERCENTAGE:-10}
+      PAYMENT_AMOUNT: ${PAYMENT_AMOUNT:-29.99}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.blytz-api.rule=Host(`gateway.blytz.work`)"
+      - "traefik.http.routers.blytz-api.entrypoints=web,websecure"
+      - "traefik.http.routers.blytz-api.tls=true"
+      - "traefik.http.routers.blytz-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.blytz-api.middlewares=api-cors@file"
+      - "traefik.http.services.blytz-api.loadbalancer.server.port=3000"
+    networks:
+      - blytz-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  blytz-network:
+    driver: bridge
+    external: false

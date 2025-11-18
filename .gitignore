@@ -162,6 +162,7 @@ monitoring/
 docker-data/
 postgres_data/
 redis_data/
+n8n_data/
 letsencrypt/
 certbot/
 
@@ -215,12 +216,6 @@ docker-compose.backend.yml
 docker-compose.nginx.yml
 docker-compose.yml
 
-# Multiple redundant compose files
-docker-compose.apigateway.yml
-docker-compose.frontend.yml
-docker-compose.n8n.yml
-docker-compose.database.yml
-
-# Keep only numbered structure
+# Keep only numbered structure (allow our new files)
 docker-compose.*.yml
 !docker-compose.[1-9]*.yml
