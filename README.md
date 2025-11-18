@@ -4,7 +4,7 @@ A comprehensive hiring platform connecting companies with virtual assistants, fe
 
 ## 🌐 Live Applications
 
-- **Main Platform**: [hyred.blytz.work](https://hyred.blytz.work)
+- **Main Platform**: [blytz.work](https://blytz.work)
 - **API Gateway**: [gateway.blytz.work](https://gateway.blytz.work)
 - **Management**: [sudo.blytz.work](https://sudo.blytz.work)
 

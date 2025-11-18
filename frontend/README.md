@@ -22,7 +22,7 @@ Modern Next.js application for the Hyred hiring platform, featuring real-time au
 
 ## 🌐 Access
 
-- **Production**: [hyred.blytz.work](https://hyred.blytz.work)
+- **Production**: [blytz.work](https://blytz.work)
 - **Development**: Local development server
 
 ## 📱 Browser Support
