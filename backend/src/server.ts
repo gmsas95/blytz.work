@@ -50,8 +50,8 @@ app.register(rateLimit, {
 // Register plugins
 app.register(cors, {
   origin: process.env.NODE_ENV === "production" 
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://hyred.blytz.app"])
-    : ["http://localhost:3000", "http://localhost:3001", "https://hyred.blytz.app", "https://gateway.blytz.app"],
+    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://hyred.blytz.work"])
+    : ["http://localhost:3000", "http://localhost:3001", "https://hyred.blytz.work", "https://gateway.blytz.work"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range"],
