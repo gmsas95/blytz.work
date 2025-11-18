@@ -106,6 +106,8 @@ prisma/migrations/node_modules/
 
 # Docker
 .dockerignore
+acme.json
+traefik-dynamic/
 
 # Database
 *.db
@@ -144,3 +146,76 @@ pnpm-lock.yaml
 # Monitoring and metrics
 *.metrics
 monitoring/
+
+# Development files
+.env.dev
+.env.local
+.env.production
+!.env.example
+
+# Docker volumes and data
+docker-data/
+postgres_data/
+redis_data/
+letsencrypt/
+certbot/
+
+# Traefik specific
+traefik/logs/
+traefik/acme.json
+traefik/dynamic/
+dokploy-traefik/
+
+# Dokploy specific
+dokploy/data/
+dokploy/logs/
+
+# Health check and monitoring
+healthcheck-logs/
+monitoring-data/
+prometheus-data/
+grafana-data/
+
+# Build caches
+.cache/
+.parcel-cache/
+.next/cache/
+.vite/
+
+# Firebase
+firebase-*.json
+google-service-account*.json
+google-credentials.json
+
+# Stripe
+stripe-webhooks/
+stripe-logs/
+
+# LiveKit
+livekit-data/
+livekit-logs/
+livekit-config/
+
+# Local development
+.local/
+localhost/
+127.0.0.1/
+
+# Generated documentation
+docs/build/
+api-docs/
+
+# Legacy compose files to remove
+docker-compose.backend.yml
+docker-compose.nginx.yml
+docker-compose.yml
+
+# Multiple redundant compose files
+docker-compose.apigateway.yml
+docker-compose.frontend.yml
+docker-compose.n8n.yml
+docker-compose.database.yml
+
+# Keep only numbered structure
+docker-compose.*.yml
+!docker-compose.[1-9]*.yml
