@@ -7,8 +7,9 @@ dist/
 build/
 *.tsbuildinfo
 
-# Environment files
+# Environment files - BLOCK ALL
 .env*
+.env.* 
 !.env.example
 
 # Security - keys and certificates
@@ -21,6 +22,9 @@ build/
 ssh-keys/
 ssl/
 certificates/
+firebase-credentials.json
+google-credentials.json
+google-service-account*.json
 
 # Logs
 logs/
@@ -148,8 +152,9 @@ pnpm-lock.yaml
 monitoring/
 
 # Development files
-.env.dev
 .env.local
+.env.development
+.env.staging
 .env.production
 !.env.example
 
