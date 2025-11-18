@@ -1,59 +1,37 @@
-# VA Matching Platform Frontend
+# Hyred Frontend
 
-## Setup Instructions
+Modern Next.js application for the Hyred hiring platform, featuring real-time authentication, job matching, and seamless user experience.
 
-### 1. Install Dependencies
-```bash
-cd frontend
-npm install
-```
+## 🚀 Features
 
-### 2. Environment Setup
-```bash
-cp .env.example .env.local
-# Edit .env.local with your actual values
-```
+- **🔐 Firebase Authentication** (Google, Email)
+- **📱 Mobile-Responsive Design** 
+- **⚡ Real-Time Updates**
+- **💳 Stripe Integration**
+- **🎨 Modern UI with Tailwind CSS**
+- **📊 Analytics Dashboard**
 
-### 3. Development Server
-```bash
-npm run dev
-```
+## 🛠️ Technology Stack
 
-## Key Features Implemented
-✅ Next.js 16 with App Router
-✅ Firebase Authentication
-✅ TailwindCSS styling
-✅ React Hook Form + Zod validation
-✅ TanStack Query for data fetching
-✅ Stripe payment integration
-✅ Responsive design
+- **Framework**: Next.js 14 with TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: Firebase Auth
+- **State Management**: React Hook Form + TanStack Query
+- **Payments**: Stripe.js
+- **Deployment**: Docker Container
 
-## Pages Structure
-- `/auth` - Login/Signup
-- `/va/profile` - VA profile creation/editing
-- `/va/matches` - VA matches view
-- `/company/profile` - Company profile
-- `/company/jobs` - Job postings management
-- `/company/discover` - Swipe interface for finding VAs
-- `/company/matches` - Company matches with payment
+## 🌐 Access
 
-## Payment Flow
-1. Company discovers VAs through swipe interface
-2. Mutual match triggers payment requirement
-3. Company pays $29.99 via Stripe Checkout
-4. Contact information exchanged between parties
-5. Platform takes 10% fee
+- **Production**: [hyred.blytz.app](https://hyred.blytz.app)
+- **Development**: Local development server
 
-## Environment Variables Required
-- `NEXT_PUBLIC_API_URL`: Backend API URL
-- `NEXT_PUBLIC_FIREBASE_*`: Firebase config
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`: Stripe public key
+## 📱 Browser Support
 
-## Tech Stack
-- **Framework**: Next.js 16
-- **Styling**: TailwindCSS 4.1
-- **State Management**: TanStack Query
-- **Forms**: React Hook Form + Zod
-- **Auth**: Firebase Auth
-- **Payments**: Stripe
-- **Icons**: Lucide React
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+---
+
+© 2024 Blytz Work. All rights reserved.

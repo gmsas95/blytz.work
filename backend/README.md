@@ -1,65 +1,50 @@
-# VA Matching Platform Backend
+# Hyred Backend
 
-## Setup Instructions
+RESTful API service for the Hyred hiring platform, built with Node.js, Fastify, and PostgreSQL.
 
-### 1. Install Dependencies
-```bash
-cd backend
-npm install
-```
+## 🚀 Features
 
-### 2. Environment Setup
-```bash
-cp .env.example .env
-# Edit .env with your actual values
-```
+- **🔐 Firebase Authentication** with JWT tokens
+- **📊 PostgreSQL Database** with Prisma ORM
+- **⚡ High-Performance** Fastify framework
+- **💳 Stripe Payment Processing**
+- **📝 Real-Time Validation** with Zod
+- **🔒 Security-First** Architecture
 
-### 3. Database Setup
-```bash
-# Generate Prisma client
-npm run generate
+## 🛠️ Technology Stack
 
-# Run database migrations
-npm run migrate
-```
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Fastify
+- **Database**: PostgreSQL 15
+- **ORM**: Prisma
+- **Authentication**: Firebase Admin SDK
+- **Payments**: Stripe API
+- **Validation**: Zod schemas
+- **Deployment**: Docker Container
 
-### 4. Development Server
-```bash
-npm run dev
-```
+## 🔐 Security
 
-## API Documentation
-- OpenAPI spec: `openapi.yaml`
-- Health check: `GET /health`
-- API endpoints: All prefixed with `/api`
+- JWT token-based authentication
+- Input validation and sanitization
+- Rate limiting and DDoS protection
+- CORS configuration
+- SQL injection prevention
+- Environment variable security
 
-## Key Features Implemented
-✅ Firebase Authentication
-✅ VA Profile CRUD
-✅ Company & Job Posting CRUD
-✅ Matching Algorithm
-✅ Stripe Payments Integration
-✅ Contact Unlock System
-✅ Input Validation (Zod)
-✅ Error Handling
+## 📊 API Endpoints
 
-## Environment Variables Required
-- `DATABASE_URL`: PostgreSQL connection string
-- `FIREBASE_PROJECT_ID`: Firebase project ID
-- `FIREBASE_CLIENT_EMAIL`: Service account email
-- `FIREBASE_PRIVATE_KEY`: Service account private key
-- `STRIPE_SECRET_KEY`: Stripe secret key
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook secret
+- **Authentication**: `/api/auth/*`
+- **User Management**: `/api/users/*`
+- **Job Contracts**: `/api/contracts/*`
+- **Payments**: `/api/payments/*`
+- **Messaging**: `/api/chat/*`
 
-## Database Schema
-See `prisma/schema.prisma` for complete schema including:
-- Users, VA Profiles, Companies
-- Job Postings, Match Votes, Matches
-- Payments with Stripe integration
+## 🌐 Access
 
-## Payment Flow
-1. Company likes VA → Match created
-2. Company pays $29.99 to unlock contact
-3. Payment processed via Stripe
-4. Contact info exchanged between parties
-5. Platform takes 10% fee
+- **Production**: [gateway.blytz.app](https://gateway.blytz.app)
+- **Health Check**: `/health`
+- **API Documentation**: Available on deployment
+
+---
+
+© 2024 Blytz Work. All rights reserved.
