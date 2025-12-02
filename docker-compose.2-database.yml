@@ -4,10 +4,10 @@ services:
     container_name: blytz-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${{environment.POSTGRES_DB}}
-      POSTGRES_USER: ${{environment.POSTGRES_USER}}
-      POSTGRES_PASSWORD: ${{environment.POSTGRES_PASSWORD}}
-      POSTGRES_HOST_AUTH_METHOD: ${{environment.POSTGRES_HOST_AUTH_METHOD}}
+      POSTGRES_DB: $${{environment.POSTGRES_DB}}
+      POSTGRES_USER: $${{environment.POSTGRES_USER}}
+      POSTGRES_PASSWORD: $${{environment.POSTGRES_PASSWORD}}
+      POSTGRES_HOST_AUTH_METHOD: $${{environment.POSTGRES_HOST_AUTH_METHOD}}
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${{environment.POSTGRES_USER}} -d ${{environment.POSTGRES_DB}}" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${{environment.POSTGRES_USER}} -d $${{environment.POSTGRES_DB}}" ]
       interval: 10s
       timeout: 5s
       retries: 5
