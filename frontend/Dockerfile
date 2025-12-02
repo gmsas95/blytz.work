@@ -44,7 +44,10 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built application
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+
+# Copy public folder if it exists, otherwise create empty one
+RUN mkdir -p ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public 2>/dev/null || true
 
 # Set permissions
 USER nextjs
