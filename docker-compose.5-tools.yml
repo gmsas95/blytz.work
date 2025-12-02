@@ -4,26 +4,26 @@ services:
     container_name: blytz-n8n
     restart: unless-stopped
     environment:
-      N8N_BASIC_AUTH_ACTIVE: $${{environment.N8N_BASIC_AUTH_ACTIVE}}
-      N8N_BASIC_AUTH_USER: $${{environment.N8N_USER}}
-      N8N_BASIC_AUTH_PASSWORD: $${{environment.N8N_PASSWORD}}
-      N8N_HOST: $${{environment.N8N_HOST}}
-      N8N_PORT: $${{environment.N8N_PORT}}
-      N8N_PROTOCOL: $${{environment.N8N_PROTOCOL}}
-      WEBHOOK_URL: $${{environment.N8N_WEBHOOK_URL}}
-      N8N_METRICS: $${{environment.N8N_METRICS}}
+      N8N_BASIC_AUTH_ACTIVE: ${{environment.N8N_BASIC_AUTH_ACTIVE}}
+      N8N_BASIC_AUTH_USER: ${{environment.N8N_USER}}
+      N8N_BASIC_AUTH_PASSWORD: ${{environment.N8N_PASSWORD}}
+      N8N_HOST: ${{environment.N8N_HOST}}
+      N8N_PORT: ${{environment.N8N_PORT}}
+      N8N_PROTOCOL: ${{environment.N8N_PROTOCOL}}
+      WEBHOOK_URL: ${{environment.N8N_WEBHOOK_URL}}
+      N8N_METRICS: ${{environment.N8N_METRICS}}
       DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: $${{environment.DB_POSTGRESDB_HOST}}
-      DB_POSTGRESDB_PORT: $${{environment.DB_POSTGRESDB_PORT}}
-      DB_POSTGRESDB_DATABASE: $${{environment.N8N_DB_NAME}}
-      DB_POSTGRESDB_USER: $${{environment.N8N_DB_USER}}
-      DB_POSTGRESDB_PASSWORD: $${{environment.N8N_DB_PASSWORD}}
-      N8N_EMAIL_MODE: $${{environment.N8N_EMAIL_MODE}}
-      N8N_SMTP_HOST: $${{environment.SMTP_HOST}}
-      N8N_SMTP_PORT: $${{environment.SMTP_PORT}}
-      N8N_SMTP_USER: $${{environment.SMTP_USER}}
-      N8N_SMTP_PASS: $${{environment.SMTP_PASS}}
-      N8N_SMTP_SENDER: $${{environment.SMTP_SENDER}}
+      DB_POSTGRESDB_HOST: ${{environment.DB_POSTGRESDB_HOST}}
+      DB_POSTGRESDB_PORT: ${{environment.DB_POSTGRESDB_PORT}}
+      DB_POSTGRESDB_DATABASE: ${{environment.N8N_DB_NAME}}
+      DB_POSTGRESDB_USER: ${{environment.N8N_DB_USER}}
+      DB_POSTGRESDB_PASSWORD: ${{environment.N8N_DB_PASSWORD}}
+      N8N_EMAIL_MODE: ${{environment.N8N_EMAIL_MODE}}
+      N8N_SMTP_HOST: ${{environment.SMTP_HOST}}
+      N8N_SMTP_PORT: ${{environment.SMTP_PORT}}
+      N8N_SMTP_USER: ${{environment.SMTP_USER}}
+      N8N_SMTP_PASS: ${{environment.SMTP_PASS}}
+      N8N_SMTP_SENDER: ${{environment.SMTP_SENDER}}
 
     labels:
       - "traefik.enable=true"
