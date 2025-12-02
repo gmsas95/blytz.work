@@ -21,11 +21,7 @@ services:
       LOG_LEVEL: $${{environment.LOG_LEVEL}}
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.blytz-api.rule=Host(`gateway.blytz.work`)"

@@ -21,9 +21,7 @@ services:
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: $${{environment.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}}
       NEXT_PUBLIC_FIREBASE_APP_ID: $${{environment.NEXT_PUBLIC_FIREBASE_APP_ID}}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: $${{environment.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}}
-    depends_on:
-      backend:
-        condition: service_healthy
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.blytz-frontend.rule=Host(`blytz.work`)"
