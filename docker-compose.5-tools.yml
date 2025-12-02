@@ -24,9 +24,7 @@ services:
       N8N_SMTP_USER: $${{environment.SMTP_USER}}
       N8N_SMTP_PASS: $${{environment.SMTP_PASS}}
       N8N_SMTP_SENDER: $${{environment.SMTP_SENDER}}
-    depends_on:
-      postgres:
-        condition: service_healthy
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.blytz-n8n.rule=Host(`n8n.blytz.work`)"
@@ -39,7 +37,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      test: [ "CMD", "curl", "-f", "http://localhost:5678/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 3
