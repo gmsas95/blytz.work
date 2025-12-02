@@ -14,9 +14,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
     networks:
-      - blytz-network
+      - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${{environment.POSTGRES_USER}} -d $${{environment.POSTGRES_DB}}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${{environment.POSTGRES_USER}} -d $${{environment.POSTGRES_DB}}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,6 +27,5 @@ volumes:
     external: false
 
 networks:
-  blytz-network:
-    driver: bridge
-    external: false
+  dokploy-network:
+    external: true

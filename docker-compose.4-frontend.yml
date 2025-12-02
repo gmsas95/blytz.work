@@ -33,7 +33,7 @@ services:
       - "traefik.http.routers.blytz-frontend.middlewares=redirect-to-https@file"
       - "traefik.http.services.blytz-frontend.loadbalancer.server.port=3000"
     networks:
-      - blytz-network
+      - dokploy-network
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
       interval: 30s
@@ -42,6 +42,5 @@ services:
       start_period: 30s
 
 networks:
-  blytz-network:
-    driver: bridge
-    external: false
+  dokploy-network:
+    external: true

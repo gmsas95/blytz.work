@@ -19,8 +19,6 @@ services:
       PLATFORM_FEE_PERCENTAGE: $${{environment.PLATFORM_FEE_PERCENTAGE}}
       PAYMENT_AMOUNT: $${{environment.PAYMENT_AMOUNT}}
       LOG_LEVEL: $${{environment.LOG_LEVEL}}
-    ports:
-      - "3000:3000"
 
     labels:
       - "traefik.enable=true"
@@ -31,15 +29,14 @@ services:
       - "traefik.http.routers.blytz-api.middlewares=api-cors@file"
       - "traefik.http.services.blytz-api.loadbalancer.server.port=3000"
     networks:
-      - blytz-network
+      - dokploy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
 networks:
-  blytz-network:
-    driver: bridge
-    external: false
+  dokploy-network:
+    external: true
