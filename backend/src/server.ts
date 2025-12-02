@@ -12,6 +12,7 @@ import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
 import paymentRoutes from "./routes/payments.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
+import contractsRoutes from "./routes/contracts.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";
@@ -49,7 +50,7 @@ app.register(rateLimit, {
 
 // Register plugins
 app.register(cors, {
-  origin: process.env.NODE_ENV === "production" 
+  origin: process.env.NODE_ENV === "production"
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work"])
     : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://gateway.blytz.work"],
   credentials: true,
@@ -70,11 +71,12 @@ app.register(jobMarketplaceRoutes, { prefix: "/api" });
 app.register(paymentRoutes, { prefix: "/api" });
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
+app.register(contractsRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {
   app.log.error(error);
-  
+
   if (error.validation) {
     return reply.code(400).send({
       success: false,
@@ -110,11 +112,11 @@ const start = async () => {
     } catch (dbError: any) {
       app.log.warn("⚠️ Database connection failed, continuing without database:", dbError.message);
     }
-    
+
     await app.ready();
-    await app.listen({ 
+    await app.listen({
       port: parseInt(process.env.PORT || "3002"), // Use different port for database-only backend
-      host: "0.0.0.0" 
+      host: "0.0.0.0"
     });
     app.log.info(`Server listening on port ${process.env.PORT || 3002}`);
     app.log.info(`🗄️ Database-only backend ready for operations`);

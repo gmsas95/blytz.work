@@ -20,7 +20,7 @@ export default async function authRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    
+
     try {
       const userProfile = await prisma.user.findUnique({
         where: { id: user.uid },
@@ -35,7 +35,7 @@ export default async function authRoutes(app: FastifyInstance) {
       });
 
       if (!userProfile) {
-        return reply.code(404).send({ 
+        return reply.code(404).send({
           error: "User profile not found",
           code: "USER_NOT_FOUND"
         });
@@ -46,7 +46,7 @@ export default async function authRoutes(app: FastifyInstance) {
         data: userProfile
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to fetch user profile",
         code: "PROFILE_FETCH_ERROR",
         details: error.message
@@ -69,7 +69,7 @@ export default async function authRoutes(app: FastifyInstance) {
         });
 
         if (existingUser) {
-          return reply.code(400).send({ 
+          return reply.code(400).send({
             error: "Email already exists",
             code: "EMAIL_EXISTS"
           });
@@ -93,14 +93,14 @@ export default async function authRoutes(app: FastifyInstance) {
       };
     } catch (error: any) {
       if (error instanceof z.ZodError) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "Validation error",
           code: "VALIDATION_ERROR",
           details: error.errors
         });
       }
 
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to update profile",
         code: "PROFILE_UPDATE_ERROR",
         details: error.message
@@ -114,7 +114,7 @@ export default async function authRoutes(app: FastifyInstance) {
       const { email } = request.body as { email: string };
 
       if (!email || !email.includes('@')) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "Please enter a valid email address",
           code: "INVALID_EMAIL"
         });
@@ -131,21 +131,26 @@ export default async function authRoutes(app: FastifyInstance) {
         });
 
       if (!userRecord) {
-        return reply.code(404).send({ 
+        return reply.code(404).send({
           error: "No account found with this email address. Please check your email or sign up for a new account.",
           code: "USER_NOT_FOUND"
         });
       }
 
-      // TODO: Send password reset email via Firebase
-      console.log(`Password reset requested for Firebase user: ${userRecord.email}`);
-      
+      // Generate password reset link
+      const link = await admin.auth().generatePasswordResetLink(email);
+
+      // In a real production app, you would send this via email (e.g., SendGrid, AWS SES)
+      // For this implementation, we'll log it and return it for development convenience
+      console.log(`Password reset link for ${email}: ${link}`);
+
       return reply.send({
         success: true,
-        message: "Password reset link sent to your email address."
+        message: "Password reset link generated (check console/response for dev)",
+        debug_link: link // Remove this in strict production if email service is added
       });
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to process forgot password request",
         code: "FORGOT_PASSWORD_ERROR",
         details: error.message
@@ -181,7 +186,7 @@ export default async function authRoutes(app: FastifyInstance) {
         message: "User synced successfully"
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to sync user",
         code: "USER_SYNC_ERROR",
         details: error.message
@@ -202,7 +207,7 @@ export default async function authRoutes(app: FastifyInstance) {
       });
 
       if (existingUser) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "User already exists",
           code: "USER_EXISTS"
         });
@@ -223,7 +228,7 @@ export default async function authRoutes(app: FastifyInstance) {
         message: "User created successfully"
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to create user",
         code: "USER_CREATION_ERROR",
         details: error.message
@@ -238,9 +243,9 @@ export default async function authRoutes(app: FastifyInstance) {
     const user = request.user as any;
 
     try {
-      // For now, return a mock token
-      const customToken = "mock_custom_token_" + user.uid;
-      
+      // Generate a custom token for the user
+      const customToken = await admin.auth().createCustomToken(user.uid);
+
       return {
         success: true,
         data: {
@@ -249,7 +254,7 @@ export default async function authRoutes(app: FastifyInstance) {
         }
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to generate token",
         code: "TOKEN_GENERATION_ERROR",
         details: error.message
