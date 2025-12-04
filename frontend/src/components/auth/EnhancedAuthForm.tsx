@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, getAuth } from 'firebase/auth';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { getToken } from '@/lib/auth-utils';
 
 interface Message {
   id: string;
@@ -25,7 +26,8 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Debug environment on mount

@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { app } from './firebase';
+import { app, auth as firebaseAuth } from './firebase';
 
 // Token management utilities
 let tokenRefreshPromise: Promise<string | null> | null = null;
@@ -11,7 +11,7 @@ export const getToken = async (): Promise<string | null> => {
       return await tokenRefreshPromise;
     }
     
-    const auth = getAuth(app);
+    const auth = firebaseAuth || getAuth(app);
     const user = auth.currentUser;
     
     console.log("🔍 Debug - Firebase user:", user);
@@ -41,7 +41,7 @@ export const getToken = async (): Promise<string | null> => {
 
 // Monitor auth state and automatically update token in localStorage
 export const setupTokenRefresh = (): (() => void) => {
-  const auth = getAuth(app);
+  const auth = firebaseAuth || getAuth(app);
   let isUpdating = false;
   
   const unsubscribe = onAuthStateChanged(auth, async (user) => {

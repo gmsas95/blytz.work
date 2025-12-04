@@ -1,7 +1,8 @@
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User, onAuthStateChanged } from 'firebase/auth';
-import { app } from './firebase';
+import { app, auth as firebaseAuth } from './firebase';
 
-export const auth = getAuth(app);
+// Use the pre-initialized auth from firebase module
+export const auth = firebaseAuth || getAuth(app);
 
 export interface AuthUser {
   uid: string;
