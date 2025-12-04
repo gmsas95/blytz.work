@@ -1,7 +1,6 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { prisma } from '../utils/prisma.js';
-import { pushNotificationService } from './pushNotificationService.js';
 import { getAuth } from 'firebase-admin/auth';
 
 export interface SocketUser {
@@ -12,18 +11,11 @@ export interface SocketUser {
 
 export interface ChatMessage {
   id: string;
-  roomId: string;
-  senderId: string;
   content: string;
-  type: 'text' | 'image' | 'file';
-  status: 'sent' | 'delivered' | 'read';
+  senderId: string;
+  senderName: string;
+  senderRole: string;
   createdAt: Date;
-  sender: {
-    id: string;
-    name: string;
-    avatar?: string;
-    role: string;
-  };
 }
 
 export class WebSocketServer {
@@ -54,336 +46,235 @@ export class WebSocketServer {
 
   private setupMiddleware() {
     // Authentication middleware
-    this.io.use(async (socket, next) => {
+    this.io.use(async (socket: any, next: any) => {
       try {
         const token = socket.handshake.auth.token;
-        
         if (!token) {
-          console.log('❌ No token provided for WebSocket connection');
-          return next(new Error('Authentication token required'));
+          return next(new Error('Authentication error: No token provided'));
         }
 
         // Verify Firebase token
         const decodedToken = await getAuth().verifyIdToken(token);
+        const userId = decodedToken.uid;
         
-        // Get user from database
+        // Get user data from database
         const user = await prisma.user.findUnique({
-          where: { email: decodedToken.email },
+          where: { id: userId },
           select: { id: true, email: true, role: true }
         });
 
         if (!user) {
-          console.log('❌ User not found for WebSocket connection:', decodedToken.email);
-          return next(new Error('User not found'));
+          return next(new Error('Authentication error: User not found'));
         }
 
-        // Attach user to socket
-        socket.data.user = user;
-        console.log('✅ WebSocket authenticated:', user.email);
+        socket.user = {
+          userId: user.id,
+          email: user.email,
+          role: user.role as 'va' | 'company' | 'admin'
+        };
+
         next();
-        
-      } catch (error) {
-        console.error('❌ WebSocket authentication failed:', error);
-        next(new Error('Authentication failed'));
+      } catch (error: any) {
+        console.error('Socket authentication error:', error.message);
+        next(new Error('Authentication error'));
       }
     });
   }
 
   private setupEventHandlers() {
-    this.io.on('connection', (socket) => {
-      const user = socket.data.user as SocketUser;
-      console.log('🔌 User connected to WebSocket:', user.email, 'Socket:', socket.id);
+    this.io.on('connection', (socket: any) => {
+      console.log(`User connected: ${socket.user?.userId}`);
       
-      // Track connected user
-      if (!this.connectedUsers.has(user.userId)) {
-        this.connectedUsers.set(user.userId, new Set());
+      // Add user to connected users
+      const userId = socket.user?.userId;
+      if (userId) {
+        if (!this.connectedUsers.has(userId)) {
+          this.connectedUsers.set(userId, new Set());
+        }
+        this.connectedUsers.get(userId)?.add(socket.id);
       }
-      this.connectedUsers.get(user.userId)!.add(socket.id);
 
-      // Join user's personal room for notifications
-      socket.join(`user_${user.userId}`);
-
-      // Chat room events
-      this.handleChatEvents(socket, user);
-      
-      // Typing indicators
-      this.handleTypingEvents(socket, user);
-      
-      // Status updates
-      this.handleStatusEvents(socket, user);
-
-      socket.on('disconnect', () => {
-        console.log('🔌 User disconnected:', user.email, 'Socket:', socket.id);
-        
-        // Remove from connected users
-        const userSockets = this.connectedUsers.get(user.userId);
-        if (userSockets) {
-          userSockets.delete(socket.id);
-          if (userSockets.size === 0) {
-            this.connectedUsers.delete(user.userId);
-          }
+      // Handle joining chat rooms
+      socket.on('join-chat', async (data: { recipientId: string }) => {
+        try {
+          const { recipientId } = data;
+          const roomId = this.getRoomId(userId, recipientId);
+          socket.join(roomId);
+          console.log(`User ${userId} joined chat room ${roomId}`);
+          
+          // Send recent messages
+          const recentMessages = await this.getRecentMessages(userId, recipientId, 20);
+          socket.emit('chat-history', recentMessages);
+        } catch (error: any) {
+          console.error('Error joining chat:', error.message);
+          socket.emit('error', { message: 'Failed to join chat' });
         }
       });
-    });
-  }
 
-  private handleChatEvents(socket: any, user: SocketUser) {
-    socket.on('join_chat', async (data) => {
-      try {
-        const { chatRoomId } = data;
-        console.log(`📱 User ${user.email} joining chat ${chatRoomId}`);
-        
-        // Verify user has access to this chat room
-        const hasAccess = await this.verifyChatAccess(chatRoomId, user.userId);
-        
-        if (!hasAccess) {
-          socket.emit('error', { message: 'Access denied to this chat room' });
-          return;
-        }
-
-        // Join the chat room
-        socket.join(`chat_${chatRoomId}`);
-        socket.data.currentChatRoom = chatRoomId;
-        
-        // Send recent messages
-        const recentMessages = await this.getRecentMessages(chatRoomId);
-        socket.emit('chat_history', recentMessages);
-        
-        // Notify other participants
-        socket.to(`chat_${chatRoomId}`).emit('user_joined', {
-          userId: user.userId,
-          name: user.role === 'va' ? 
-            (await prisma.vAProfile.findUnique({ where: { userId: user.userId } }))?.name :
-            (await prisma.company.findUnique({ where: { userId: user.userId } }))?.name,
-          joinedAt: new Date()
-        });
-        
-        console.log(`✅ User ${user.email} joined chat ${chatRoomId}`);
-        
-      } catch (error) {
-        console.error('❌ Error joining chat:', error);
-        socket.emit('error', { message: 'Failed to join chat room' });
-      }
-    });
-
-    socket.on('send_message', async (data) => {
-      try {
-        const { content, chatRoomId, type = 'text' } = data;
-        const userId = user.userId;
-        
-        if (!socket.data.currentChatRoom || socket.data.currentChatRoom !== chatRoomId) {
-          socket.emit('error', { message: 'Not authorized for this chat room' });
-          return;
-        }
-
-        console.log(`💬 Message from ${user.email} in chat ${chatRoomId}: ${content.substring(0, 50)}...`);
-
-        // Save message to database
-        const message = await prisma.message.create({
-          data: {
-            roomId: chatRoomId,
-            senderId: userId,
-            content,
-            type: type as 'text' | 'image' | 'file',
-            status: 'sent'
-          },
-          include: {
-            sender: {
-              select: {
-                id: true,
-                email: true,
-                vaProfile: { select: { name: true, avatarUrl: true } },
-                company: { select: { name: true, logoUrl: true } }
+      // Handle sending messages
+      socket.on('send-message', async (data: { recipientId: string; content: string }) => {
+        try {
+          const { recipientId, content } = data;
+          
+          // Create notification as message
+          const notification = await prisma.notification.create({
+            data: {
+              userId: recipientId,
+              type: 'chat_message',
+              title: 'New Message',
+              message: content,
+              data: {
+                senderId: userId,
+                senderName: socket.user?.email,
+                senderRole: socket.user?.role,
+                timestamp: new Date().toISOString()
               }
             }
+          });
+
+          // Emit to recipient if online
+          const recipientSockets = this.connectedUsers.get(recipientId);
+          if (recipientSockets && recipientSockets.size > 0) {
+            const messageData = {
+              id: String(notification.id),
+              content: notification.message,
+              senderId: userId,
+              senderName: socket.user?.email,
+              senderRole: socket.user?.role,
+              createdAt: notification.createdAt
+            };
+
+            recipientSockets.forEach(socketId => {
+              this.io.to(socketId).emit('new-message', messageData);
+            });
           }
-        });
 
-        // Update chat room last message time
-        await prisma.chatRoom.update({
-          where: { id: chatRoomId },
-          data: { lastMessageAt: new Date() }
-        });
+          // Send confirmation back to sender
+          socket.emit('message-sent', {
+            messageId: String(notification.id),
+            createdAt: notification.createdAt
+          });
 
-        // Format message for client
-        const formattedMessage: ChatMessage = {
-          id: message.id,
-          roomId: message.roomId,
-          senderId: message.senderId,
-          content: message.content,
-          type: message.type,
-          status: message.status,
-          createdAt: message.createdAt,
-          sender: {
-            id: message.sender.id,
-            name: message.sender.vaProfile?.name || message.sender.company?.name || message.sender.email,
-            avatar: message.sender.vaProfile?.avatarUrl || message.sender.company?.logoUrl,
-            role: message.sender.vaProfile ? 'va' : 'company'
-          }
-        };
+        } catch (error: any) {
+          console.error('Error sending message:', error.message);
+          socket.emit('error', { message: 'Failed to send message' });
+        }
+      });
 
-        // Broadcast to all participants in the room
-        this.io.to(`chat_${chatRoomId}`).emit('new_message', formattedMessage);
+      // Handle marking messages as read
+      socket.on('mark-as-read', async (data: { messageId: string }) => {
+        try {
+          const { messageId } = data;
+          
+          await prisma.notification.update({
+            where: { id: messageId },
+            data: { read: true }
+          });
 
-        // Send push notification to other participants
-        await this.notifyOtherParticipants(chatRoomId, userId, message);
+          socket.emit('message-read', { messageId });
+        } catch (error: any) {
+          console.error('Error marking as read:', error.message);
+          socket.emit('error', { message: 'Failed to mark message as read' });
+        }
+      });
 
-        console.log(`✅ Message sent and broadcasted in chat ${chatRoomId}`);
-        
-      } catch (error) {
-        console.error('❌ Error sending message:', error);
-        socket.emit('error', { message: 'Failed to send message' });
-      }
-    });
+      // Handle getting unread count
+      socket.on('get-unread-count', async () => {
+        try {
+          const unreadCount = await prisma.notification.count({
+            where: {
+              userId: userId,
+              type: 'chat_message',
+              read: false
+            }
+          });
 
-    socket.on('mark_message_read', async (data) => {
-      try {
-        const { messageId } = data;
-        
-        // Update message status
-        await prisma.message.update({
-          where: { id: messageId },
-          data: { status: 'read' }
-        });
+          socket.emit('unread-count', { count: unreadCount });
+        } catch (error: any) {
+          console.error('Error getting unread count:', error.message);
+          socket.emit('error', { message: 'Failed to get unread count' });
+        }
+      });
 
-        // Notify sender
-        const message = await prisma.message.findUnique({
-          where: { id: messageId },
-          select: { senderId: true, roomId: true }
-        });
-
-        if (message && message.senderId !== user.userId) {
-          // Notify the sender that message was read
-          const senderSockets = this.connectedUsers.get(message.senderId);
-          if (senderSockets) {
-            for (const socketId of senderSockets) {
-              this.io.to(socketId).emit('message_read', { messageId });
+      // Handle disconnection
+      socket.on('disconnect', () => {
+        console.log(`User disconnected: ${userId}`);
+        if (userId) {
+          const userSockets = this.connectedUsers.get(userId);
+          if (userSockets) {
+            userSockets.delete(socket.id);
+            if (userSockets.size === 0) {
+              this.connectedUsers.delete(userId);
             }
           }
         }
+      });
+    });
+  }
+
+  private getRoomId(userId1: string, userId2: string): string {
+    // Create consistent room ID regardless of order
+    return [userId1, userId2].sort().join('-');
+  }
+
+  private async getRecentMessages(userId1: string, userId2: string, limit: number = 20): Promise<ChatMessage[]> {
+    try {
+      // Get messages between these two users
+      const notifications = await prisma.notification.findMany({
+        where: {
+          OR: [
+            {
+              userId: userId2,
+              type: 'chat_message',
+              data: {
+                path: ['senderId'],
+                equals: userId1
+              }
+            },
+            {
+              userId: userId1,
+              type: 'chat_message',
+              data: {
+                path: ['senderId'],
+                equals: userId2
+              }
+            }
+          ]
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+
+      return notifications.reverse().map(notification => {
+        const notificationData = notification.data as Record<string, any>;
         
-      } catch (error) {
-        console.error('❌ Error marking message as read:', error);
-      }
-    });
+        return {
+          id: String(notification.id),
+          content: notification.message,
+          senderId: String(notificationData?.senderId || ""),
+          senderName: String(notificationData?.senderName || "Unknown"),
+          senderRole: String(notificationData?.senderRole || "unknown"),
+          createdAt: notification.createdAt
+        };
+      });
+    } catch (error: any) {
+      console.error('Error getting recent messages:', error.message);
+      return [];
+    }
   }
 
-  private handleTypingEvents(socket: any, user: SocketUser) {
-    socket.on('typing', (data) => {
-      const { isTyping, chatRoomId } = data;
-      
-      if (socket.data.currentChatRoom === chatRoomId) {
-        socket.to(`chat_${chatRoomId}`).emit('user_typing', {
-          userId: user.userId,
-          isTyping,
-          chatRoomId
-        });
-      }
-    });
-  }
-
-  private handleStatusEvents(socket: any, user: SocketUser) {
-    socket.on('update_status', (data) => {
-      const { status, chatRoomId } = data;
-      
-      if (socket.data.currentChatRoom === chatRoomId) {
-        socket.to(`chat_${chatRoomId}`).emit('user_status_updated', {
-          userId: user.userId,
-          status,
-          chatRoomId
-        });
-      }
-    });
-  }
-
-  private async verifyChatAccess(chatRoomId: string, userId: string): Promise<boolean> {
-    const chatRoom = await prisma.chatRoom.findUnique({
-      where: { id: chatRoomId },
-      select: { participant1Id: true, participant2Id: true }
-    });
-
-    if (!chatRoom) return false;
-    
-    return chatRoom.participant1Id === userId || chatRoom.participant2Id === userId;
-  }
-
-  private async getRecentMessages(chatRoomId: string, limit: number = 50): Promise<ChatMessage[]> {
-    const messages = await prisma.message.findMany({
-      where: { roomId: chatRoomId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      include: {
-        sender: {
-          select: {
-            id: true,
-            email: true,
-            vaProfile: { select: { name: true, avatarUrl: true } },
-            company: { select: { name: true, logoUrl: true } }
-          }
-        }
-      }
-    });
-
-    return messages.reverse().map(message => ({
-      id: message.id,
-      roomId: message.roomId,
-      senderId: message.senderId,
-      content: message.content,
-      type: message.type,
-      status: message.status,
-      createdAt: message.createdAt,
-      sender: {
-        id: message.sender.id,
-        name: message.sender.vaProfile?.name || message.sender.company?.name || message.sender.email,
-        avatar: message.sender.vaProfile?.avatarUrl || message.sender.company?.logoUrl,
-        role: message.sender.vaProfile ? 'va' : 'company'
-      }
-    }));
-  }
-
-  private async notifyOtherParticipants(chatRoomId: string, senderId: string, message: any) {
-    const chatRoom = await prisma.chatRoom.findUnique({
-      where: { id: chatRoomId },
-      select: { participant1Id: true, participant2Id: true }
-    });
-
-    if (!chatRoom) return;
-
-    const otherParticipantId = chatRoom.participant1Id === senderId 
-      ? chatRoom.participant2Id 
-      : chatRoom.participant1Id;
-
-    if (otherParticipantId) {
-      await pushNotificationService.sendNotification(otherParticipantId, {
-        title: 'New Message',
-        body: message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
-        type: 'chat_message',
-        data: { 
-          chatRoomId,
-          messageId: message.id,
-          senderId: senderId
-        }
+  // Method to emit events to specific users
+  public emitToUser(userId: string, event: string, data: any) {
+    const userSockets = this.connectedUsers.get(userId);
+    if (userSockets && userSockets.size > 0) {
+      userSockets.forEach(socketId => {
+        this.io.to(socketId).emit(event, data);
       });
     }
   }
 
-  // Public methods for sending notifications
-  async sendNotification(userId: string, notification: any) {
-    const userSockets = this.connectedUsers.get(userId);
-    if (userSockets && userSockets.size > 0) {
-      this.io.to(`user_${userId}`).emit('notification', notification);
-    }
-  }
-
-  async broadcastToChat(chatRoomId: string, event: string, data: any) {
-    this.io.to(`chat_${chatRoomId}`).emit(event, data);
-  }
-
-  getConnectedUsers(): string[] {
-    return Array.from(this.connectedUsers.keys());
-  }
-
-  isUserOnline(userId: string): boolean {
-    return this.connectedUsers.has(userId);
+  // Method to broadcast to all connected users
+  public broadcast(event: string, data: any) {
+    this.io.emit(event, data);
   }
 }
