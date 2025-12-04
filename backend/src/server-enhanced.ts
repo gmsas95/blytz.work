@@ -18,7 +18,7 @@ import paymentRoutes from "./routes/payments.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import contractsRoutes from "./routes/contracts.js";
-import chatRoutes from "./routes/chat.js";
+import chatRoutes from "./routes/chat-final-fix.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";

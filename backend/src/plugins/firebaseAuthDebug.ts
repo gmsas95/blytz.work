@@ -117,8 +117,3 @@ function createAuthError(code: string, message: string) {
     }
   };
 }
-EOF
-```
-
-Now let me add the chat system database schema and implementation:<function_calls>
-<invoke name=

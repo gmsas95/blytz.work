@@ -13,6 +13,7 @@ import paymentRoutes from "./routes/payments.js";
 import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import contractsRoutes from "./routes/contracts.js";
+import chatRoutes from "./routes/chat-final-fix.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";
@@ -72,6 +73,7 @@ app.register(paymentRoutes, { prefix: "/api" });
 app.register(vaRoutes, { prefix: "/api" });
 app.register(companyRoutes, { prefix: "/api" });
 app.register(contractsRoutes, { prefix: "/api" });
+app.register(chatRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {
@@ -127,6 +129,7 @@ const start = async () => {
     app.log.info(`💼 Job marketplace system ready at /api/jobs/marketplace/*`);
     app.log.info(`🤝 Contract management system ready at /api/contracts/*`);
     app.log.info(`💳 Payment system ready at /api/payments/*`);
+    app.log.info(`💬 Chat system ready at /api/chat/*`);
     app.log.info(`🚀 Platform-first implementation complete`);
     app.log.info(`🎯 MVP Database Backend Ready`);
   } catch (err) {
