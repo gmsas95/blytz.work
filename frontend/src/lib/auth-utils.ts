@@ -2,18 +2,33 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase';
 
 // Token management utilities
+let tokenRefreshPromise: Promise<string | null> | null = null;
+
 export const getToken = async (): Promise<string | null> => {
   try {
+    // If we have a pending token refresh, return it to prevent race conditions
+    if (tokenRefreshPromise) {
+      return await tokenRefreshPromise;
+    }
+    
     const auth = getAuth(app);
     const user = auth.currentUser;
     
     console.log("🔍 Debug - Firebase user:", user);
     
     if (user) {
-      // Firebase user exists, get real token
-      const token = await user.getIdToken(true); // Force refresh
-      console.log("🔍 Debug - Firebase token:", token ? `${token.substring(0, 20)}...` : 'null');
-      return token;
+      // Create a promise for token refresh to prevent concurrent requests
+      tokenRefreshPromise = user.getIdToken(true).then(token => {
+        console.log("🔍 Debug - Firebase token refreshed:", token ? `${token.substring(0, 20)}...` : 'null');
+        return token;
+      }).catch(error => {
+        console.error('🔍 Debug - Error getting auth token:', error);
+        return null;
+      }).finally(() => {
+        tokenRefreshPromise = null;
+      });
+      
+      return await tokenRefreshPromise;
     }
     
     console.log("🔍 Debug - No Firebase user found");
@@ -27,29 +42,51 @@ export const getToken = async (): Promise<string | null> => {
 // Monitor auth state and automatically update token in localStorage
 export const setupTokenRefresh = (): (() => void) => {
   const auth = getAuth(app);
+  let isUpdating = false;
   
   const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (isUpdating) return; // Prevent concurrent updates
+    isUpdating = true;
+    
     if (user) {
       try {
         const token = await user.getIdToken();
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify({
+        const userData = {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
-        }));
+        };
+        
+        // Only update if token or user data has changed
+        const currentToken = localStorage.getItem('authToken');
+        const currentUser = localStorage.getItem('user');
+        
+        if (token !== currentToken) {
+          localStorage.setItem('authToken', token);
+        }
+        
+        const userDataStr = JSON.stringify(userData);
+        if (userDataStr !== currentUser) {
+          localStorage.setItem('user', userDataStr);
+        }
+        
+        console.log('✅ Auth state updated for user:', user.email);
       } catch (error) {
         console.error('Error refreshing token:', error);
         // Clear invalid token
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
       }
     } else {
       // User signed out, clear tokens
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('userRole');
+      console.log('👋 User signed out, tokens cleared');
     }
+    
+    isUpdating = false;
   });
   
   return unsubscribe;

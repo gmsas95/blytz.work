@@ -24,10 +24,26 @@ let firebaseAuth: admin.auth.Auth | null = null;
 // Initialize Firebase Admin if credentials are available
 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
   try {
+    // Handle private key formatting - ensure proper newlines
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    
+    // Replace literal \n with actual newlines if present
+    if (privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+    
+    // Ensure the key starts and ends correctly
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
+    }
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+      privateKey = privateKey + '\n-----END PRIVATE KEY-----';
+    }
+    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey: privateKey,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       }),
     });
@@ -35,9 +51,15 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
     console.log("✅ Firebase Admin initialized successfully");
   } catch (error) {
     console.error("❌ Firebase Admin initialization failed:", error);
+    console.error("🔍 Debug - FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
+    console.error("🔍 Debug - FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL);
+    console.error("🔍 Debug - FIREBASE_PRIVATE_KEY length:", process.env.FIREBASE_PRIVATE_KEY?.length);
   }
 } else {
   console.warn("⚠️ Firebase credentials not provided, authentication will not work in production");
+  console.warn("🔍 Debug - Available vars: PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID, 
+              "PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY, 
+              "CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
