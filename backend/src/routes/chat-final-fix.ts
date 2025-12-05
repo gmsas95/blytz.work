@@ -185,36 +185,6 @@ export default async function chatRoutes(app: FastifyInstance) {
     }
   });
 
-  // Delete message
-  app.delete('/chat/messages/:messageId', {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const user = request.user as any;
-    const { messageId } = request.params as { messageId: string };
-    
-    try {
-      // Delete notification (message)
-      await prisma.notification.delete({
-        where: { 
-          id: messageId,
-          userId: user.uid // Ensure user can only delete their own messages
-        }
-      });
-
-      return {
-        success: true,
-        data: { deleted: true }
-      };
-      
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return reply.code(500).send({
-        error: 'Failed to delete message',
-        details: errorMessage
-      });
-    }
-  });
-
   // Get unread message count
   app.get('/chat/unread-count', {
     preHandler: [verifyAuth]
