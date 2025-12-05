@@ -1,2 +1,3 @@
-// Re-export from safe firebase module
-export { app, auth } from './firebase-safe';
+// Runtime Firebase configuration for Dokploy deployment
+export { getFirebase } from './firebase-runtime';
+export { app, auth } from './firebase-runtime';

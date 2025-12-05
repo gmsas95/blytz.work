@@ -1,8 +1,6 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User, onAuthStateChanged } from 'firebase/auth';
-import { app, auth as firebaseAuth } from './firebase';
-
-// Use the pre-initialized auth from firebase module
-export const auth = firebaseAuth || getAuth(app);
+// Runtime authentication for Dokploy deployment
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { onAuthStateChange } from './auth-runtime';
 
 export interface AuthUser {
   uid: string;
@@ -10,11 +8,26 @@ export interface AuthUser {
   displayName?: string;
 }
 
+// Get Firebase auth instance at runtime
+const getAuthInstance = () => {
+  // Dynamic import to avoid build-time issues
+  return import('./firebase-runtime').then(({ getFirebase }) => {
+    const { auth } = getFirebase();
+    if (!auth) {
+      throw new Error('Firebase auth not initialized');
+    }
+    return auth;
+  });
+};
+
 // Sign in user
 export const signInUser = async (email: string, password: string): Promise<AuthUser> => {
   try {
+    const auth = await getAuthInstance();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    
+    console.log('✅ Runtime sign in successful:', user.email);
     
     return {
       uid: user.uid,
@@ -22,7 +35,7 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
       displayName: user.displayName || undefined,
     };
   } catch (error) {
-    console.error('Sign in error:', error);
+    console.error('Runtime sign in error:', error);
     throw error;
   }
 };
@@ -30,16 +43,19 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
 // Register new user
 export const registerUser = async (email: string, password: string, name?: string): Promise<AuthUser> => {
   try {
+    const auth = await getAuthInstance();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    
+    console.log('✅ Runtime registration successful:', user.email);
     
     return {
       uid: user.uid,
       email: user.email!,
-      displayName: name || user.displayName || undefined,
+      displayName: user.displayName || name || undefined,
     };
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Runtime registration error:', error);
     throw error;
   }
 };
@@ -47,42 +63,56 @@ export const registerUser = async (email: string, password: string, name?: strin
 // Sign out user
 export const signOutUser = async (): Promise<void> => {
   try {
+    const auth = await getAuthInstance();
     await signOut(auth);
+    console.log('✅ Runtime sign out successful');
   } catch (error) {
-    console.error('Sign out error:', error);
+    console.error('Runtime sign out error:', error);
     throw error;
   }
 };
 
-// Listen to auth state changes
-export const onAuthStateChange = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback);
-};
-
-// Get current user
-export const getCurrentUser = (): User | null => {
-  return auth.currentUser;
-};
-
-// Error handling helper
+// Get auth error message from Firebase error
 export const getAuthErrorMessage = (error: any): string => {
-  if (error.code === 'auth/user-not-found') {
-    return 'No account found with this email.';
+  if (!error) return 'Unknown error occurred';
+  
+  // Firebase Auth errors
+  if (error.code) {
+    switch (error.code) {
+      case 'auth/invalid-email':
+        return 'Invalid email address';
+      case 'auth/user-disabled':
+        return 'This account has been disabled';
+      case 'auth/user-not-found':
+        return 'No account found with this email';
+      case 'auth/wrong-password':
+        return 'Incorrect password';
+      case 'auth/email-already-in-use':
+        return 'An account already exists with this email';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters';
+      case 'auth/operation-not-allowed':
+        return 'This operation is not allowed';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection';
+      case 'auth/api-key-not-valid':
+        return 'Firebase configuration error. Please contact support';
+      case 'auth/invalid-api-key':
+        return 'Invalid Firebase configuration. Please contact support';
+      default:
+        return error.message || 'Authentication failed';
+    }
   }
-  if (error.code === 'auth/wrong-password') {
-    return 'Incorrect password. Please try again.';
+  
+  // Generic error handling
+  if (error.message) {
+    return error.message;
   }
-  if (error.code === 'auth/email-already-in-use') {
-    return 'An account with this email already exists.';
-  }
-  if (error.code === 'auth/weak-password') {
-    return 'Password should be at least 6 characters.';
-  }
-  if (error.code === 'auth/invalid-email') {
-    return 'Please enter a valid email address.';
-  }
-  if (error.code === 'auth/too-many-requests') {
-    return 'Too many failed attempts. Please try again later.';
-  }
-  return error.message || 'An error occurred during authentication.';
+  
+  return 'Authentication failed. Please try again.';
 };
+
+// Export runtime auth state monitoring
+export { onAuthStateChange };
