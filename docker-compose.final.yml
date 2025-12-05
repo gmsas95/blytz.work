@@ -48,17 +48,13 @@ services:
       dockerfile: Dockerfile
     container_name: blytzwork-backend-final
     restart: unless-stopped
+    env_file:
+      - .env.staging
     environment:
-      NODE_ENV: production
+      NODE_ENV: staging
       PORT: 3000
       DATABASE_URL: postgresql://postgres:password@postgres-final:5432/blytzwork
       REDIS_URL: redis://redis-final:6379
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: http://localhost:3020
       FRONTEND_URL: http://localhost:3021
     ports:
@@ -91,17 +87,11 @@ services:
       dockerfile: Dockerfile
     container_name: blytzwork-frontend-final
     restart: unless-stopped
+    env_file:
+      - .env.staging
     environment:
-      NODE_ENV: production
+      NODE_ENV: staging
       PORT: 3001
-      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
-      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
-      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
-      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
-      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
-      NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
-      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       NEXT_PUBLIC_API_URL: http://localhost:3020
     ports:
       - "3021:3001"
