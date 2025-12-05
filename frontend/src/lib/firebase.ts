@@ -1,3 +1,2 @@
-// Runtime Firebase configuration for Dokploy deployment
-export { getFirebase } from './firebase-runtime';
-export { app, auth } from './firebase-runtime';
+// Secure runtime Firebase configuration for Dokploy deployment
+export { getFirebase, app, auth } from './firebase-runtime-secure';
