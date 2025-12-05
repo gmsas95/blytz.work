@@ -42,7 +42,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
   
   // Helper function to handle auth errors
   const handleAuthError = async () => {
-    console.log('🔄 Token refresh failed after retry, clearing auth state');
+    // Token refresh failed after retry, clearing auth state
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');

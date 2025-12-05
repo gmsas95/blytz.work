@@ -14,15 +14,15 @@ export const getToken = async (): Promise<string | null> => {
     const auth = firebaseAuth || getAuth(app);
     const user = auth.currentUser;
     
-    console.log("🔍 Debug - Firebase user:", user);
+    // Debug: Firebase user check
     
     if (user) {
       // Create a promise for token refresh to prevent concurrent requests
       tokenRefreshPromise = user.getIdToken(true).then(token => {
-        console.log("🔍 Debug - Firebase token refreshed:", token ? `${token.substring(0, 20)}...` : 'null');
+        // Debug: Firebase token refreshed
         return token;
       }).catch(error => {
-        console.error('🔍 Debug - Error getting auth token:', error);
+        // Debug: Error getting auth token
         return null;
       }).finally(() => {
         tokenRefreshPromise = null;
@@ -31,10 +31,10 @@ export const getToken = async (): Promise<string | null> => {
       return await tokenRefreshPromise;
     }
     
-    console.log("🔍 Debug - No Firebase user found");
+    // Debug: No Firebase user found
     return null; // No user logged in
   } catch (error) {
-    console.error('🔍 Debug - Error getting auth token:', error);
+    // Debug: Error getting auth token
     return null; // Return null on error instead of dev tokens
   }
 };
