@@ -4,14 +4,15 @@
 let firebaseApp: any = null;
 let firebaseAuth: any = null;
 
-// Fallback Firebase configuration (your real config)
+// No fallback configuration for security
+// Firebase config must be provided via environment variables
 const FALLBACK_CONFIG = {
-  apiKey: "AIzaSyDy63cQFqr6DT7_y9pmhgASd8NX5GW0oio",
-  authDomain: "blytz-hyred.firebaseapp.com",
-  projectId: "blytz-hyred",
-  storageBucket: "blytz-hyred.appspot.com",
-  messagingSenderId: "100201094663",
-  appId: "1:100201094663:web:d78f0857db3c1dcda8d4a2"
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 
 // Try to get Firebase config from various sources

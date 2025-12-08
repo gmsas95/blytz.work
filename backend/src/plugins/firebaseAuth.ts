@@ -50,16 +50,10 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
     firebaseAuth = admin.auth();
     console.log("✅ Firebase Admin initialized successfully");
   } catch (error) {
-    console.error("❌ Firebase Admin initialization failed:", error);
-    console.error("🔍 Debug - FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
-    console.error("🔍 Debug - FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL);
-    console.error("🔍 Debug - FIREBASE_PRIVATE_KEY length:", process.env.FIREBASE_PRIVATE_KEY?.length);
+    console.error("❌ Firebase Admin initialization failed");
   }
 } else {
   console.warn("⚠️ Firebase credentials not provided, authentication will not work in production");
-  console.warn("🔍 Debug - Available vars: PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID, 
-              "PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY, 
-              "CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
 }
 
 export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
@@ -70,8 +64,6 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     return reply.code(204).send();
   }
   
-  console.log("🔍 Debug - Auth Header:", authHeader);
-  
   if (!authHeader) {
     return reply.code(401).send({ 
       error: "Missing authorization header",
@@ -80,7 +72,6 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   }
 
   const token = authHeader.split(" ")[1];
-  console.log("🔍 Debug - Token:", token ? `${token.substring(0, 20)}...` : 'null');
   
   if (!token) {
     return reply.code(401).send({ 
@@ -92,17 +83,10 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   try {
     // Production: Verify Firebase token
     if (firebaseAuth) {
-      console.log('🔍 Debug - Attempting Firebase token verification for:', token.substring(0, 50) + '...');
-      
       const decodedToken = await firebaseAuth.verifyIdToken(token)
         .catch(error => {
-          console.error('🔍 Debug - Firebase verification failed:', error.message);
-          console.error('🔍 Debug - Firebase verification error code:', error.code);
-          console.error('🔍 Debug - Firebase verification full error:', error);
           throw error;
         });
-      
-      console.log('🔍 Debug - Firebase token verified successfully for:', decodedToken.email);
       
       // Get user from database to get role and profile status
       const user = await prisma.user.findUnique({
@@ -124,41 +108,8 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
         profileComplete: user.profileComplete
       };
     } 
-    // Development: Allow mock token with proper validation
-    else if (process.env.NODE_ENV === 'development') {
-      // Allow special development token for testing
-      if (token === 'dev-token-admin') {
-        request.user = {
-          uid: 'dev-admin-user',
-          email: 'admin@dev.com',
-          role: 'admin',
-          profileComplete: true
-        };
-      } 
-      else if (token === 'dev-token-company') {
-        request.user = {
-          uid: 'dev-company-user',
-          email: 'company@dev.com',
-          role: 'company',
-          profileComplete: false
-        };
-      }
-      else if (token === 'dev-token-va') {
-        request.user = {
-          uid: 'dev-va-user',
-          email: 'va@dev.com',
-          role: 'va',
-          profileComplete: false
-        };
-      }
-      else {
-        return reply.code(401).send({ 
-          error: "Invalid development token",
-          code: "INVALID_DEV_TOKEN",
-          hint: "Use: dev-token-admin, dev-token-company, or dev-token-va"
-        });
-      }
-    }
+    // Development mode disabled for security
+    // Remove development tokens to prevent authentication bypass
     // Production fallback when Firebase is not initialized
     else {
       return reply.code(500).send({ 
@@ -169,11 +120,9 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     
     return;
   } catch (error: any) {
-    console.log("🔍 Debug - Token verification failed:", error.message);
     return reply.code(401).send({ 
       error: "Invalid or expired token",
-      code: "INVALID_TOKEN",
-      details: error.message
+      code: "INVALID_TOKEN"
     });
   }
 }
