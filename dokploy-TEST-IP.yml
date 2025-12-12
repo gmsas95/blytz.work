@@ -16,25 +16,20 @@ http:
       tls:
         certResolver: letsencrypt
     
-    # FIXED: Frontend routing - use correct service name
-    blytz-frontend-router:
-      rule: Host(`blytz.work`) || Host(`www.blytz.work`)
-      service: blytzwork-frontend-final-service  # FIXED: was blytz-frontend-final-service
+    # TEST: Use IP address instead of domain names
+    blytz-frontend-test:
+      rule: Host(`YOUR_SERVER_IP`) || Host(`localhost`)
+      service: blytzwork-frontend-final
       entryPoints:
         - web
         - websecure
-      tls:
-        certResolver: letsencrypt
     
-    # FIXED: Backend API routing - use correct service name  
-    blytz-backend-router:
-      rule: Host(`api.blytz.work`)
-      service: blytzwork-backend-final-service   # FIXED: was blytz-backend-final-service
+    blytz-backend-test:
+      rule: Host(`YOUR_SERVER_IP`) && PathPrefix(`/api`)
+      service: blytzwork-backend-final
       entryPoints:
         - web
         - websecure
-      tls:
-        certResolver: letsencrypt
 
   services:
     dokploy-service-app:
@@ -43,15 +38,14 @@ http:
           - url: http://dokploy:3000
         passHostHeader: true
     
-    # FIXED: Frontend service - match actual container name
-    blytzwork-frontend-final-service:
+    # TEST: Direct service to container ports
+    blytzwork-frontend-final:
       loadBalancer:
         servers:
           - url: http://blytzwork-frontend-final:3001
         passHostHeader: true
     
-    # FIXED: Backend service - match actual container name
-    blytzwork-backend-final-service:
+    blytzwork-backend-final:
       loadBalancer:
         servers:
           - url: http://blytzwork-backend-final:3000
