@@ -56,8 +56,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-http://localhost:3010}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3012}
+      API_URL: ${API_URL:-https://gateway.blytz.work}
+      FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
     ports:
       - "3010:3000"
     depends_on:
