@@ -5,9 +5,9 @@ services:
     container_name: blytzwork-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
+      POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
@@ -16,7 +16,7 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,7 +48,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/blytzwork}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://blytz_user:z46fkjvmqzf7z2woihbvo9hr2yloopac@postgres:5432/blytz_work}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
