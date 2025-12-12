@@ -31,12 +31,12 @@ services:
         docker-entrypoint.sh postgres &
         # Wait for PostgreSQL to be ready
         sleep 5
-        # Create user if it doesn't exist
-        psql -U postgres -d postgres -c 'CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD \"${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}\";' || echo 'User already exists'
+        # Create user if it doesn't exist (fixing quote issues)
+        psql -U postgres -d postgres -c \"CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}';\" 2>/dev/null || echo 'User already exists'
         # Create database if it doesn't exist
-        psql -U postgres -d postgres -c 'CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};' || echo 'Database already exists'
+        psql -U postgres -d postgres -c \"CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Database already exists'
         # Grant privileges
-        psql -U postgres -d postgres -c 'GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB:-blytz_work} TO ${POSTGRES_USER:-blytz_user};'
+        psql -U postgres -d postgres -c \"GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB:-blytz_work} TO ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Privileges already granted'
         # Bring PostgreSQL to foreground
         wait
       else
