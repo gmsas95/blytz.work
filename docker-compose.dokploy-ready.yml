@@ -11,6 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
+      - ./scripts/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     ports:
       - "5432:5432"
     networks:
@@ -20,6 +21,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Ensure database and user are created correctly
+    entrypoint: >
+      bash -c "
+      # Check if database directory exists and has data
+      if [ -d /var/lib/postgresql/data/base ] && [ \"$(ls -A /var/lib/postgresql/data/base)\" ]; then
+        echo 'Database directory exists, starting PostgreSQL...'
+        # Start PostgreSQL in background
+        docker-entrypoint.sh postgres &
+        # Wait for PostgreSQL to be ready
+        sleep 5
+        # Create user if it doesn't exist
+        psql -U postgres -d postgres -c 'CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD \"${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}\";' || echo 'User already exists'
+        # Create database if it doesn't exist
+        psql -U postgres -d postgres -c 'CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};' || echo 'Database already exists'
+        # Grant privileges
+        psql -U postgres -d postgres -c 'GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB:-blytz_work} TO ${POSTGRES_USER:-blytz_user};'
+        # Bring PostgreSQL to foreground
+        wait
+      else
+        echo 'Database directory is empty, running normal initialization...'
+        exec docker-entrypoint.sh postgres
+      fi
+      "
 
   # Redis Cache
   redis:
