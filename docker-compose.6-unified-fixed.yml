@@ -57,7 +57,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytzwork-unified-backend
+    container_name: blytzwork-backend-final
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -100,7 +100,7 @@ services:
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
-    container_name: blytzwork-unified-frontend
+    container_name: blytzwork-frontend-final
     restart: unless-stopped
     environment:
       NODE_ENV: production
