@@ -22,6 +22,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Ensure database is created
+    entrypoint: >
+      bash -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        docker-entrypoint.sh postgres &
+        sleep 5
+        psql -U ${POSTGRES_USER:-postgres} -d postgres -c 'CREATE DATABASE ${POSTGRES_DB:-blytzwork};' || true
+        kill %1
+        wait
+      fi
+      exec docker-entrypoint.sh postgres
+      "
 
   # Redis Cache
   redis:
@@ -80,6 +92,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
     container_name: blytzwork-unified-frontend
     restart: unless-stopped
     environment:
