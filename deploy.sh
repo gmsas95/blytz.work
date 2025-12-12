@@ -5,7 +5,7 @@
 
 set -e
 
-COMPOSE_FILE="docker-compose.6-unified-fixed.yml"
+COMPOSE_FILE="docker-compose.dokploy-ready.yml"
 ENV_FILE=".env.production"
 
 case "$1" in
