@@ -108,7 +108,7 @@ check_health "blytzwork-frontend-final"
 print_status "Testing API endpoints..."
 
 # Test backend health endpoint
-backend_health=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010/health || echo "000")
+backend_health=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/health || echo "000")
 if [ "$backend_health" == "200" ]; then
     print_success "Backend health endpoint is responding (HTTP $backend_health)"
 else
@@ -139,7 +139,7 @@ print_success "Final deployment fix completed!"
 echo ""
 echo "Services should be accessible at:"
 echo "  - Frontend: http://localhost:3012"
-echo "  - Backend API: http://localhost:3010"
+echo "  - Backend API: http://localhost:3002"
 echo "  - Database: localhost:5432"
 echo "  - Redis: localhost:6379"
 echo ""

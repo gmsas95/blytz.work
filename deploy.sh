@@ -55,7 +55,7 @@ case "$1" in
         fi
         
         # Test backend
-        if curl -f http://localhost:3010/api/health > /dev/null 2>&1; then
+        if curl -f http://localhost:3002/api/health > /dev/null 2>&1; then
             echo "✅ Backend: Healthy"
         else
             echo "❌ Backend: Unhealthy"

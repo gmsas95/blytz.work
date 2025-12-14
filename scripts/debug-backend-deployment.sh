@@ -92,12 +92,12 @@ print_header "Step 7: Testing health endpoint manually..."
 sleep 10  # Give server time to start
 echo ""
 echo "=== Health Endpoint Test ==="
-if curl -f http://localhost:3010/health 2>/dev/null; then
+if curl -f http://localhost:3002/health 2>/dev/null; then
     print_status "Health endpoint is responding correctly"
 else
     print_error "Health endpoint is not responding"
     echo "Trying with curl -v for more details:"
-    curl -v http://localhost:3010/health || true
+    curl -v http://localhost:3002/health || true
 fi
 
 # Step 8: Show environment variables

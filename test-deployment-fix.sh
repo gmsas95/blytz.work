@@ -97,7 +97,7 @@ echo "Frontend health check will use: $frontend_health_url"
 # Check port mappings
 echo ""
 echo "🔍 Checking port mappings..."
-echo "Backend: Host port 3010 → Container port 3000"
+echo "Backend: Host port 3002 → Container port 3000"
 echo "Frontend: Host port 3012 → Container port 3001"
 echo "PostgreSQL: Host port 5432 → Container port 5432"
 echo "Redis: Host port 6379 → Container port 6379"
