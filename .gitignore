@@ -7,12 +7,10 @@ dist/
 build/
 *.tsbuildinfo
 
-# Environment files - BLOCK ALL
+# Environment files
 .env*
 .env.*
 !.env.example
-!.env.staging
-!.env.dokploy
 
 # Security - keys and certificates
 *.key
@@ -213,15 +211,11 @@ localhost/
 docs/build/
 api-docs/
 
-# Legacy compose files to remove
-docker-compose.backend.yml
-docker-compose.nginx.yml
-docker-compose.yml
-
-# Keep only numbered structure and dokploy files (allow our new files)
+# Old docker-compose files to exclude
 docker-compose.*.yml
-!docker-compose.[1-9]*.yml
-!docker-compose.dokploy-final.yml
+!docker-compose.yml
+!docker-compose.1-infrastructure.yml
+!docker-compose.2-database.yml
 
 # Additional security exclusions
 scripts/*.log
@@ -231,3 +225,18 @@ scripts/backup-*.sh
 scripts/test-*.sh
 frontend/src/app/debug/
 docs/FIREBASE_*.md
+
+# Exclude old/experimental docker compose files
+docker-compose.3-apigateway.yml
+docker-compose.4-frontend.fixed.yml
+docker-compose.4-frontend.yml
+docker-compose.5-tools.yml
+docker-compose.6-debug.yml
+docker-compose.6-unified-fixed.yml
+docker-compose.6-unified.yml
+docker-compose.dokploy-final.yml
+docker-compose.dokploy-ready.yml
+docker-compose.final.yml
+
+# Exclude old nginx configs
+nginx/
