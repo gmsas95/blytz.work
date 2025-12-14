@@ -10,7 +10,8 @@ services:
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
     volumes:
       - postgres_data_unified:/var/lib/postgresql/data
-      - ./backend/prisma/fix-user.sh:/fix-user.sh
+      - ./backend/prisma/fix-user.sh:/docker-entrypoint-initdb.d/01-fix-user.sh
+      - ./backend/prisma/postfix.sh:/postfix.sh
     networks:
       - dokploy-network
     healthcheck:
@@ -22,33 +23,16 @@ services:
       retries: 10
       start_period: 30s
     command: >
-      bash -c "
+      sh -c "
       echo 'Starting PostgreSQL...'
       if [ -d /var/lib/postgresql/data/base ]; then
-        echo 'Existing database found'
+        echo 'Existing database found, running post-fix script...'
+        chmod +x /postfix.sh
+        exec /postfix.sh
+      else
+        echo 'New database, using normal initialization...'
+        exec docker-entrypoint.sh postgres
       fi
-      
-      # Start PostgreSQL normally
-      docker-entrypoint.sh postgres &
-      
-      # Wait for PostgreSQL to start
-      echo 'Waiting for PostgreSQL to start...'
-      for i in \$(seq 1 30); do
-        if pg_isready -q; then
-          echo 'PostgreSQL is ready'
-          break
-        fi
-        echo 'Waiting for PostgreSQL... (attempt \${i})'
-        sleep 1
-      done
-      
-      # Run fix script
-      echo 'Running user fix script...'
-      chmod +x /fix-user.sh
-      /fix-user.sh
-      
-      # Wait for background process
-      wait
       "
   redis:
     image: redis:7-alpine
