@@ -10,7 +10,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
     volumes:
       - postgres_data_unified:/var/lib/postgresql/data
-      - ./backend/prisma:/docker-entrypoint-initdb.d
+      - ./backend/prisma/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - dokploy-network
     healthcheck:
@@ -21,6 +21,27 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    command: >
+      sh -c "
+      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
+        echo 'Database does not exist, will initialize...'
+        docker-entrypoint.sh postgres &
+        PID=$$
+        sleep 5
+        echo 'Creating user and database...'
+        psql -U postgres -c \"CREATE USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';\" || echo 'User already exists'
+        psql -U postgres -c \"CREATE DATABASE ${POSTGRES_DB} OWNER ${POSTGRES_USER};\" || echo 'Database already exists'
+        wait $$PID
+      else
+        echo 'Database already exists, starting normally...'
+        docker-entrypoint.sh postgres &
+        PID=$$
+        sleep 5
+        echo 'Ensuring user exists...'
+        psql -U postgres -c \"DO \\$\\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${POSTGRES_USER}') THEN CREATE USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}'; END IF; \\$\\$;\" || echo 'User setup complete'
+        wait $$PID
+      fi
+      "
   redis:
     image: redis:7-alpine
     container_name: blytzwork-unified-redis
