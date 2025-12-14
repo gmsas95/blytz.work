@@ -7,10 +7,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
     volumes:
       - postgres_data_unified:/var/lib/postgresql/data
-      - ./backend/prisma/fix-user.sh:/docker-entrypoint-initdb.d/fix-user.sh
+      - ./backend/prisma/fix-user.sh:/fix-user.sh
     networks:
       - dokploy-network
     healthcheck:
@@ -21,22 +21,34 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-    entrypoint: >
-      sh -c "
-      echo 'Checking if database exists...'
+    command: >
+      bash -c "
+      echo 'Starting PostgreSQL...'
       if [ -d /var/lib/postgresql/data/base ]; then
         echo 'Existing database found'
-        # For existing databases, run fix script directly
-        docker-entrypoint.sh postgres &
-        PG_PID=$$
-        sleep 5
-        ./docker-entrypoint-initdb.d/fix-user.sh
-        wait \$$PG_PID
-      else
-        echo 'New database, will initialize...'
-        # For new databases, let entrypoint handle it
-        exec docker-entrypoint.sh postgres
       fi
+      
+      # Start PostgreSQL normally
+      docker-entrypoint.sh postgres &
+      
+      # Wait for PostgreSQL to start
+      echo 'Waiting for PostgreSQL to start...'
+      for i in \$(seq 1 30); do
+        if pg_isready -q; then
+          echo 'PostgreSQL is ready'
+          break
+        fi
+        echo 'Waiting for PostgreSQL... (attempt \${i})'
+        sleep 1
+      done
+      
+      # Run fix script
+      echo 'Running user fix script...'
+      chmod +x /fix-user.sh
+      /fix-user.sh
+      
+      # Wait for background process
+      wait
       "
   redis:
     image: redis:7-alpine
@@ -89,8 +101,10 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       HOSTNAME: 0.0.0.0
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - dokploy-network
   frontend-final:
