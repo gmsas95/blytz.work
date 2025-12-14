@@ -11,7 +11,7 @@ export interface AuthUser {
 // Get Firebase auth instance at runtime
 const getAuthInstance = () => {
   // Dynamic import to avoid build-time issues
-  return import('./firebase-runtime').then(({ getFirebase }) => {
+  return import('./firebase-runtime-final').then(({ getFirebase }) => {
     const { auth } = getFirebase();
     if (!auth) {
       throw new Error('Firebase auth not initialized');

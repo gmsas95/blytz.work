@@ -1,6 +1,6 @@
 // Runtime authentication utilities for Dokploy deployment
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirebase } from './firebase-runtime';
+import { getFirebase } from './firebase-runtime-final';
 
 // Token management utilities
 let tokenRefreshPromise: Promise<string | null> | null = null;
