@@ -9,9 +9,10 @@ build/
 
 # Environment files - BLOCK ALL
 .env*
-.env.* 
+.env.*
 !.env.example
 !.env.staging
+!.env.dokploy
 
 # Security - keys and certificates
 *.key
@@ -217,6 +218,7 @@ docker-compose.backend.yml
 docker-compose.nginx.yml
 docker-compose.yml
 
-# Keep only numbered structure (allow our new files)
+# Keep only numbered structure and dokploy files (allow our new files)
 docker-compose.*.yml
 !docker-compose.[1-9]*.yml
+!docker-compose.dokploy-final.yml
