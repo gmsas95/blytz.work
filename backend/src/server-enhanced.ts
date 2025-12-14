@@ -71,6 +71,7 @@ app.register(env, {
 
 // Register routes
 app.register(healthRoutes);
+app.register(healthRoutes, { prefix: "/api" });
 app.register(authRoutes, { prefix: "/api" });
 app.register(uploadRoutes, { prefix: "/api" });
 app.register(jobMarketplaceRoutes, { prefix: "/api" });
