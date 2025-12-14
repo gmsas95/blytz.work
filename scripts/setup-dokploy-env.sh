@@ -10,8 +10,8 @@ echo ""
 
 # Firebase Frontend Variables
 echo "📱 Firebase Frontend Variables (Required for Authentication):"
-echo "NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key"
-echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com"
+echo "NEXT_PUBLIC_FIREBASE_API_KEY=REPLACE_WITH_YOUR_FIREBASE_API_KEY"
+echo "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com"
 echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id"
 echo "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com"
 echo "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789"
@@ -46,7 +46,7 @@ echo ""
 
 # JWT Secret
 echo "🔐 JWT Secret:"
-echo "JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long"
+echo "JWT_SECRET=REPLACE_WITH_SECURE_RANDOM_JWT_SECRET_MINIMUM_32_CHARACTERS"
 echo ""
 
 echo "⚠️ Important Notes:"

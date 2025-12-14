@@ -108,18 +108,8 @@ export const getCurrentUser = (): any => {
   }
 };
 
-// Create a mock user for development when Firebase is not configured
+// Mock user creation disabled for security
+// This function should not be used in production
 export const createMockUser = async (email: string, password: string, role: 'va' | 'company'): Promise<any> => {
-  const mockUser = {
-    uid: `dev-${role}-${Date.now()}`,
-    email: email,
-    displayName: email.split('@')[0],
-  };
-  
-  // Store mock user and set development token
-  localStorage.setItem('user', JSON.stringify(mockUser));
-  localStorage.setItem('userRole', role === 'company' ? 'employer' : 'va');
-  localStorage.setItem('authToken', role === 'company' ? 'dev-token-company' : 'dev-token-va');
-  
-  return mockUser;
+  throw new Error('Mock user creation is disabled for security. Please configure Firebase authentication.');
 };

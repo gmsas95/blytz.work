@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
       POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
@@ -32,7 +32,7 @@ services:
         # Wait for PostgreSQL to be ready
         sleep 5
         # Create user if it doesn't exist (fixing quote issues)
-        psql -U postgres -d postgres -c \"CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}';\" 2>/dev/null || echo 'User already exists'
+        psql -U postgres -d postgres -c \"CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';\" 2>/dev/null || echo 'User already exists'
         # Create database if it doesn't exist
         psql -U postgres -d postgres -c \"CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Database already exists'
         # Grant privileges
@@ -72,12 +72,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://blytz_user:z46fkjvmqzf7z2woihbvo9hr2yloopac@postgres:5432/blytz_work}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-https://gateway.blytz.work}

@@ -83,21 +83,10 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
       return;
     }
     
-    // Development mode with debug tokens
-    console.log('⚠️ Development mode - using debug tokens');
-    if (token === 'dev-token-admin') {
-      request.user = {
-        uid: 'dev-admin-user',
-        email: 'admin@dev.com',
-        role: 'admin',
-        profileComplete: true
-      };
-      console.log('✅ Development admin authenticated');
-      return;
-    }
-    
-    console.log('❌ Invalid development token');
-    return reply.code(401).send(createAuthError('INVALID_DEV_TOKEN', 'Invalid development token'));
+    // Development mode disabled for security
+    // Remove development tokens to prevent authentication bypass
+    console.error('❌ Authentication failed: Firebase not properly initialized');
+    return reply.code(401).send(createAuthError('AUTH_NOT_INITIALIZED', 'Authentication system not properly configured'));
     
   } catch (error: any) {
     console.log('❌ Token verification failed:', error.message);
