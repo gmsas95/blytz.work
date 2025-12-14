@@ -8,17 +8,24 @@ let firebaseAuth: any = null;
 const isDokployTemplate = (value: string | undefined): boolean => {
   if (!value) return false;
   
+  // First, check if it's a placeholder value from .env.dokploy
+  if (value.includes('REPLACE_WITH_')) {
+    return true;
+  }
+  
   // Check for both regular and URL-encoded template syntax
   const decodedValue = decodeURIComponent(value);
   
+  // Only flag as template if it contains actual template syntax, not just any occurrence
   return (
-    value.includes('${environment') ||
-    value.includes('$${environment') ||
-    decodedValue.includes('${environment') ||
-    decodedValue.includes('$${environment') ||
-    value.includes('%24%7B%7B') || // URL-encoded ${{
-    value.includes('%7B%7B') ||   // URL-encoded {{
-    value.includes('%7D%7D')      // URL-encoded }}
+    // Direct template syntax
+    (value.includes('${{') && value.includes('}}')) ||
+    (value.includes('${environment') && value.includes('}')) ||
+    // URL-encoded template syntax
+    (value.includes('%24%7B%7B') && value.includes('%7D%7D')) ||
+    // Decoded template syntax
+    (decodedValue.includes('${{') && decodedValue.includes('}}')) ||
+    (decodedValue.includes('${environment') && decodedValue.includes('}'))
   );
 };
 
@@ -53,12 +60,20 @@ const getFirebaseConfig = () => {
     [key]: hasTemplate ? '❌ CONTAINS TEMPLATE' : (isValid ? '✅ VALID' : '❌ INVALID')
   })));
 
+  // Check if the three essential variables are valid (Firebase can work with just these)
+  const essentialVars = ['apiKey', 'authDomain', 'projectId'];
+  const essentialValid = essentialVars.filter(varName => {
+    const config = templateAnalysis.find(item => item.key === varName);
+    return config && config.isValid;
+  }).length;
+
   // Count how many have templates
   const templateCount = templateAnalysis.filter(item => item.hasTemplate).length;
   const validCount = templateAnalysis.filter(item => item.isValid).length;
 
-  if (validCount === 6) { // All 6 variables are valid
-    console.log('✅ All Firebase environment variables are valid (no templates detected)');
+  // If the three essential variables are valid, we can initialize Firebase
+  if (essentialValid === 3) {
+    console.log('✅ Essential Firebase variables are valid (apiKey, authDomain, projectId)');
     return rawConfig;
   }
 
@@ -80,9 +95,13 @@ const getFirebaseConfig = () => {
       appId: (window as any).NEXT_PUBLIC_FIREBASE_APP_ID,
     };
 
-    const validWindowConfig = Object.entries(windowConfig).every(([_, val]) => val && !isDokployTemplate(val));
+    // Check if essential variables are valid in window config
+    const windowEssentialValid = essentialVars.filter(varName => {
+      const value = windowConfig[varName as keyof typeof windowConfig];
+      return value && !isDokployTemplate(value);
+    }).length;
     
-    if (validWindowConfig && windowConfig.apiKey && windowConfig.authDomain && windowConfig.projectId) {
+    if (windowEssentialValid === 3) {
       console.log('✅ Using window object for Firebase config (runtime injection)');
       return windowConfig;
     }
@@ -94,7 +113,12 @@ const getFirebaseConfig = () => {
     if (savedConfig) {
       try {
         const parsed = JSON.parse(savedConfig);
-        if (parsed.apiKey && parsed.authDomain && parsed.projectId && !isDokployTemplate(parsed.apiKey)) {
+        const savedEssentialValid = essentialVars.filter(varName => {
+          const value = parsed[varName];
+          return value && !isDokployTemplate(value);
+        }).length;
+        
+        if (savedEssentialValid === 3) {
           console.log('✅ Using saved Firebase config from localStorage');
           return parsed;
         }
@@ -109,8 +133,9 @@ const getFirebaseConfig = () => {
   console.error('Configuration analysis:', {
     totalVariables: templateAnalysis.length,
     validVariables: validCount,
+    essentialValid: essentialValid,
     templateVariables: templateCount,
-    status: 'All variables either missing or contain template syntax'
+    status: 'Essential variables (apiKey, authDomain, projectId) are either missing or contain template syntax'
   });
   
   return null;
@@ -157,6 +182,10 @@ export const initializeFirebase = () => {
   
   if (!config) {
     console.error('❌ Cannot initialize Firebase - no valid configuration');
+    console.error('This usually means:');
+    console.error('1. Environment variables are not set in Dokploy');
+    console.error('2. Environment variables contain placeholder values (REPLACE_WITH_)');
+    console.error('3. Environment variables contain unresolved template syntax');
     firebaseApp = { name: '[DEFAULT]', options: {} };
     firebaseAuth = createMockAuth();
     return { app: firebaseApp, auth: firebaseAuth };
@@ -166,7 +195,9 @@ export const initializeFirebase = () => {
     hasApiKey: !!config.apiKey,
     hasAuthDomain: !!config.authDomain,
     hasProjectId: !!config.projectId,
-    apiKeyPreview: config.apiKey ? `${config.apiKey.substring(0, 10)}...` : 'none'
+    apiKeyPreview: config.apiKey ? `${config.apiKey.substring(0, 10)}...` : 'none',
+    authDomain: config.authDomain,
+    projectId: config.projectId
   });
 
   try {
@@ -177,8 +208,15 @@ export const initializeFirebase = () => {
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
     console.log('✅ Firebase initialized successfully at runtime');
+    console.log('🔗 Firebase app name:', firebaseApp.name);
   } catch (error) {
     console.error('❌ Runtime Firebase initialization failed:', error);
+    console.error('This could be due to:');
+    console.error('1. Invalid Firebase configuration values');
+    console.error('2. Network connectivity issues');
+    console.error('3. Firebase service unavailability');
+    
+    // Only fall back to mock mode if there's a critical error
     firebaseApp = { name: '[DEFAULT]', options: config };
     firebaseAuth = createMockAuth();
   }
