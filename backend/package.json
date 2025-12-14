@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server-enhanced.ts",
+    "dev:debug": "ts-node-dev --respawn src/server-enhanced-debug.ts",
     "build": "tsc",
+    "build:debug": "tsc src/server-enhanced-debug.ts --outDir dist --target es2020 --module commonjs --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck",
     "start": "node dist/server-enhanced.js",
+    "start:debug": "node dist/server-enhanced-debug.js",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "db:push": "prisma db push",

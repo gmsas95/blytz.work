@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -52,8 +50,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/blytzwork}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       # Firebase Backend Configuration (Admin SDK)
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
@@ -71,14 +69,14 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       # Other Configuration
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-minimum-32-characters-long}
+      JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      API_URL: ${API_URL:-https://gateway.blytz.work}
-      FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,gateway.blytz.work,sudo.blytz.work}
+      API_URL: ${API_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       HOSTNAME: "0.0.0.0"
     ports:
       - "3010:3000"
@@ -110,7 +108,7 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: blytzwork-frontend-final
     restart: unless-stopped
     environment:
@@ -124,7 +122,7 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     ports:
       - "3012:3001"
     depends_on:
