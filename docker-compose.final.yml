@@ -7,9 +7,9 @@ services:
     container_name: blytzwork-postgres-final
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
+      POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}
     volumes:
       - postgres_data_final:/var/lib/postgresql/data
     ports:
@@ -17,7 +17,7 @@ services:
     networks:
       - blytzwork-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -53,10 +53,15 @@ services:
     environment:
       NODE_ENV: staging
       PORT: 3000
-      DATABASE_URL: postgresql://postgres:password@postgres-final:5432/blytzwork
+      DATABASE_URL: postgresql://blytz_user:z46fkjvmqzf7z2woihbvo9hr2yloopac@postgres-final:5432/blytz_work
       REDIS_URL: redis://redis-final:6379
-      API_URL: http://localhost:3020
-      FRONTEND_URL: http://localhost:3021
+      API_URL: https://gateway.blytz.work/api
+      FRONTEND_URL: https://blytz.work
+      BACKEND_PORT: 3000
+      ALLOWED_ORIGINS: https://blytz.work,https://gateway.blytz.work
+      LOG_LEVEL: info
+      PLATFORM_FEE_PERCENTAGE: 10
+      PAYMENT_AMOUNT: 29.99
     ports:
       - "3020:3000"
     depends_on:
@@ -92,7 +97,7 @@ services:
     environment:
       NODE_ENV: staging
       PORT: 3001
-      NEXT_PUBLIC_API_URL: http://localhost:3020
+      NEXT_PUBLIC_API_URL: https://gateway.blytz.work/api
     ports:
       - "3021:3001"
     depends_on:
