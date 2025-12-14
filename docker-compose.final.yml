@@ -23,6 +23,24 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    # Initialize database with required schema
+    command: >
+      bash -c "
+      # Create blytz_user if it doesn't exist
+      psql -U postgres -d postgres -c \"CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';\" 2>/dev/null || echo 'User already exists'
+      
+      # Create database if it doesn't exist
+      psql -U postgres -d postgres -c \"CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Database already exists'
+      
+      # Grant privileges
+      psql -U postgres -d postgres -c \"GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB:-blytz_work} TO ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Privileges already granted'
+      
+      # Create blytz_hire schema if it doesn't exist
+      psql -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work} -c \"CREATE SCHEMA IF NOT EXISTS blytz_hire;\" 2>/dev/null || echo 'Schema already exists'
+      
+      # Bring PostgreSQL to foreground
+      exec postgres
+      "
 
   # Redis Cache
   redis-final:
