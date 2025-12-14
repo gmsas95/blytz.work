@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
       POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-z46fkjvmqzf7z2woihbvo9hr2yloopac}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
     volumes:
       - postgres_data_final:/var/lib/postgresql/data
@@ -54,7 +54,7 @@ services:
     environment:
       NODE_ENV: staging
       PORT: 3000
-      DATABASE_URL: postgresql://blytz_user:z46fkjvmqzf7z2woihbvo9hr2yloopac@postgres-final:5432/blytz_work
+      DATABASE_URL: postgresql://blytz_user:${POSTGRES_PASSWORD}@postgres-final:5432/blytz_work
       REDIS_URL: redis://redis-final:6379
       API_URL: https://gateway.blytz.work/api
       FRONTEND_URL: https://blytz.work
