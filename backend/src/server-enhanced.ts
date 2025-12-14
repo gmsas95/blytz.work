@@ -122,17 +122,20 @@ const start = async () => {
       'JWT_SECRET'
     ]);
     
-    // Step 2: Validate Firebase configuration
-    validateFirebaseConfig();
-    
-    // Step 3: Test database connection
+    // Step 2: Test database connection
     console.log('🔄 Testing database connection...');
     await prisma.$connect();
     console.log('✅ Database connected successfully');
     
-    // Step 4: Initialize Firebase Admin
+    // Step 3: Initialize Firebase Admin (non-blocking)
     console.log('🔄 Initializing Firebase Admin...');
-    initializeFirebaseAuth();
+    try {
+      validateFirebaseConfig();
+      initializeFirebaseAuth();
+    } catch (firebaseError: any) {
+      console.warn('⚠️ Firebase initialization failed, continuing in development mode:', firebaseError.message);
+      console.warn('💡 To fix: Update FIREBASE_* environment variables with actual Firebase credentials');
+    }
     
     // Create HTTP server with WebSocket support
     const server = createServer(app.server);
