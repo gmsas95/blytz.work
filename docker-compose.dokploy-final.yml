@@ -10,7 +10,6 @@ services:
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
     volumes:
       - postgres_data_unified:/var/lib/postgresql/data
-      - ./backend/prisma/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - dokploy-network
     healthcheck:
@@ -23,24 +22,45 @@ services:
       start_period: 30s
     command: >
       sh -c "
-      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
-        echo 'Database does not exist, will initialize...'
-        docker-entrypoint.sh postgres &
-        PID=$$
-        sleep 5
-        echo 'Creating user and database...'
-        psql -U postgres -c \"CREATE USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';\" || echo 'User already exists'
-        psql -U postgres -c \"CREATE DATABASE ${POSTGRES_DB} OWNER ${POSTGRES_USER};\" || echo 'Database already exists'
-        wait $$PID
-      else
-        echo 'Database already exists, starting normally...'
-        docker-entrypoint.sh postgres &
-        PID=$$
-        sleep 5
-        echo 'Ensuring user exists...'
-        psql -U postgres -c \"DO \\$\\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${POSTGRES_USER}') THEN CREATE USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}'; END IF; \\$\\$;\" || echo 'User setup complete'
-        wait $$PID
-      fi
+      # Fix existing database authentication issue
+      echo 'Starting PostgreSQL with user fix...'
+      
+      # Start PostgreSQL in background
+      docker-entrypoint.sh postgres &
+      PG_PID=$$
+      
+      # Wait for PostgreSQL to be ready
+      sleep 10
+      
+      # Connect to default postgres database and create/update user
+      psql -U postgres -d postgres -c \"
+        DO \$\$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${POSTGRES_USER}') THEN
+            CREATE USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';
+            RAISE NOTICE 'User ${POSTGRES_USER} created';
+          ELSE
+            ALTER USER ${POSTGRES_USER} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';
+            RAISE NOTICE 'User ${POSTGRES_USER} updated';
+          END IF;
+        END
+        \$\$;
+      \" || echo 'User setup completed'
+      
+      # Ensure database exists with correct owner
+      psql -U postgres -d postgres -c \"
+        DO \$\$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '${POSTGRES_DB}') THEN
+            CREATE DATABASE ${POSTGRES_DB} OWNER ${POSTGRES_USER};
+            RAISE NOTICE 'Database ${POSTGRES_DB} created';
+          END IF;
+        END
+        \$\$;
+      \" || echo 'Database setup completed'
+      
+      # Wait for PostgreSQL process to finish
+      wait \$PG_PID
       "
   redis:
     image: redis:7-alpine
