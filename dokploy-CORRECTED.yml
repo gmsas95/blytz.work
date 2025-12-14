@@ -1,0 +1,51 @@
+http:
+  routers:
+    dokploy-router-app:
+      rule: Host(`dokploy.docker.localhost`) && PathPrefix(`/`)
+      service: dokploy-service-app
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+    
+    dokploy-router-app-secure:
+      rule: Host(`admin.blytz.work`)
+      service: dokploy-service-app
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+    
+    # FIXED: Use Docker service discovery instead of manual service definition
+    blytz-frontend-router:
+      rule: Host(`blytz.work`) || Host(`www.blytz.work`)
+      service: blytzwork-frontend-final  # Use container name directly
+      entryPoints:
+        - web
+        - websecure
+      tls:
+        certResolver: letsencrypt
+    
+    # FIXED: Use Docker service discovery for backend
+    blytz-backend-router:
+      rule: Host(`api.blytz.work`)
+      service: blytzwork-backend-final   # Use container name directly
+      entryPoints:
+        - web
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    # Only manually defined service (Dokploy itself)
+    dokploy-service-app:
+      loadBalancer:
+        servers:
+          - url: http://dokploy:3000
+        passHostHeader: true
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
