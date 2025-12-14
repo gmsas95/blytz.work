@@ -27,8 +27,9 @@ describe('VA Profile Endpoints', () => {
       },
     });
 
-    // Mock Firebase token (in real tests, use Firebase Auth)
-    authToken = 'mock-firebase-token';
+    // In production tests, use real Firebase Auth tokens
+    // Mock tokens are disabled for security
+    authToken = null;
   });
 
   describe('POST /api/va/profile', () => {
@@ -121,7 +122,9 @@ describe('Company Endpoints', () => {
       },
     });
 
-    authToken = 'mock-firebase-token';
+    // In production tests, use real Firebase Auth tokens
+    // Mock tokens are disabled for security
+    authToken = null;
   });
 
   describe('POST /api/company', () => {
@@ -220,7 +223,9 @@ describe('Matching Endpoints', () => {
       },
     });
 
-    companyToken = 'mock-company-token';
+    // In production tests, use real Firebase Auth tokens
+    // Mock tokens are disabled for security
+    companyToken = null;
   });
 
   describe('GET /api/matches/discover', () => {

@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: blytzwork-unified-postgres
@@ -8,19 +7,34 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
     volumes:
       - postgres_data_unified:/var/lib/postgresql/data
-      - ./backend/prisma:/docker-entrypoint-initdb.d
+      - ./backend/prisma/fix-user.sh:/docker-entrypoint-initdb.d/01-fix-user.sh
+      - ./backend/prisma/postfix.sh:/postfix.sh
     networks:
       - dokploy-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  # Redis Cache
+    # healthcheck disabled for debugging
+    # healthcheck:
+    #   test:
+    #     - CMD-SHELL
+    #     - pg_isready -U postgres -d postgres
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 30
+    #   start_period: 60s
+    command: >
+      sh -c "
+      echo 'Starting PostgreSQL...'
+      if [ -d /var/lib/postgresql/data/base ]; then
+        echo 'Existing database found, running post-fix script...'
+        chmod +x /postfix.sh
+        exec /postfix.sh
+      else
+        echo 'New database, using normal initialization...'
+        exec docker-entrypoint.sh postgres
+      fi
+      "
   redis:
     image: redis:7-alpine
     container_name: blytzwork-unified-redis
@@ -30,12 +44,13 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        - CMD
+        - redis-cli
+        - ping
       interval: 10s
       timeout: 3s
       retries: 5
-
-  # Backend API
   backend-final:
     build:
       context: ./backend
@@ -47,7 +62,6 @@ services:
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-      # Firebase Backend Configuration (Admin SDK)
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
@@ -55,7 +69,6 @@ services:
       FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
       FIREBASE_APP_ID: ${FIREBASE_APP_ID}
       FIREBASE_MEASUREMENT_ID: ${FIREBASE_MEASUREMENT_ID}
-      # Firebase Frontend Configuration (Client SDK)
       NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
@@ -63,7 +76,6 @@ services:
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
-      # Other Configuration
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
@@ -72,14 +84,12 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
-      HOSTNAME: "0.0.0.0"
+      HOSTNAME: 0.0.0.0
     depends_on:
       - postgres
       - redis
     networks:
       - dokploy-network
-
-  # Frontend
   frontend-final:
     build:
       context: ./frontend
@@ -112,14 +122,24 @@ services:
       - backend-final
     networks:
       - dokploy-network
-
+    labels:
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-web.rule=Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-web.entrypoints=web
+      - traefik.http.services.blytzwork-webapp-uvey24-2-web.loadbalancer.server.port=3001
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-web.service=blytzwork-webapp-uvey24-2-web
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-web.middlewares=redirect-to-https@file
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-websecure.rule=Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-websecure.entrypoints=websecure
+      - traefik.http.services.blytzwork-webapp-uvey24-2-websecure.loadbalancer.server.port=3001
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-websecure.service=blytzwork-webapp-uvey24-2-websecure
+      - traefik.http.routers.blytzwork-webapp-uvey24-2-websecure.tls.certresolver=letsencrypt
+      - traefik.enable=true
 volumes:
   postgres_data_unified:
     driver: local
   redis_data_unified:
     driver: local
-
 networks:
   dokploy-network:
     external: true
-    name: dokploy-network

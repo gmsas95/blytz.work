@@ -7,9 +7,10 @@ services:
     container_name: blytzwork-postgres-final
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
+      POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
     volumes:
       - postgres_data_final:/var/lib/postgresql/data
     ports:
@@ -17,11 +18,29 @@ services:
     networks:
       - blytzwork-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
+    # Initialize database with required schema
+    command: >
+      bash -c "
+      # Create blytz_user if it doesn't exist
+      psql -U postgres -d postgres -c \"CREATE USER ${POSTGRES_USER:-blytz_user} WITH SUPERUSER PASSWORD '${POSTGRES_PASSWORD}';\" 2>/dev/null || echo 'User already exists'
+      
+      # Create database if it doesn't exist
+      psql -U postgres -d postgres -c \"CREATE DATABASE ${POSTGRES_DB:-blytz_work} OWNER ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Database already exists'
+      
+      # Grant privileges
+      psql -U postgres -d postgres -c \"GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB:-blytz_work} TO ${POSTGRES_USER:-blytz_user};\" 2>/dev/null || echo 'Privileges already granted'
+      
+      # Create blytz_hire schema if it doesn't exist
+      psql -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work} -c \"CREATE SCHEMA IF NOT EXISTS blytz_hire;\" 2>/dev/null || echo 'Schema already exists'
+      
+      # Bring PostgreSQL to foreground
+      exec postgres
+      "
 
   # Redis Cache
   redis-final:
@@ -53,10 +72,15 @@ services:
     environment:
       NODE_ENV: staging
       PORT: 3000
-      DATABASE_URL: postgresql://postgres:password@postgres-final:5432/blytzwork
+      DATABASE_URL: postgresql://blytz_user:${POSTGRES_PASSWORD}@postgres-final:5432/blytz_work
       REDIS_URL: redis://redis-final:6379
-      API_URL: http://localhost:3020
-      FRONTEND_URL: http://localhost:3021
+      API_URL: https://gateway.blytz.work/api
+      FRONTEND_URL: https://blytz.work
+      BACKEND_PORT: 3000
+      ALLOWED_ORIGINS: https://blytz.work,https://gateway.blytz.work
+      LOG_LEVEL: info
+      PLATFORM_FEE_PERCENTAGE: 10
+      PAYMENT_AMOUNT: 29.99
     ports:
       - "3020:3000"
     depends_on:
@@ -92,7 +116,7 @@ services:
     environment:
       NODE_ENV: staging
       PORT: 3001
-      NEXT_PUBLIC_API_URL: http://localhost:3020
+      NEXT_PUBLIC_API_URL: https://gateway.blytz.work/api
     ports:
       - "3021:3001"
     depends_on:

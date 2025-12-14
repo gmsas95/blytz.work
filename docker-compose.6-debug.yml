@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data_debug:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
@@ -52,7 +52,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/blytzwork}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
@@ -61,7 +61,7 @@ services:
       FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
       FIREBASE_APP_ID: ${FIREBASE_APP_ID}
       FIREBASE_MEASUREMENT_ID: ${FIREBASE_MEASUREMENT_ID}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3010}
@@ -103,12 +103,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/blytzwork}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - dokploy-network
     depends_on:

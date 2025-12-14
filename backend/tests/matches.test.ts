@@ -55,8 +55,10 @@ describe('Match Endpoints', () => {
       },
     });
 
-    companyToken = 'mock-company-token';
-    vaToken = 'mock-va-token';
+    // In production tests, use real Firebase Auth tokens
+    // Mock tokens are disabled for security
+    companyToken = null;
+    vaToken = null;
   });
 
   describe('GET /api/matches', () => {
@@ -187,7 +189,8 @@ describe('Match Endpoints', () => {
       // Company votes yes on VA
       await request(app.server)
         .post('/api/matches/vote')
-        .set('Authorization', 'mock-company-token')
+        // Mock tokens disabled for security
+        .set('Authorization', '')
         .send({
           jobPostingId: job.id,
           vaProfileId: va.id,
@@ -197,7 +200,8 @@ describe('Match Endpoints', () => {
       // VA votes yes on company/job
       await request(app.server)
         .post('/api/matches/vote')
-        .set('Authorization', 'mock-va-token')
+        // Mock tokens disabled for security
+        .set('Authorization', '')
         .send({
           jobPostingId: job.id,
           vaProfileId: va.id,

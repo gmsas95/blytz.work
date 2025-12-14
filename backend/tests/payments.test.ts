@@ -67,8 +67,10 @@ describe('Payment Endpoints', () => {
       },
     });
 
-    companyToken = 'mock-company-token';
-    vaToken = 'mock-va-token';
+    // In production tests, use real Firebase Auth tokens
+    // Mock tokens are disabled for security
+    companyToken = null;
+    vaToken = null;
   });
 
   describe('POST /api/payments/create-intent', () => {

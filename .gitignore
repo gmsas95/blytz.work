@@ -222,3 +222,12 @@ docker-compose.yml
 docker-compose.*.yml
 !docker-compose.[1-9]*.yml
 !docker-compose.dokploy-final.yml
+
+# Additional security exclusions
+scripts/*.log
+scripts/*.tmp
+scripts/env-*.sh
+scripts/backup-*.sh
+scripts/test-*.sh
+frontend/src/app/debug/
+docs/FIREBASE_*.md

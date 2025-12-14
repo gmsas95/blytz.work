@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
@@ -50,12 +50,12 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/blytzwork}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3000}
@@ -141,7 +141,7 @@ services:
       NODE_ENV: production
       N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE:-true}
       N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
-      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:-password}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
       N8N_EMAIL_MODE: ${N8N_EMAIL_MODE:-smtp}
       N8N_SMTP_HOST: ${N8N_SMTP_HOST}
       N8N_SMTP_PORT: ${N8N_SMTP_PORT:-587}
@@ -154,7 +154,7 @@ services:
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
       DB_POSTGRESDB_USER: ${POSTGRES_USER:-postgres}
-      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5678:5678"
     volumes:
