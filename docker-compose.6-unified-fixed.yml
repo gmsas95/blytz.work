@@ -17,22 +17,11 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
-      retries: 5
-    # Ensure database is created
-    entrypoint: >
-      bash -c "
-      if [ ! -f /var/lib/postgresql/data/PG_VERSION ]; then
-        docker-entrypoint.sh postgres &
-        sleep 5
-        psql -U ${POSTGRES_USER:-postgres} -d postgres -c 'CREATE DATABASE ${POSTGRES_DB:-blytzwork};' || true
-        kill %1
-        wait
-      fi
-      exec docker-entrypoint.sh postgres
-      "
+      retries: 10
+      start_period: 30s
 
   # Redis Cache
   redis:
@@ -81,10 +70,11 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
   # Frontend
   frontend-final:
@@ -121,10 +111,11 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
   # Nginx Reverse Proxy
   nginx:
@@ -143,7 +134,7 @@ services:
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -186,10 +177,11 @@ services:
     profiles:
       - automation
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
 volumes:
   postgres_data_unified:
