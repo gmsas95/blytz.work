@@ -1,6 +1,6 @@
 // Runtime authentication for Dokploy deployment
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User } from 'firebase/auth';
-import { onAuthStateChange } from './auth-runtime';
+import { onAuthStateChange } from './firebase-runtime-dokploy-fixed';
 
 export interface AuthUser {
   uid: string;

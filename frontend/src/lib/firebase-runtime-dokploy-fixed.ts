@@ -156,3 +156,14 @@ export const auth = (() => {
   const { auth } = getFirebase();
   return auth;
 })();
+
+// Export auth state change monitoring
+export const onAuthStateChange = (callback: (user: any) => void) => {
+  const { auth } = getFirebase();
+  if (!auth) {
+    console.warn('Firebase auth not initialized, cannot set up auth state change listener');
+    return;
+  }
+  
+  return auth.onAuthStateChanged(callback);
+};
