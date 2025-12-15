@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { auth } from './lib/firebase-runtime-dokploy-fixed';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,15 +13,19 @@ export function middleware(request: NextRequest) {
   ];
 
   // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
 
-  // If it's a protected route, we'll let the client-side handle auth checking
-  // This allows the pages to load and then redirect if needed
-  if (isProtectedRoute) {
-    // Continue to the page, client-side will handle auth checks
-    return NextResponse.next();
+  // Check if user is authenticated
+  const { auth: firebaseAuth } = auth();
+  const user = firebaseAuth.currentUser;
+
+  // If it's a protected route and user is not authenticated, redirect to auth
+  if (isProtectedRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    return NextResponse.redirect(url);
   }
 
   // For all other routes, continue as normal
