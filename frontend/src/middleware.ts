@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { auth } from './lib/firebase-runtime-dokploy-fixed';
+import { auth } from './lib/firebase-runtime-final-fixed';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
