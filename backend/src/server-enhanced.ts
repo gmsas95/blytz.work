@@ -4,24 +4,24 @@ import cors from "@fastify/cors";
 import env from "@fastify/env";
 import rateLimit from "@fastify/rate-limit";
 import { createServer } from 'http';
-import { WebSocketServer } from './services/websocketServer.js';
-import { validateFirebaseConfig } from './config/firebaseConfig.js';
-import { initializeFirebaseAuth } from './plugins/firebaseAuthDebug.js';
-import { validateRequiredEnvVars } from './utils/envValidator.js';
+import { WebSocketServer } from './services/websocketServer';
+import { validateFirebaseConfig } from './config/firebaseConfig';
+import { initializeFirebaseAuth } from './plugins/firebaseAuthDebug';
+import { validateRequiredEnvVars } from './utils/envValidator';
 
 // Import routes
-import healthRoutes from "./routes/health.js";
-import authRoutes from "./routes/auth.js";
-import uploadRoutes from "./routes/upload.js";
-import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
-import paymentRoutes from "./routes/payments.js";
-import vaRoutes from "./routes/va.js";
-import companyRoutes from "./routes/company.js";
-import contractsRoutes from "./routes/contracts.js";
-import chatRoutes from "./routes/chat-final-fix.js";
+import healthRoutes from "./routes/health";
+import authRoutes from "./routes/auth";
+import uploadRoutes from "./routes/upload";
+import jobMarketplaceRoutes from "./routes/jobMarketplace";
+import paymentRoutes from "./routes/payments";
+import vaRoutes from "./routes/va";
+import companyRoutes from "./routes/company";
+import contractsRoutes from "./routes/contracts";
+import chatRoutes from "./routes/chat-final-fix";
 
 // Import utilities
-import { prisma } from "./utils/prisma.js";
+import { prisma } from "./utils/prisma";
 
 // Environment schema
 const envSchema = {
@@ -71,7 +71,6 @@ app.register(env, {
 
 // Register routes
 app.register(healthRoutes);
-app.register(healthRoutes, { prefix: "/api" });
 app.register(authRoutes, { prefix: "/api" });
 app.register(uploadRoutes, { prefix: "/api" });
 app.register(jobMarketplaceRoutes, { prefix: "/api" });
