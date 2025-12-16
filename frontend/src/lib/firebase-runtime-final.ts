@@ -14,12 +14,16 @@ const getFirebaseConfig = () => {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   };
 
-  console.log('🔍 Firebase config check:', {
-    hasApiKey: !!config.apiKey,
-    hasAuthDomain: !!config.authDomain,
-    hasProjectId: !!config.projectId,
-    apiKeyPreview: config.apiKey ? config.apiKey.substring(0, 10) + '...' : 'missing'
-  });
+  // During build time, environment variables might not be available
+  // Only log during runtime (when window is available)
+  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    console.log('🔍 Firebase config check:', {
+      hasApiKey: !!config.apiKey,
+      hasAuthDomain: !!config.authDomain,
+      hasProjectId: !!config.projectId,
+      apiKeyPreview: config.apiKey ? config.apiKey.substring(0, 10) + '...' : 'missing'
+    });
+  }
 
   // Check if essential variables are present
   const essentialVars = ['apiKey', 'authDomain', 'projectId'];
@@ -28,40 +32,56 @@ const getFirebaseConfig = () => {
     return value && value.trim() !== '' && !value.includes('REPLACE_WITH_');
   });
 
-  if (hasEssentialVars) {
-    console.log('✅ Firebase configuration is valid');
-    return config;
+  // During build time, return null silently if config is incomplete
+  if (!hasEssentialVars) {
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('❌ Firebase configuration is incomplete');
+      console.error('Missing essential variables:', essentialVars.filter(varName => {
+        const value = config[varName as keyof typeof config];
+        return !value || value.trim() === '' || value.includes('REPLACE_WITH_');
+      }));
+    }
+    return null;
   }
 
-  console.error('❌ Firebase configuration is incomplete');
-  console.error('Missing essential variables:', essentialVars.filter(varName => {
-    const value = config[varName as keyof typeof config];
-    return !value || value.trim() === '' || value.includes('REPLACE_WITH_');
-  }));
-  
-  return null;
+  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    console.log('✅ Firebase configuration is valid');
+  }
+  return config;
 };
 
 // Mock Firebase services for when config is missing
 const createMockAuth = () => {
-  console.log('🔧 Using mock Firebase auth - configuration incomplete');
+  // Only log during runtime or development, not during build
+  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    console.log('🔧 Using mock Firebase auth - configuration incomplete');
+  }
+  
   return {
     currentUser: null,
     onAuthStateChanged: () => () => {},
     signInWithEmailAndPassword: async () => {
-      console.log('🔧 Mock signInWithEmailAndPassword called');
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signInWithEmailAndPassword called');
+      }
       return { user: null };
     },
     createUserWithEmailAndPassword: async () => {
-      console.log('🔧 Mock createUserWithEmailAndPassword called');
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock createUserWithEmailAndPassword called');
+      }
       return { user: null };
     },
     signInWithPopup: async () => {
-      console.log('🔧 Mock signInWithPopup called');
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signInWithPopup called');
+      }
       return { user: null };
     },
     signOut: async () => {
-      console.log('🔧 Mock signOut called');
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signOut called');
+      }
     },
     getAuth: () => createMockAuth(),
     GoogleAuthProvider: class {
@@ -79,7 +99,9 @@ export const initializeFirebase = () => {
   const config = getFirebaseConfig();
   
   if (!config) {
-    console.error('❌ Cannot initialize Firebase - configuration incomplete');
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('❌ Cannot initialize Firebase - configuration incomplete');
+    }
     firebaseApp = { name: '[DEFAULT]', options: {} };
     firebaseAuth = createMockAuth();
     return { app: firebaseApp, auth: firebaseAuth };
@@ -92,10 +114,14 @@ export const initializeFirebase = () => {
     
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
-    console.log('✅ Firebase initialized successfully');
-    console.log('🔗 Firebase app name:', firebaseApp.name);
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.log('✅ Firebase initialized successfully');
+      console.log('🔗 Firebase app name:', firebaseApp.name);
+    }
   } catch (error) {
-    console.error('❌ Firebase initialization failed:', error);
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('❌ Firebase initialization failed:', error);
+    }
     firebaseApp = { name: '[DEFAULT]', options: config };
     firebaseAuth = createMockAuth();
   }
@@ -112,7 +138,9 @@ export const getFirebase = () => {
 export const onAuthStateChange = (callback: (user: any) => void) => {
   const { auth } = getFirebase();
   if (!auth) {
-    console.warn('Auth not available for state monitoring');
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.warn('Auth not available for state monitoring');
+    }
     return () => {}; // Return unsubscribe function
   }
   
@@ -121,7 +149,9 @@ export const onAuthStateChange = (callback: (user: any) => void) => {
     const { onAuthStateChanged } = require('firebase/auth');
     return onAuthStateChanged(auth, callback);
   } catch (error) {
-    console.error('Failed to setup auth state monitoring:', error);
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('Failed to setup auth state monitoring:', error);
+    }
     return () => {}; // Return unsubscribe function
   }
 };
