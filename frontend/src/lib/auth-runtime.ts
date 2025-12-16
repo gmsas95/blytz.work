@@ -22,7 +22,11 @@ export const getToken = async (): Promise<string | null> => {
     
     const user = auth.currentUser;
     
-    console.log("🔍 Runtime auth check - user:", user);
+    console.log("🔍 Runtime auth check - user:", user ? JSON.stringify({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName
+    }) : 'null');
     
     if (user) {
       // Create a promise for token refresh to prevent concurrent requests
