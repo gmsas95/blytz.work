@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { app, auth as firebaseAuth } from './firebase';
+import { app, auth as firebaseAuth } from './firebase-runtime-final';
 
 // Token management utilities
 let tokenRefreshPromise: Promise<string | null> | null = null;

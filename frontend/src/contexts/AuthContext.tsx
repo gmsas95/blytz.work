@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthStateChange, signOutUser } from '@/lib/auth';
+import { onAuthStateChange, signOutUser } from '@/lib/auth-runtime';
 import { setupTokenRefresh } from '@/lib/auth-utils';
 
 interface AuthUser {
