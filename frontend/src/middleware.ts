@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
     // Dynamically import auth to avoid build-time issues
     let authModule;
     try {
-      authModule = require('./lib/firebase-runtime-final-fixed');
+      authModule = require('./lib/firebase-runtime-final');
     } catch (importError) {
       console.error('❌ Failed to import auth module:', importError);
       // Redirect to auth page if auth module can't be loaded
