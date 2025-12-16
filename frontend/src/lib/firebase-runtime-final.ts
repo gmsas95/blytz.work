@@ -21,7 +21,7 @@ const getFirebaseConfig = () => {
       hasApiKey: !!config.apiKey,
       hasAuthDomain: !!config.authDomain,
       hasProjectId: !!config.projectId,
-      apiKeyPreview: config.apiKey ? config.apiKey.substring(0, 10) + '...' : 'missing'
+      apiKeyPreview: config.apiKey ? '[REDACTED]' : 'missing'
     });
   }
 
