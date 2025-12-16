@@ -55,9 +55,11 @@ app.register(cors, {
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work"])
     : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://gateway.blytz.work"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range"],
-  exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin"],
+  exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 });
 
 app.register(env, {

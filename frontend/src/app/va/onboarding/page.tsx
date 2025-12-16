@@ -25,6 +25,16 @@ export default function VAOnboardingPage() {
 
   const handleSubmit = async () => {
     try {
+      // Ensure we have a fresh token before making the API call
+      const token = await getToken();
+      if (!token) {
+        toast.error("Authentication error", {
+          description: "Please sign in again",
+        });
+        router.push("/auth");
+        return;
+      }
+
       // Create VA profile
       await apiCall('/va/profile', {
         method: 'POST',
@@ -42,10 +52,14 @@ export default function VAOnboardingPage() {
         description: "Welcome to BlytzWork as a Virtual Assistant",
       });
 
-      router.push("/va/dashboard");
+      // Add a small delay to ensure the profile is created before redirecting
+      setTimeout(() => {
+        router.push("/va/dashboard");
+      }, 1000);
     } catch (error) {
+      console.error('VA Profile creation error:', error);
       toast.error("Failed to create profile", {
-        description: "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
       });
     }
   };

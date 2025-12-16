@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { apiCall } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -65,6 +67,7 @@ interface VAProfile {
 
 const VADashboard = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<VAProfile | null>(null);
   const [analytics, setAnalytics] = useState({
@@ -86,17 +89,14 @@ const VADashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!user) {
         router.push('/auth');
         return;
       }
 
-      // Fetch VA profile
-      const profileResponse = await fetch('/api/va/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Fetch VA profile using the centralized API call function
+      const profileResponse = await apiCall('/va/profile', {
+        method: 'GET'
       });
 
       if (profileResponse.ok) {
