@@ -7,8 +7,7 @@ import { Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
-import { getToken, setupTokenRefresh, createMockUser } from "@/lib/auth-utils";
+import { signInUser, registerUser, getAuthErrorMessage, getToken } from "@/lib/auth";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -42,18 +41,30 @@ export default function AuthPage() {
           
           // For demo purposes, accept any email/password and assign role based on email
           const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          authUser = await createMockUser(formData.email, formData.password, role);
+          
+          // Create a mock user object for demo purposes
+          authUser = {
+            uid: 'demo-user-' + Date.now(),
+            email: formData.email,
+            displayName: formData.name || formData.email.split('@')[0],
+          };
+          
+          toast.success(`Welcome back!`, {
+            description: "Successfully signed in to your account",
+          });
         }
         
         // Get Firebase ID token and store it for API calls
-        const token = await getToken();
-        if (!token) {
-          throw new Error('Failed to get authentication token');
+        let token;
+        try {
+          token = await getToken();
+          if (!token) {
+            throw new Error('Failed to get authentication token');
+          }
+        } catch (tokenError) {
+          console.log('Token generation failed, using mock token');
+          token = 'demo-token-' + Date.now();
         }
-        
-        toast.success(`Welcome back!`, {
-          description: "Successfully signed in to your account",
-        });
         
         // Check user role from backend with timeout
         try {
@@ -90,6 +101,7 @@ export default function AuthPage() {
                   return;
                 }
                 router.push("/employer/dashboard");
+                return;
               } catch {
                 router.push("/employer/onboarding");
                 return;
@@ -110,6 +122,7 @@ export default function AuthPage() {
                   return;
                 }
                 router.push("/va/dashboard");
+                return;
               } catch {
                 router.push("/va/onboarding");
                 return;
@@ -118,6 +131,7 @@ export default function AuthPage() {
               // User exists but no role - send to role selection
               console.log('User has no role, going to role selection');
               router.push("/select-role");
+              return;
             }
           } else if (profileResponse.status === 404) {
             // User doesn't exist in backend - create fallback user
@@ -149,13 +163,25 @@ export default function AuthPage() {
           // If Firebase is not configured or fails, use mock auth
           console.log('Firebase auth failed, using mock auth:', firebaseError.message);
           const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          authUser = await createMockUser(formData.email, formData.password, role);
+          
+          // Create a mock user object for demo purposes
+          authUser = {
+            uid: 'demo-user-' + Date.now(),
+            email: formData.email,
+            displayName: formData.name || formData.email.split('@')[0],
+          };
         }
         
         // Get Firebase ID token and store it for API calls
-        const token = await getToken();
-        if (!token) {
-          throw new Error('Failed to get authentication token');
+        let token;
+        try {
+          token = await getToken();
+          if (!token) {
+            throw new Error('Failed to get authentication token');
+          }
+        } catch (tokenError) {
+          console.log('Token generation failed, using mock token');
+          token = 'demo-token-' + Date.now();
         }
         
         // Get Firebase user UID and create basic profile in backend
@@ -236,22 +262,6 @@ export default function AuthPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="johndoe"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                   required
                   disabled={isLoading}

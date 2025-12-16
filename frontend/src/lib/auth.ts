@@ -72,6 +72,26 @@ export const signOutUser = async (): Promise<void> => {
   }
 };
 
+// Get Firebase ID token for API calls
+export const getToken = async (): Promise<string | null> => {
+  try {
+    const auth = await getAuthInstance();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      console.warn('No current user to get token from');
+      return null;
+    }
+    
+    const token = await user.getIdToken();
+    console.log('✅ Firebase ID token retrieved successfully');
+    return token;
+  } catch (error) {
+    console.error('Failed to get Firebase ID token:', error);
+    return null;
+  }
+};
+
 // Get auth error message from Firebase error
 export const getAuthErrorMessage = (error: any): string => {
   if (!error) return 'Unknown error occurred';

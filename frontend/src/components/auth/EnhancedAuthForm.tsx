@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
-import { getToken } from '@/lib/auth-utils';
+import { getToken } from '@/lib/auth';
 import { signInUser, registerUser } from '@/lib/auth';
 
 interface Message {
@@ -73,16 +73,16 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
 
       // Get Firebase token
       console.log('🔑 Getting Firebase token...');
-      const token = await getToken();
-      console.log('✅ Token obtained:', token ? token.substring(0, 20) + '...' : 'null');
+      const firebaseToken = await getToken();
+      console.log('✅ Token obtained:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
 
-      if (!token) {
+      if (!firebaseToken) {
         throw new Error('Failed to get authentication token');
       }
 
       // Sync with backend
       console.log('🔄 Syncing with backend...');
-      await syncWithBackend(token);
+      await syncWithBackend(firebaseToken);
       console.log('✅ Backend sync complete');
 
       // Redirect
@@ -131,11 +131,11 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       console.log('✅ Google user ID:', result.user.uid);
 
       // Get Firebase token
-      const token = await result.user.getIdToken();
+      const firebaseToken = await result.user.getIdToken();
       console.log('🔑 Firebase token obtained');
 
       // Sync with backend
-      await syncWithBackend(token);
+      await syncWithBackend(firebaseToken);
       
       // Redirect
       window.location.href = '/dashboard';
@@ -212,7 +212,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            placeholder="••••••••"
+            placeholder="••••••"
             disabled={loading}
           />
         </div>
@@ -243,8 +243,6 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
     </div>
   );
 }
-
-// Remove duplicate function - it's already defined above
 
 function mapAuthError(error: any): string {
   const errorMessages: Record<string, string> = {

@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthStateChange, signOutUser } from '@/lib/auth-runtime';
-import { setupTokenRefresh } from '@/lib/auth-utils';
+import { onAuthStateChange, signOutUser, getToken } from '@/lib/auth';
 
 interface AuthUser {
   uid: string;
@@ -24,9 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up token refresh monitoring
-    const unsubscribeTokenRefresh = setupTokenRefresh();
-    
     // Set up auth state change monitoring
     const unsubscribeAuth = onAuthStateChange((firebaseUser: User | null) => {
       if (firebaseUser) {
@@ -43,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       unsubscribeAuth();
-      unsubscribeTokenRefresh();
     };
   }, []);
 
