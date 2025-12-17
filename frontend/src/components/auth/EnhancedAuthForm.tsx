@@ -1,0 +1,262 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
+import { getToken } from '@/lib/auth';
+import { signInUser, registerUser } from '@/lib/auth';
+
+interface Message {
+  id: string;
+  content: string;
+  type: 'text' | 'image' | 'file';
+  status: 'sent' | 'delivered' | 'read';
+  createdAt: string;
+  isOwn: boolean;
+  sender: {
+    id: string;
+    name: string;
+    avatar?: string;
+    role: string;
+  };
+}
+
+export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const { user } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Debug environment on mount
+    try {
+      const envInfo = {
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        hasApiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+        appUrl: process.env.NEXT_PUBLIC_APP_URL
+      };
+      
+      console.log('🔍 Frontend environment debug:', envInfo);
+      setDebugInfo(envInfo);
+    } catch (error) {
+      console.error('❌ Environment debug error:', error);
+      setDebugInfo({ error: error.message });
+    }
+  }, []);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      console.log('🔍 Starting email authentication...');
+      console.log('📧 Email:', email);
+      console.log('🔑 Password length:', password.length);
+
+      let user;
+      
+      if (mode === 'register') {
+        console.log('📝 Creating new user...');
+        user = await registerUser(email, password);
+        console.log('✅ User created:', user.uid);
+      } else {
+        console.log('🔐 Signing in user...');
+        user = await signInUser(email, password);
+        console.log('✅ User signed in:', user.uid);
+      }
+
+      // Get Firebase token
+      console.log('🔑 Getting Firebase token...');
+      const firebaseToken = await getToken();
+      console.log('✅ Token obtained:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
+
+      if (!firebaseToken) {
+        throw new Error('Failed to get authentication token');
+      }
+
+      // Sync with backend
+      console.log('🔄 Syncing with backend...');
+      await syncWithBackend(firebaseToken);
+      console.log('✅ Backend sync complete');
+
+      // Redirect
+      window.location.href = '/dashboard';
+      
+    } catch (error: any) {
+      console.error('❌ Authentication failed:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      
+      setDebugInfo(prev => ({
+        ...prev,
+        lastError: {
+          code: error.code,
+          message: error.message,
+          email: email
+        }
+      }));
+      
+      setError(mapAuthError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      console.log('🔍 Starting Google authentication...');
+      
+      // Import Firebase auth dynamically for Google sign-in
+      const { getAuth } = await import('firebase/auth');
+      const { getFirebase } = await import('@/lib/firebase-runtime-final');
+      const { auth } = getFirebase();
+      
+      if (!auth) {
+        throw new Error('Firebase auth not initialized');
+      }
+      
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      console.log('✅ Google sign-in successful:', result.user.email);
+      console.log('✅ Google user ID:', result.user.uid);
+
+      // Get Firebase token
+      const firebaseToken = await result.user.getIdToken();
+      console.log('🔑 Firebase token obtained');
+
+      // Sync with backend
+      await syncWithBackend(firebaseToken);
+      
+      // Redirect
+      window.location.href = '/dashboard';
+      
+    } catch (error: any) {
+      console.error('❌ Google authentication failed:', error);
+      setError(mapAuthError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncWithBackend = async (firebaseToken: string) => {
+    try {
+      console.log('🔄 Starting backend sync...');
+      console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
+      
+      const response = await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${firebaseToken}`
+        },
+        body: JSON.stringify({
+          uid: 'will-be-set-by-backend',
+          email: 'will-be-set-by-backend'
+        })
+      });
+
+      console.log('📡 Backend response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Backend sync successful:', data);
+        return data;
+        
+      } else {
+        const error = await response.json();
+        console.error('❌ Backend sync failed:', error);
+        throw new Error(error.error || 'Backend sync failed');
+      }
+      
+    } catch (error) {
+      console.error('❌ Backend sync error:', error);
+      throw error;
+    }
+  };
+
+  return (
+    <div className="enhanced-auth-form">
+      {debugInfo && (
+        <div className="debug-info">
+          <small>Debug: {JSON.stringify(debugInfo, null, 2)}</small>
+        </div>
+      )}
+      
+      <form onSubmit={handleEmailAuth}>
+        <div className="form-group">
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="your@email.com"
+            disabled={loading}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••"
+            disabled={loading}
+          />
+        </div>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+        
+        <button type="submit" disabled={loading}>
+          {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+        </button>
+      </form>
+      
+      <div className="divider">
+        <span>OR</span>
+      </div>
+      
+      <button 
+        type="button" 
+        onClick={handleGoogleAuth}
+        disabled={loading}
+        className="google-auth-button"
+      >
+        Continue with Google
+      </button>
+    </div>
+  );
+}
+
+function mapAuthError(error: any): string {
+  const errorMessages: Record<string, string> = {
+    'auth/invalid-email': 'Invalid email address',
+    'auth/user-disabled': 'This account has been disabled',
+    'auth/user-not-found': 'No account found with this email',
+    'auth/wrong-password': 'Incorrect password',
+    'auth/email-already-in-use': 'An account already exists with this email',
+    'auth/weak-password': 'Password should be at least 6 characters',
+    'auth/popup-closed-by-user': 'Google sign-in was cancelled',
+    'auth/cancelled-popup-request': 'Sign-in request was cancelled',
+    'auth/network-request-failed': 'Network error. Please check your connection',
+    'auth/too-many-requests': 'Too many attempts. Please try again later'
+  };
+  
+  return errorMessages[error.code] || error.message || 'Authentication failed';
+}

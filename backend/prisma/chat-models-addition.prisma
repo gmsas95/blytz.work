@@ -1,0 +1,116 @@
+// Chat System Models - Add to existing schema.prisma
+
+model ChatRoom {
+  id              String    @id @default(cuid())
+  participant1Id  String    @map("participant1_id")
+  participant2Id  String    @map("participant2_id")
+  type            String    @default("direct") // direct, group, support
+  status          String    @default("active") // active, archived, blocked
+  lastMessageAt   DateTime? @map("last_message_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  participant1    User      @relation("participant1", fields: [participant1Id], references: [id])
+  participant2    User      @relation("participant2", fields: [participant2Id], references: [id])
+  messages        Message[]
+  
+  @@unique([participant1Id, participant2Id])
+  @@map("chat_rooms")
+  @@schema("blytz_hire")
+}
+
+model Message {
+  id          String      @id @default(cuid())
+  roomId      String      @map("room_id")
+  senderId    String      @map("sender_id")
+  content     String
+  type        String      @default("text") // text, image, file, system
+  status      String      @default("sent") // sent, delivered, read
+  metadata    Json?       // For file info, reactions, etc.
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  
+  room        ChatRoom    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender      User        @relation(fields: [senderId], references: [id])
+  
+  @@index([roomId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+  @@schema("blytz_hire")
+}
+
+model PushNotification {
+  id                Int       @id @default(autoincrement())
+  userId            String    @map("user_id")
+  platform          String    @map("platform") // 'ios' | 'android'
+  notificationType  String    @map("notification_type")
+  title             String
+  body              String
+  data              Json?
+  sentAt            DateTime  @default(now()) @map("sent_at")
+  readAt            DateTime? @map("read_at")
+  clickedAt         DateTime? @map("clicked_at")
+  status            String    @default("sent") // sent, delivered, read, failed
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("push_notifications")
+  @@schema("blytz_hire")
+}
+
+model MobileSession {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  deviceId    String   @unique @map("device_id") @db.VarChar(255)
+  platform    String   @map("platform") // 'ios' | 'android'
+  appVersion  String?  @map("app_version") @db.VarChar(20)
+  lastActive  DateTime @default(now()) @map("last_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("mobile_sessions")
+  @@schema("blytz_hire")
+}
+
+model SyncQueue {
+  id            Int       @id @default(autoincrement())
+  userId        String    @map("user_id")
+  deviceId      String    @map("device_id") @db.VarChar(255)
+  operation     String    @map("operation") @db.VarChar(50)
+  entityType    String    @map("entity_type") @db.VarChar(50)
+  entityId      String?   @map("entity_id")
+  data          Json
+  status        String    @default("pending") @map("status") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  processedAt   DateTime? @map("processed_at")
+  errorMessage  String?   @map("error_message")
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@index([createdAt])
+  @@map("sync_queue")
+  @@schema("blytz_hire")
+}
+
+// Update User model to add chat relations
+model User {
+  // ... existing fields ...
+  
+  // Chat system relations
+  deviceTokens      Json?           @map("device_tokens")
+  mobilePreferences Json?           @map("mobile_preferences")
+  lastPlatform      String?         @map("last_platform") @db.VarChar(20)
+  lastAppVersion    String?         @map("last_app_version") @db.VarChar(20)
+  
+  // Chat relations
+  chatRooms1        ChatRoom[]      @relation("participant1")
+  chatRooms2        ChatRoom[]      @relation("participant2")
+  messages          Message[]       @relation("messages")
+  pushNotifications PushNotification[]
+  mobileSessions    MobileSession[]
+  syncQueue         SyncQueue[]
+  
+  // ... existing relations ...
+}
