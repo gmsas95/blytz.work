@@ -26,6 +26,11 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
     console.log('🔍 Attempting sign in with email:', email);
     const auth = await getAuthInstance();
     
+    // Ensure auth is properly initialized
+    if (!auth) {
+      throw new Error('Firebase auth not initialized properly');
+    }
+    
     // Log auth instance details
     console.log('🔍 Auth instance details:', {
       appName: auth.app.name,
@@ -114,6 +119,13 @@ export const signOutUser = async (): Promise<void> => {
 export const getToken = async (): Promise<string | null> => {
   try {
     const auth = await getAuthInstance();
+    
+    // Ensure auth is properly initialized
+    if (!auth) {
+      console.warn('Firebase auth not initialized properly');
+      return null;
+    }
+    
     const user = auth.currentUser;
     
     if (!user) {
