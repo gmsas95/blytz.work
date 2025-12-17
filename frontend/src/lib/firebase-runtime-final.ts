@@ -50,45 +50,6 @@ const getFirebaseConfig = () => {
   return config;
 };
 
-// Mock Firebase services for when config is missing
-const createMockAuth = () => {
-  // Only log during runtime or development, not during build
-  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-    console.log('🔧 Using mock Firebase auth - configuration incomplete');
-  }
-  
-  return {
-    currentUser: null,
-    onAuthStateChanged: () => () => {},
-    signInWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    createUserWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock createUserWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    signInWithPopup: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithPopup called');
-      }
-      return { user: null };
-    },
-    signOut: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signOut called');
-      }
-    },
-    getAuth: () => createMockAuth(),
-    GoogleAuthProvider: class {
-      static PROVIDER_ID = 'google.com';
-    },
-  };
-};
 
 // Initialize Firebase at runtime
 export const initializeFirebase = () => {
@@ -99,12 +60,15 @@ export const initializeFirebase = () => {
   const config = getFirebaseConfig();
   
   if (!config) {
+    const error = new Error('Firebase configuration is incomplete. Please check environment variables.');
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('❌ Cannot initialize Firebase - configuration incomplete');
+      console.error('Required environment variables:');
+      console.error('- NEXT_PUBLIC_FIREBASE_API_KEY');
+      console.error('- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+      console.error('- NEXT_PUBLIC_FIREBASE_PROJECT_ID');
     }
-    firebaseApp = { name: '[DEFAULT]', options: {} };
-    firebaseAuth = createMockAuth();
-    return { app: firebaseApp, auth: firebaseAuth };
+    throw error;
   }
 
   try {
@@ -122,8 +86,7 @@ export const initializeFirebase = () => {
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('❌ Firebase initialization failed:', error);
     }
-    firebaseApp = { name: '[DEFAULT]', options: config };
-    firebaseAuth = createMockAuth();
+    throw new Error(`Firebase initialization failed: ${error.message}`);
   }
 
   return { app: firebaseApp, auth: firebaseAuth };
@@ -136,23 +99,20 @@ export const getFirebase = () => {
 
 // Export auth state change monitoring
 export const onAuthStateChange = (callback: (user: any) => void) => {
-  const { auth } = getFirebase();
-  if (!auth) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.warn('Auth not available for state monitoring');
-    }
-    return () => {}; // Return unsubscribe function
-  }
-  
-  // Import onAuthStateChanged dynamically
   try {
+    const { auth } = getFirebase();
+    if (!auth) {
+      throw new Error('Firebase auth not initialized');
+    }
+    
+    // Import onAuthStateChanged dynamically
     const { onAuthStateChanged } = require('firebase/auth');
     return onAuthStateChanged(auth, callback);
   } catch (error) {
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('Failed to setup auth state monitoring:', error);
     }
-    return () => {}; // Return unsubscribe function
+    throw error;
   }
 };
 

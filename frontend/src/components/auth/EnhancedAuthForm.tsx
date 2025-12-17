@@ -85,8 +85,26 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       await syncWithBackend(firebaseToken);
       console.log('✅ Backend sync complete');
 
-      // Redirect
-      window.location.href = '/dashboard';
+      // Redirect to appropriate dashboard based on user role
+      // Check if user has completed onboarding
+      const profileResponse = await fetch('/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${firebaseToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.profileComplete) {
+          window.location.href = profileData.role === 'va' ? '/va/dashboard' : '/employer/dashboard';
+        } else {
+          window.location.href = profileData.role === 'va' ? '/va/onboarding' : '/employer/onboarding';
+        }
+      } else {
+        // If profile check fails, redirect to general dashboard
+        window.location.href = '/dashboard';
+      }
       
     } catch (error: any) {
       console.error('❌ Authentication failed:', error);
@@ -137,8 +155,26 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       // Sync with backend
       await syncWithBackend(firebaseToken);
       
-      // Redirect
-      window.location.href = '/dashboard';
+      // Redirect to appropriate dashboard based on user role
+      // Check if user has completed onboarding
+      const profileResponse = await fetch('/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${firebaseToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        if (profileData.profileComplete) {
+          window.location.href = profileData.role === 'va' ? '/va/dashboard' : '/employer/dashboard';
+        } else {
+          window.location.href = profileData.role === 'va' ? '/va/onboarding' : '/employer/onboarding';
+        }
+      } else {
+        // If profile check fails, redirect to general dashboard
+        window.location.href = '/dashboard';
+      }
       
     } catch (error: any) {
       console.error('❌ Google authentication failed:', error);

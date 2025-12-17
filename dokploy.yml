@@ -23,6 +23,8 @@ http:
       entryPoints:
         - web
         - websecure
+      middlewares:
+        - redirect-to-https
       tls:
         certResolver: letsencrypt
     
@@ -33,12 +35,14 @@ http:
       entryPoints:
         - web
         - websecure
+      middlewares:
+        - redirect-to-https
       tls:
         certResolver: letsencrypt
     
     # Backend API routing - CRITICAL FIX
     blytzwork-backend-router:
-      rule: Host(`api.blytz.work`)
+      rule: Host(`gateway.blytz.work`)
       service: blytzwork-backend-service
       entryPoints:
         - web
@@ -55,6 +59,19 @@ http:
     
     # Frontend service
     blytzwork-service-app:
+      loadBalancer:
+        servers:
+          - url: http://blytzwork-frontend-final:3001
+        passHostHeader: true
+    
+    # Frontend staging service
+    blytzwork-service-app-staging:
+      loadBalancer:
+        servers:
+          - url: http://blytzwork-frontend-final:3001
+        passHostHeader: true
+    # Frontend prod service
+    blytzwork-service-app-prod:
       loadBalancer:
         servers:
           - url: http://blytzwork-frontend-final:3001

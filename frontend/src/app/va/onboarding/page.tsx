@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { apiCall } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 
 export default function VAOnboardingPage() {
   const router = useRouter();

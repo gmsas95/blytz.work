@@ -39,12 +39,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const { auth } = authModule;
+    const { getFirebase } = authModule;
     let firebaseAuth;
     
     try {
-      const authResult = auth();
-      firebaseAuth = authResult.auth;
+      const firebaseResult = getFirebase();
+      firebaseAuth = firebaseResult.auth;
     } catch (authError) {
       console.error('❌ Failed to initialize Firebase auth:', authError);
       // Redirect to auth page if Firebase auth can't be initialized
