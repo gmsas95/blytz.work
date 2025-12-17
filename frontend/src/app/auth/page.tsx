@@ -32,26 +32,16 @@ export default function AuthPage() {
       if (isLogin) {
         let authUser;
         
+        // Firebase authentication - no fallback to mock
         try {
-          // Try Firebase auth first
           authUser = await signInUser(formData.email, formData.password);
         } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          
-          // For demo purposes, accept any email/password and assign role based on email
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          
-          // Create a mock user object for demo purposes
-          authUser = {
-            uid: 'demo-user-' + Date.now(),
-            email: formData.email,
-            displayName: formData.name || formData.email.split('@')[0],
-          };
-          
-          toast.success(`Welcome back!`, {
-            description: "Successfully signed in to your account",
+          const errorMessage = getAuthErrorMessage(firebaseError);
+          setError(errorMessage);
+          toast.error("Authentication failed", {
+            description: errorMessage,
           });
+          return;
         }
         
         // Get Firebase ID token and store it for API calls
@@ -61,9 +51,12 @@ export default function AuthPage() {
           if (!token) {
             throw new Error('Failed to get authentication token');
           }
-        } catch (tokenError) {
-          console.log('Token generation failed, using mock token');
-          token = 'demo-token-' + Date.now();
+        } catch (tokenError: any) {
+          setError("Failed to get authentication token. Please try again.");
+          toast.error("Token generation failed", {
+            description: "Please try signing in again",
+          });
+          return;
         }
         
         // Check user role from backend with timeout
@@ -134,42 +127,34 @@ export default function AuthPage() {
               return;
             }
           } else if (profileResponse.status === 404) {
-            // User doesn't exist in backend - create fallback user
-            console.log('User not found in backend, using fallback...');
-            const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-            localStorage.setItem('userRole', emailRole);
-            router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+            // User doesn't exist in backend
+            setError("User profile not found. Please register first.");
+            return;
           } else {
-            // Other HTTP error - use fallback
+            // Other HTTP error
             throw new Error(`Backend returned ${profileResponse.status}`);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error checking user role:', error);
-          console.log('Backend is unavailable, using fallback...');
-          
-          // Backend is down - determine role from email and redirect to onboarding
-          const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-          console.log('Determining role from email:', emailRole);
-          localStorage.setItem('userRole', emailRole);
-          router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+          setError("Failed to verify user profile. Please try again.");
+          toast.error("Profile verification failed", {
+            description: error.message || "Please try again",
+          });
+          return;
         }
       } else {
         let authUser;
         
+        // Firebase registration - no fallback to mock
         try {
-          // Try Firebase auth first
           authUser = await registerUser(formData.email, formData.password, formData.name);
         } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          
-          // Create a mock user object for demo purposes
-          authUser = {
-            uid: 'demo-user-' + Date.now(),
-            email: formData.email,
-            displayName: formData.name || formData.email.split('@')[0],
-          };
+          const errorMessage = getAuthErrorMessage(firebaseError);
+          setError(errorMessage);
+          toast.error("Registration failed", {
+            description: errorMessage,
+          });
+          return;
         }
         
         // Get Firebase ID token and store it for API calls
@@ -179,9 +164,12 @@ export default function AuthPage() {
           if (!token) {
             throw new Error('Failed to get authentication token');
           }
-        } catch (tokenError) {
-          console.log('Token generation failed, using mock token');
-          token = 'demo-token-' + Date.now();
+        } catch (tokenError: any) {
+          setError("Failed to get authentication token. Please try again.");
+          toast.error("Token generation failed", {
+            description: "Please try registering again",
+          });
+          return;
         }
         
         // Get Firebase user UID and create basic profile in backend
