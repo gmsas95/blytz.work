@@ -224,7 +224,8 @@ scripts/env-*.sh
 scripts/backup-*.sh
 scripts/test-*.sh
 frontend/src/app/debug/
-docs/FIREBASE_*.md
+# Firebase documentation (keep specific files)
+# docs/FIREBASE_*.md
 
 # Exclude old/experimental docker compose files
 docker-compose.3-apigateway.yml

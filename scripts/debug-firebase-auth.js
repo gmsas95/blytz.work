@@ -3,12 +3,15 @@
 // Firebase Authentication Debug Script
 // This script helps diagnose Firebase authentication issues
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const https = require('https');
 
-// Firebase configuration from the error logs
-const FIREBASE_API_KEY = 'AIzaSyDy63cQFqr6DT7_y9pmhgASd8NX5GW0oio';
-const FIREBASE_AUTH_DOMAIN = 'blytzwork-9a3b4.firebaseapp.com'; // Based on project ID pattern
-const FIREBASE_PROJECT_ID = 'blytzwork-9a3b4'; // Extracted from typical pattern
+// Firebase configuration from environment variables
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const FIREBASE_AUTH_DOMAIN = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
 console.log('🔍 Firebase Authentication Debug Tool');
 console.log('=====================================');
