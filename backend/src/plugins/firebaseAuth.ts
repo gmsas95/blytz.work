@@ -28,15 +28,15 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
     // Replace literal \n with actual newlines if present
-    if (privateKey.includes('\\n')) {
+    if (privateKey && privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n');
     }
     
     // Ensure the key starts and ends correctly
-    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+    if (privateKey && !privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
       privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
     }
-    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+    if (privateKey && !privateKey.endsWith('-----END PRIVATE KEY-----')) {
       privateKey = privateKey + '\n-----END PRIVATE KEY-----';
     }
     
@@ -71,7 +71,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     });
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader && authHeader.split(" ")[1];
   
   if (!token) {
     return reply.code(401).send({ 
@@ -83,10 +83,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   try {
     // Production: Verify Firebase token
     if (firebaseAuth) {
-      const decodedToken = await firebaseAuth.verifyIdToken(token)
-        .catch(error => {
-          throw error;
-        });
+      const decodedToken = await firebaseAuth.verifyIdToken(token);
       
       // Get user from database to get role and profile status
       const user = await prisma.user.findUnique({
@@ -107,7 +104,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
         role: user.role as 'company' | 'va' | 'admin',
         profileComplete: user.profileComplete
       };
-    } 
+    }
     // Development mode disabled for security
     // Remove development tokens to prevent authentication bypass
     // Production fallback when Firebase is not initialized

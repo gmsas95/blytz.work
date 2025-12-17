@@ -116,13 +116,37 @@ export const onAuthStateChange = (callback: (user: any) => void) => {
   }
 };
 
-// Export app and auth for compatibility
+// Export app and auth for compatibility - lazy initialization
 export const app = (() => {
-  const { app } = getFirebase();
-  return app;
+  try {
+    // Only initialize Firebase if we're not in build time
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      const { app } = getFirebase();
+      return app;
+    }
+    return null;
+  } catch (error) {
+    // Return null during build time
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('Failed to initialize Firebase app:', error);
+    }
+    return null;
+  }
 })();
 
 export const auth = (() => {
-  const { auth } = getFirebase();
-  return auth;
+  try {
+    // Only initialize Firebase if we're not in build time
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      const { auth } = getFirebase();
+      return auth;
+    }
+    return null;
+  } catch (error) {
+    // Return null during build time
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('Failed to initialize Firebase auth:', error);
+    }
+    return null;
+  }
 })();
