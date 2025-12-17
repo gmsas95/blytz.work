@@ -74,13 +74,20 @@ export const initializeFirebase = () => {
   try {
     // Import Firebase modules dynamically
     const { initializeApp } = require('firebase/app');
-    const { getAuth } = require('firebase/auth');
+    const { getAuth, connectAuthEmulator } = require('firebase/auth');
     
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
+    
+    // Add additional debugging for auth instance
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.log('✅ Firebase initialized successfully');
       console.log('🔗 Firebase app name:', firebaseApp.name);
+      console.log('🔍 Auth settings:', {
+        apiKey: config.apiKey ? 'present' : 'missing',
+        authDomain: config.authDomain || 'missing',
+        projectId: config.projectId || 'missing'
+      });
     }
   } catch (error) {
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {

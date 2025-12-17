@@ -23,7 +23,16 @@ const getAuthInstance = () => {
 // Sign in user
 export const signInUser = async (email: string, password: string): Promise<AuthUser> => {
   try {
+    console.log('🔍 Attempting sign in with email:', email);
     const auth = await getAuthInstance();
+    
+    // Log auth instance details
+    console.log('🔍 Auth instance details:', {
+      appName: auth.app.name,
+      config: auth.config,
+      currentUser: auth.currentUser ? 'exists' : 'null'
+    });
+    
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
@@ -34,8 +43,18 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
       email: user.email!,
       displayName: user.displayName || undefined,
     };
-  } catch (error) {
-    console.error('Runtime sign in error:', error);
+  } catch (error: any) {
+    console.error('❌ Runtime sign in error:', error);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error details:', error);
+    
+    // Log additional network details
+    if (error.code === 'auth/network-request-failed') {
+      console.error('🌐 Network request failed - checking CORS/Firewall issues');
+      console.error('🌐 Current origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
+    }
+    
     throw error;
   }
 };
@@ -43,7 +62,16 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
 // Register new user
 export const registerUser = async (email: string, password: string, name?: string): Promise<AuthUser> => {
   try {
+    console.log('🔍 Attempting registration with email:', email);
     const auth = await getAuthInstance();
+    
+    // Log auth instance details
+    console.log('🔍 Auth instance details:', {
+      appName: auth.app.name,
+      config: auth.config,
+      currentUser: auth.currentUser ? 'exists' : 'null'
+    });
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
@@ -54,8 +82,18 @@ export const registerUser = async (email: string, password: string, name?: strin
       email: user.email!,
       displayName: user.displayName || name || undefined,
     };
-  } catch (error) {
-    console.error('Runtime registration error:', error);
+  } catch (error: any) {
+    console.error('❌ Runtime registration error:', error);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error details:', error);
+    
+    // Log additional network details
+    if (error.code === 'auth/network-request-failed') {
+      console.error('🌐 Network request failed - checking CORS/Firewall issues');
+      console.error('🌐 Current origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
+    }
+    
     throw error;
   }
 };

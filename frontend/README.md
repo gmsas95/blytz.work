@@ -1,6 +1,6 @@
-# Hyred Frontend
+# Blytz.Work Frontend
 
-Modern Next.js application for the Hyred hiring platform, featuring real-time authentication, job matching, and seamless user experience.
+Modern Next.js application for the Blytz.Work hiring platform, featuring real-time authentication, job matching, and seamless user experience.
 
 ## 🚀 Features
 
@@ -34,4 +34,4 @@ Modern Next.js application for the Hyred hiring platform, featuring real-time au
 
 ---
 
-© 2024 Blytz Work. All rights reserved.
+© 2024 Blytz.Work. All rights reserved.

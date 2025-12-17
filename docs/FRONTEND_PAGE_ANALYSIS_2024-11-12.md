@@ -1,8 +1,8 @@
 # 🗺️ **FRONTEND PAGE MAP & ANALYSIS**
 
 **Generated**: November 11, 2024  
-**App**: BlytzHire Frontend  
-**Status**: Live at https://hyred.blytz.app  
+**App**: Blytz.Work Frontend  
+**Status**: Live at https://blytz.work
 
 ## 📋 **PAGE OVERVIEW (14 Total Pages)**
 
