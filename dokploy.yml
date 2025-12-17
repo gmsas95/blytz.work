@@ -49,6 +49,8 @@ http:
         - websecure
       tls:
         certResolver: letsencrypt
+      middlewares:
+        - firebase-allowlist
 
   services:
     dokploy-service-app:
@@ -89,3 +91,8 @@ http:
       redirectScheme:
         scheme: https
         permanent: true
+    firebase-allowlist:
+      headers:
+        accessControlAllowOrigin: "*"
+        accessControlAllowMethods: "GET, POST, PUT, DELETE, OPTIONS"
+        accessControlAllowHeaders: "Content-Type, Authorization, X-Requested-With"

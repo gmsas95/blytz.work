@@ -59,6 +59,12 @@ app.register(cors, {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
+    // Always allow Firebase domains for authentication
+    const firebaseDomains = ["https://identitytoolkit.googleapis.com", "https://firebase.googleapis.com"];
+    if (firebaseDomains.some(domain => origin?.includes(domain))) {
+      return callback(null, true);
+    }
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
