@@ -1,9 +1,30 @@
 import { getEnvVar } from '../utils/envValidator.js';
 
+// Handle both literal \n and single-line formats for private key
+let privateKey = getEnvVar('FIREBASE_PRIVATE_KEY');
+
+if (privateKey && privateKey.includes('\\n')) {
+  privateKey = privateKey.replace(/\\n/g, '\n');
+} else if (privateKey && !privateKey.includes('\n')) {
+  // Handle single-line key format
+  privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n');
+  privateKey = privateKey.replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+  
+  // Add newlines every 64 characters for key content
+  const keyContent = privateKey.match(/-----BEGIN PRIVATE KEY-----(.+)-----END PRIVATE KEY-----/s);
+  if (keyContent && keyContent[1]) {
+    const keyParts = keyContent[1].match(/.{1,64}/g);
+    if (keyParts) {
+      const formattedContent = keyParts.join('\n');
+      privateKey = '-----BEGIN PRIVATE KEY-----\n' + formattedContent + '\n-----END PRIVATE KEY-----';
+    }
+  }
+}
+
 export const firebaseConfig = {
   projectId: getEnvVar('FIREBASE_PROJECT_ID'),
   clientEmail: getEnvVar('FIREBASE_CLIENT_EMAIL'),
-  privateKey: getEnvVar('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n'),
+  privateKey: privateKey,
 };
 
 export function validateFirebaseConfig(): void {
