@@ -224,6 +224,7 @@ scripts/*.tmp
 scripts/env-*.sh
 scripts/backup-*.sh
 scripts/test-*.sh
+!scripts/test-minimal-config.sh
 frontend/src/app/debug/
 # Firebase documentation (keep specific files)
 # docs/FIREBASE_*.md
