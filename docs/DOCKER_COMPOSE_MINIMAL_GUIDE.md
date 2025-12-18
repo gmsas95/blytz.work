@@ -73,7 +73,7 @@ services:
       retries: 5
 
   # Backend API - Fixed port configuration for Dokploy
-  backend:
+  backend-final:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -110,7 +110,7 @@ services:
       start_period: 60s
 
   # Frontend - Fixed configuration for proper backend communication
-  frontend:
+  frontend-final:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -142,7 +142,7 @@ services:
     ports:
       - "3001:3001"  # Host port 3001 -> Container port 3001 (matches Dokploy config)
     depends_on:
-      backend:
+      backend-final:
         condition: service_healthy
     networks:
       - blytzwork-network
