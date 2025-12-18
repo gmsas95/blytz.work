@@ -77,7 +77,7 @@ http:
           - url: http://blytzwork-frontend-final:3001
         passHostHeader: true
     
-    # Backend service - THIS WAS MISSING!
+    # Backend service - FIXED PORT
     blytzwork-backend-service:
       loadBalancer:
         servers:

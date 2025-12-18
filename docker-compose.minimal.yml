@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3000  # Container internal port
+      PORT: 3002  # Container internal port matches Dokploy expectation
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
@@ -62,8 +62,7 @@ services:
       API_URL: ${API_URL:-https://gateway.blytz.work}
       FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://staging.blytz.work,https://www.blytz.work}
-    ports:
-      - "3002:3000"  # Host port 3002 -> Container port 3000 (matches Dokploy config)
+    # Remove host port mapping to use Traefik routing
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,8 +70,9 @@ services:
         condition: service_healthy
     networks:
       - blytzwork-network
+      - dokploy-network  # Connect to dokploy network for Traefik routing
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -108,13 +108,13 @@ services:
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
-    ports:
-      - "3001:3001"  # Host port 3001 -> Container port 3001 (matches Dokploy config)
+    # Remove host port mapping to use Traefik routing
     depends_on:
       backend-final:
         condition: service_healthy
     networks:
       - blytzwork-network
+      - dokploy-network  # Connect to dokploy network for Traefik routing
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/"]
       interval: 30s
@@ -133,3 +133,6 @@ networks:
     driver: bridge
     # Create internal network for service discovery
     # This ensures containers can communicate by name
+  dokploy-network:
+    external: true
+    # Connect to external dokploy network for Traefik routing
