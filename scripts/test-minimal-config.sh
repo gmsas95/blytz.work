@@ -108,8 +108,8 @@ check_container_health() {
 # Check each container
 check_container_health "blytzwork-postgres"
 check_container_health "blytzwork-redis"
-check_container_health "blytzwork-backend-final"
-check_container_health "blytzwork-frontend-final"
+check_container_health "blytzwork-backend"
+check_container_health "blytzwork-frontend"
 
 # Test 5: Test service connectivity
 print_status "Test 5: Testing service connectivity..."
@@ -132,7 +132,7 @@ fi
 print_status "Test 6: Testing inter-container communication..."
 
 # Test if frontend can reach backend
-if docker exec blytzwork-frontend-final curl -f http://blytzwork-backend-final:3000/health > /dev/null 2>&1; then
+if docker exec blytzwork-frontend curl -f http://blytzwork-backend:3000/health > /dev/null 2>&1; then
     print_status "✅ Frontend can communicate with backend"
 else
     print_error "❌ Frontend cannot communicate with backend"
@@ -156,15 +156,15 @@ check_logs_for_errors() {
 
 check_logs_for_errors "blytzwork-postgres"
 check_logs_for_errors "blytzwork-redis"
-check_logs_for_errors "blytzwork-backend-final"
-check_logs_for_errors "blytzwork-frontend-final"
+check_logs_for_errors "blytzwork-backend"
+check_logs_for_errors "blytzwork-frontend"
 
 # Test 8: Network connectivity test
 print_status "Test 8: Testing network configuration..."
 
 # Check if containers are on the same network
-backend_network=$(docker inspect blytzwork-backend-final --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' 2>/dev/null)
-frontend_network=$(docker inspect blytzwork-frontend-final --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' 2>/dev/null)
+backend_network=$(docker inspect blytzwork-backend --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' 2>/dev/null)
+frontend_network=$(docker inspect blytzwork-frontend --format='{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' 2>/dev/null)
 
 if [ "$backend_network" == "$frontend_network" ] && [ -n "$backend_network" ]; then
     print_status "✅ Backend and Frontend are on the same network"

@@ -4,8 +4,8 @@
 
 The service naming issue in `docker-compose.minimal.yml` has been fixed and committed to Git. The changes resolve the "service not found" error during deployment by updating service names to match what Dokploy expects:
 
-- `frontend` → `frontend-final`
-- `backend` → `backend-final`
+- `frontend-final` → `blytzwork-frontend`
+- `backend-final` → `blytzwork-backend`
 
 ## Quick Deployment Steps
 
@@ -21,8 +21,8 @@ git pull origin main
 
 1. **Update your Dokploy project configuration** to use the `docker-compose.minimal.yml` file
 2. **Verify the service names** in your Dokploy routing configuration match:
-   - Frontend: `blytzwork-frontend-final:3001`
-   - Backend: `blytzwork-backend-final:3002`
+   - Frontend: `blytzwork-frontend:3001`
+   - Backend: `blytzwork-backend:3000`
 3. **Trigger a new deployment** in Dokploy
 
 ### 3. Verify the Deployment
@@ -90,7 +90,7 @@ cd /path/to/blytz.work
 git pull origin main
 
 # Verify the fixed file is present
-cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
+cat docker-compose.minimal.yml | grep -E "(blytzwork-backend|blytzwork-frontend)"
 ```
 
 #### Step 2: Update Dokploy Configuration
@@ -99,8 +99,8 @@ cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
 2. Navigate to your BlytzWork project
 3. Update the Docker Compose file path to point to `docker-compose.minimal.yml`
 4. Ensure the service names in your routing configuration match:
-   - Frontend service: `blytzwork-frontend-final`
-   - Backend service: `blytzwork-backend-final`
+   - Frontend service: `blytzwork-frontend`
+   - Backend service: `blytzwork-backend`
 5. Save the configuration
 
 #### Step 3: Deploy the Application
@@ -115,7 +115,7 @@ cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
    ```bash
    docker-compose -f docker-compose.minimal.yml ps
    ```
-   You should see all services (postgres, redis, backend-final, frontend-final) as "healthy" or "running".
+   You should see all services (postgres, redis, blytzwork-backend, blytzwork-frontend) as "healthy" or "running".
 
 2. **Test Health Endpoints**:
    ```bash
@@ -136,8 +136,8 @@ cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
 
 1. **Check Logs**:
    ```bash
-   docker-compose -f docker-compose.minimal.yml logs backend-final
-   docker-compose -f docker-compose.minimal.yml logs frontend-final
+   docker-compose -f docker-compose.minimal.yml logs blytzwork-backend
+   docker-compose -f docker-compose.minimal.yml logs blytzwork-frontend
    ```
 
 2. **Verify Environment Variables**:
@@ -151,13 +151,13 @@ cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
    docker exec blytzwork-backend-final ping postgres
    
    # Test frontend to backend connectivity
-   docker exec blytzwork-frontend-final curl http://blytzwork-backend-final:3000/health
+   docker exec blytzwork-frontend curl http://blytzwork-backend:3000/health
    ```
 
 ### If 503 Errors Persist
 
-1. **Verify Service Names**: Ensure Dokploy is routing to the correct service names (`blytzwork-frontend-final` and `blytzwork-backend-final`)
-2. **Check Port Mappings**: Verify ports 3001 (frontend) and 3002 (backend) are correctly mapped
+1. **Verify Service Names**: Ensure Dokploy is routing to the correct service names (`blytzwork-frontend` and `blytzwork-backend`)
+2. **Check Port Mappings**: Verify ports 3001 (frontend) and 3000 (backend) are correctly mapped
 3. **Review Health Checks**: Ensure all services pass their health checks
 
 ### If Authentication Issues Occur
@@ -171,12 +171,12 @@ cat docker-compose.minimal.yml | grep -E "(backend-final|frontend-final)"
 The issue was that the service names in `docker-compose.minimal.yml` didn't match what Dokploy expected:
 
 1. **Service Name Mismatch**:
-   - Before: `frontend` and `backend`
-   - After: `frontend-final` and `backend-final`
+   - Before: `frontend-final` and `backend-final`
+   - After: `blytzwork-frontend` and `blytzwork-backend`
 
 2. **Container Name Consistency**:
-   - Frontend container: `blytzwork-frontend-final`
-   - Backend container: `blytzwork-backend-final`
+   - Frontend container: `blytzwork-frontend`
+   - Backend container: `blytzwork-backend`
 
 3. **Dependency Updates**:
    - Frontend now correctly depends on `backend-final` instead of `backend`

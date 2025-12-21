@@ -217,6 +217,7 @@ docker-compose.*.yml
 !docker-compose.1-infrastructure.yml
 !docker-compose.2-database.yml
 !docker-compose.minimal.yml
+!docker-compose.consolidated.fixed.yml
 
 # Additional security exclusions
 scripts/*.log

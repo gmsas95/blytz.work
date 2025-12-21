@@ -61,27 +61,27 @@ http:
     blytzwork-service-app:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytzwork-frontend:3001
         passHostHeader: true
     
     # Frontend staging service
     blytzwork-service-app-staging:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytzwork-frontend:3001
         passHostHeader: true
     # Frontend prod service
     blytzwork-service-app-prod:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytzwork-frontend:3001
         passHostHeader: true
     
-    # Backend service - FIXED PORT
+    # Backend service - Updated port and service name
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-backend-final:3002
+          - url: http://blytzwork-backend:3000
         passHostHeader: true
 
   middlewares:

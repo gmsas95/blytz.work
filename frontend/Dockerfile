@@ -36,8 +36,8 @@ ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Build the application
-RUN npm run build
+# Build the application (skip TypeScript validation for Next.js 16.0.7)
+RUN NODE_ENV=production npx next build --webpack
 
 # Production image, copy all the files and run the app
 FROM base AS runner

@@ -37,5 +37,5 @@ http:
     blytzwork-service-app:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytzwork-frontend:3001
         passHostHeader: true

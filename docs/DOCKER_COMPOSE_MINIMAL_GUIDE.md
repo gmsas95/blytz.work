@@ -73,11 +73,11 @@ services:
       retries: 5
 
   # Backend API - Fixed port configuration for Dokploy
-  backend-final:
+  blytzwork-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytzwork-backend-final
+    container_name: blytzwork-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -110,7 +110,7 @@ services:
       start_period: 60s
 
   # Frontend - Fixed configuration for proper backend communication
-  frontend-final:
+  blytzwork-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -124,7 +124,7 @@ services:
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
-    container_name: blytzwork-frontend-final
+    container_name: blytzwork-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -142,7 +142,7 @@ services:
     ports:
       - "3001:3001"  # Host port 3001 -> Container port 3001 (matches Dokploy config)
     depends_on:
-      backend-final:
+      blytzwork-backend:
         condition: service_healthy
     networks:
       - blytzwork-network
@@ -232,8 +232,8 @@ ALLOWED_ORIGINS="https://blytz.work,https://staging.blytz.work,https://www.blytz
 ### 3. Deploy with Dokploy
 1. Update your Dokploy project to use `docker-compose.minimal.yml`
 2. Ensure the domain routing matches the service names:
-   - Frontend: `blytzwork-frontend-final:3001`
-   - Backend: `blytzwork-backend-final:3002`
+   - Frontend: `blytzwork-frontend:3001`
+   - Backend: `blytzwork-backend:3000`
 3. Deploy and monitor the health checks
 
 ### 4. Verify Deployment
@@ -262,7 +262,7 @@ If you still encounter 503 errors:
 
 2. **Check Network Connectivity**: Test service communication:
    ```bash
-   docker exec blytzwork-frontend-final curl http://blytzwork-backend-final:3000/health
+   docker exec blytzwork-frontend curl http://blytzwork-backend:3000/health
    ```
 
 3. **Check Environment Variables**: Verify all required variables are set:
