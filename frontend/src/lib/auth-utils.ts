@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { app, auth as firebaseAuth } from './firebase';
+import { getFirebase } from './firebase-simplified';
 
 // Token management utilities
 let tokenRefreshPromise: Promise<string | null> | null = null;
@@ -11,18 +11,21 @@ export const getToken = async (): Promise<string | null> => {
       return await tokenRefreshPromise;
     }
     
-    const auth = firebaseAuth || getAuth(app);
-    const user = auth.currentUser;
+    const { auth } = getFirebase();
+    if (!auth) {
+      console.error('Firebase auth not initialized');
+      return null;
+    }
     
-    // Debug: Firebase user check
+    const user = auth.currentUser;
     
     if (user) {
       // Create a promise for token refresh to prevent concurrent requests
       tokenRefreshPromise = user.getIdToken(true).then(token => {
-        // Debug: Firebase token refreshed
+        console.log('✅ Firebase token refreshed successfully');
         return token;
       }).catch(error => {
-        // Debug: Error getting auth token
+        console.error('Error getting auth token:', error);
         return null;
       }).finally(() => {
         tokenRefreshPromise = null;
@@ -31,17 +34,22 @@ export const getToken = async (): Promise<string | null> => {
       return await tokenRefreshPromise;
     }
     
-    // Debug: No Firebase user found
+    console.log('No Firebase user found');
     return null; // No user logged in
   } catch (error) {
-    // Debug: Error getting auth token
+    console.error('Error getting auth token:', error);
     return null; // Return null on error instead of dev tokens
   }
 };
 
 // Monitor auth state and automatically update token in localStorage
 export const setupTokenRefresh = (): (() => void) => {
-  const auth = firebaseAuth || getAuth(app);
+  const { auth } = getFirebase();
+  if (!auth) {
+    console.error('Firebase auth not initialized, cannot set up token refresh');
+    return () => {}; // Return empty unsubscribe function
+  }
+  
   let isUpdating = false;
   
   const unsubscribe = onAuthStateChanged(auth, async (user) => {

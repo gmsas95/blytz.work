@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { getToken } from '@/lib/auth-utils';
+import { getFirebase } from '@/lib/firebase-simplified';
 
 interface Message {
   id: string;
@@ -60,13 +61,18 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
 
       let userCredential;
       
+      const { auth } = getFirebase();
+      if (!auth) {
+        throw new Error('Firebase authentication is not configured');
+      }
+
       if (mode === 'register') {
         console.log('📝 Creating new user...');
-        userCredential = await createUserWithEmailAndPassword(getAuth(), email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
         console.log('✅ User created:', userCredential.user.uid);
       } else {
         console.log('🔐 Signing in user...');
-        userCredential = await signInWithEmailAndPassword(getAuth(), email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
         console.log('✅ User signed in:', userCredential.user.uid);
       }
 
@@ -110,8 +116,13 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
     try {
       console.log('🔍 Starting Google authentication...');
       
+      const { auth } = getFirebase();
+      if (!auth) {
+        throw new Error('Firebase authentication is not configured');
+      }
+
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(getAuth(), provider);
+      const result = await signInWithPopup(auth, provider);
       
       console.log('✅ Google sign-in successful:', result.user.email);
       console.log('✅ Google user ID:', result.user.uid);
@@ -146,8 +157,8 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
           'Authorization': `Bearer ${firebaseToken}`
         },
         body: JSON.stringify({
-          uid: getAuth().currentUser?.uid,
-          email: getAuth().currentUser?.email
+          uid: getFirebase().auth?.currentUser?.uid,
+          email: getFirebase().auth?.currentUser?.email
         })
       });
 
@@ -242,8 +253,8 @@ async function syncWithBackend(firebaseToken: string) {
         'Authorization': `Bearer ${firebaseToken}`
       },
       body: JSON.stringify({
-        uid: getAuth().currentUser?.uid,
-        email: getAuth().currentUser?.email
+        uid: getFirebase().auth?.currentUser?.uid,
+        email: getFirebase().auth?.currentUser?.email
       })
     });
 

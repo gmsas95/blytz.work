@@ -1,7 +1,7 @@
 // Simplified User Management for MVP
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
-import { verifyAuth } from "../plugins/firebaseAuth.js";
+import { verifyAuth } from "../plugins/firebaseAuth-simplified.js";
 import { z } from "zod";
 import admin from "firebase-admin";
 

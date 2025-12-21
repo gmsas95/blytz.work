@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
-import { getToken, setupTokenRefresh, createMockUser } from "@/lib/auth-utils";
+import { getToken, setupTokenRefresh } from "@/lib/auth-utils";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -31,19 +31,8 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        let authUser;
-        
-        try {
-          // Try Firebase auth first
-          authUser = await signInUser(formData.email, formData.password);
-        } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          
-          // For demo purposes, accept any email/password and assign role based on email
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          authUser = await createMockUser(formData.email, formData.password, role);
-        }
+        // Sign in with Firebase
+        const authUser = await signInUser(formData.email, formData.password);
         
         // Get Firebase ID token and store it for API calls
         const token = await getToken();
@@ -140,17 +129,8 @@ export default function AuthPage() {
           router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
         }
       } else {
-        let authUser;
-        
-        try {
-          // Try Firebase auth first
-          authUser = await registerUser(formData.email, formData.password, formData.name);
-        } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          authUser = await createMockUser(formData.email, formData.password, role);
-        }
+        // Register with Firebase
+        const authUser = await registerUser(formData.email, formData.password, formData.name);
         
         // Get Firebase ID token and store it for API calls
         const token = await getToken();

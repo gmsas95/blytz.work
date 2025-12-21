@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
-import { verifyAuth } from "../plugins/firebaseAuth.js";
+import { verifyAuth } from "../plugins/firebaseAuth-simplified.js";
 import { z } from "zod";
 
 export default async function chatRoutes(app: FastifyInstance) {

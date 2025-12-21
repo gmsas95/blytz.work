@@ -3,6 +3,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import env from "@fastify/env";
 import rateLimit from "@fastify/rate-limit";
+import { initializeFirebaseAdmin } from "./config/firebaseConfig-simplified.js";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
@@ -107,6 +108,16 @@ app.setErrorHandler((error, _request, reply) => {
 // Start server
 const start = async () => {
   try {
+    // Initialize Firebase Admin (non-blocking)
+    console.log('🔄 Initializing Firebase Admin...');
+    try {
+      initializeFirebaseAdmin();
+      console.log('✅ Firebase Admin initialized successfully');
+    } catch (firebaseError: any) {
+      console.warn('⚠️ Firebase initialization failed, continuing in development mode:', firebaseError.message);
+      console.warn('💡 To fix: Update FIREBASE_* environment variables with actual Firebase credentials');
+    }
+
     // Initialize database connection (with fallback)
     try {
       await prisma.$connect();

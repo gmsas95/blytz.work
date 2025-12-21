@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { getFirebase } from '@/lib/firebase-simplified';
 
 interface AuthUser {
   uid: string;
@@ -13,7 +14,13 @@ export function useAuth() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const auth = getAuth();
+    const { auth } = getFirebase();
+    if (!auth) {
+      console.error('Firebase auth not initialized');
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser({

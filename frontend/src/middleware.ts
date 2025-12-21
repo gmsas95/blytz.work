@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { auth } from './lib/firebase-runtime-final-fixed';
+import { getFirebase } from './lib/firebase-simplified';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,9 +17,9 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  // Check if user is authenticated
-  const { auth: firebaseAuth } = auth();
-  const user = firebaseAuth.currentUser;
+  // Check if user is authenticated using simplified Firebase
+  const { auth: firebaseAuth } = getFirebase();
+  const user = firebaseAuth?.currentUser || null;
 
   // If it's a protected route and user is not authenticated, redirect to auth
   if (isProtectedRoute && !user) {

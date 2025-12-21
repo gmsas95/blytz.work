@@ -5,8 +5,7 @@ import env from "@fastify/env";
 import rateLimit from "@fastify/rate-limit";
 import { createServer } from 'http';
 import { WebSocketServer } from './services/websocketServer';
-import { validateFirebaseConfig } from './config/firebaseConfig';
-import { initializeFirebaseAuth } from './plugins/firebaseAuthDebug';
+import { initializeFirebaseAdmin } from './config/firebaseConfig-simplified';
 import { validateRequiredEnvVars } from './utils/envValidator';
 
 // Import routes
@@ -130,8 +129,8 @@ const start = async () => {
     // Step 3: Initialize Firebase Admin (non-blocking)
     console.log('🔄 Initializing Firebase Admin...');
     try {
-      validateFirebaseConfig();
-      initializeFirebaseAuth();
+      initializeFirebaseAdmin();
+      console.log('✅ Firebase Admin initialized successfully');
     } catch (firebaseError: any) {
       console.warn('⚠️ Firebase initialization failed, continuing in development mode:', firebaseError.message);
       console.warn('💡 To fix: Update FIREBASE_* environment variables with actual Firebase credentials');

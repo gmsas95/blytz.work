@@ -1,6 +1,6 @@
-// Runtime authentication utilities for Dokploy deployment
+// Runtime authentication utilities using simplified Firebase configuration
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirebase } from './firebase-runtime-final';
+import { getFirebase } from './firebase-simplified';
 
 // Token management utilities
 let tokenRefreshPromise: Promise<string | null> | null = null;
@@ -22,15 +22,13 @@ export const getToken = async (): Promise<string | null> => {
     
     const user = auth.currentUser;
     
-    console.log("🔍 Runtime auth check - user:", user);
-    
     if (user) {
       // Create a promise for token refresh to prevent concurrent requests
       tokenRefreshPromise = user.getIdToken(true).then(token => {
-        console.log("🔍 Runtime Firebase token refreshed:", token ? `${token.substring(0, 20)}...` : 'null');
+        console.log("✅ Firebase token refreshed successfully");
         return token;
       }).catch(error => {
-        console.error('🔍 Runtime error getting auth token:', error);
+        console.error('Error getting auth token:', error);
         return null;
       }).finally(() => {
         tokenRefreshPromise = null;
@@ -39,10 +37,10 @@ export const getToken = async (): Promise<string | null> => {
       return await tokenRefreshPromise;
     }
     
-    console.log("🔍 Runtime - No Firebase user found");
+    console.log("No Firebase user found");
     return null; // No user logged in
   } catch (error) {
-    console.error('🔍 Runtime error getting auth token:', error);
+    console.error('Error getting auth token:', error);
     return null; // Return null on error instead of dev tokens
   }
 };
@@ -69,21 +67,35 @@ export const setupTokenRefresh = (): (() => void) => {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
-          token: token
         };
         
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Only update if token or user data has changed
+        const currentToken = localStorage.getItem('authToken');
+        const currentUser = localStorage.getItem('user');
         
-        console.log("🔍 Runtime - Auth state changed: user signed in", user.email);
+        if (token !== currentToken) {
+          localStorage.setItem('authToken', token);
+        }
+        
+        const userDataStr = JSON.stringify(userData);
+        if (userDataStr !== currentUser) {
+          localStorage.setItem('user', userDataStr);
+        }
+        
+        console.log('✅ Auth state updated for user:', user.email);
       } catch (error) {
-        console.error('🔍 Runtime error in auth state change:', error);
+        console.error('Error refreshing token:', error);
+        // Clear invalid token
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
       }
     } else {
-      // User signed out
+      // User signed out, clear tokens
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      console.log("🔍 Runtime - Auth state changed: user signed out");
+      localStorage.removeItem('userRole');
+      console.log('👋 User signed out, tokens cleared');
     }
     
     isUpdating = false;
@@ -119,8 +131,8 @@ export const signOutUser = async (): Promise<void> => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
-    console.log("🔍 Runtime - User signed out successfully");
+    console.log("✅ User signed out successfully");
   } catch (error) {
-    console.error('🔍 Runtime error signing out:', error);
+    console.error('Error signing out:', error);
   }
 };
