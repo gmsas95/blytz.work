@@ -1,7 +1,8 @@
-# Consolidated Docker Compose for BlytzWork Platform (Fixed Version)
-# Optimized for Dokploy deployment with proper network configuration
-# Single source of truth for production deployment
+# Clean Docker Compose for BlytzWork Platform - Dokploy Deployment
+# This file is specifically designed for clean deployment without cached state issues
 # Project name: blytzwork-webapp-uvey24
+
+version: '3.8'
 
 services:
   # PostgreSQL Database
@@ -12,12 +13,12 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blytzwork_secure_password_2024}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
     networks:
-      - blytzwork-network
+      - blytzwork-internal
     healthcheck:
       test: ["CMD", "sh", "-c", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
@@ -30,17 +31,18 @@ services:
     image: redis:7-alpine
     container_name: blytzwork-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     networks:
-      - blytzwork-network
+      - blytzwork-internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
 
-  # Backend API - Fixed for production deployment
+  # Backend API
   blytzwork-backend:
     build:
       context: ./backend
@@ -50,7 +52,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:blytzwork_secure_password_2024@postgres:5432/blytzwork}
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
@@ -67,8 +69,8 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - blytzwork-network
-      - dokploy-network  # Connect to dokploy network for Traefik routing
+      - blytzwork-internal
+      - dokploy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -76,7 +78,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # Frontend - Fixed for production deployment
+  # Frontend Application
   blytzwork-frontend:
     build:
       context: ./frontend
@@ -110,8 +112,8 @@ services:
       blytzwork-backend:
         condition: service_healthy
     networks:
-      - blytzwork-network
-      - dokploy-network  # Connect to dokploy network for Traefik routing
+      - blytzwork-internal
+      - dokploy-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:3001/"]
       interval: 30s
@@ -126,11 +128,12 @@ volumes:
     driver: local
 
 networks:
-  blytzwork-network:
+  blytzwork-internal:
     driver: bridge
-    # Create internal network for service discovery
-    # This ensures containers can communicate by name
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
   dokploy-network:
     external: true
     name: dokploy-network
-    # Connect to external dokploy network for Traefik routing
