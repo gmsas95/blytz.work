@@ -1,3 +1,8 @@
+# Consolidated Docker Compose for BlytzWork Platform (Fixed Version)
+# Optimized for Dokploy deployment with proper network configuration
+# Single source of truth for production deployment
+# Project name: blytzwork-webapp-uvey24
+
 services:
   # PostgreSQL Database
   postgres:
@@ -11,10 +16,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
     networks:
-      - dokploy-network
+      - blytzwork-network
     healthcheck:
       test: ["CMD", "sh", "-c", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
@@ -29,17 +32,15 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     networks:
-      - dokploy-network
+      - blytzwork-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
 
-  # Backend API
+  # Backend API - Fixed for production deployment
   blytzwork-backend:
     build:
       context: ./backend
@@ -49,7 +50,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:blytzwork_secure_password_2024@postgres:5432/blytzwork}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
@@ -57,19 +58,25 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-http://localhost:3000}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
-    ports:
-      - "3002:3000"
+      API_URL: ${API_URL:-https://gateway.blytz.work}
+      FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://staging.blytz.work,https://www.blytz.work}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - blytzwork-network
+      - dokploy-network  # Connect to dokploy network for Traefik routing
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # Frontend
+  # Frontend - Fixed for production deployment
   blytzwork-frontend:
     build:
       context: ./frontend
@@ -83,7 +90,7 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
     container_name: blytzwork-frontend
     restart: unless-stopped
     environment:
@@ -97,18 +104,20 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-    ports:
-      - "3001:3001"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
-      - blytzwork-backend
+      blytzwork-backend:
+        condition: service_healthy
     networks:
-      - dokploy-network
+      - blytzwork-network
+      - dokploy-network  # Connect to dokploy network for Traefik routing
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
 volumes:
   postgres_data:
@@ -117,6 +126,11 @@ volumes:
     driver: local
 
 networks:
+  blytzwork-network:
+    driver: bridge
+    # Create internal network for service discovery
+    # This ensures containers can communicate by name
   dokploy-network:
     external: true
     name: dokploy-network
+    # Connect to external dokploy network for Traefik routing

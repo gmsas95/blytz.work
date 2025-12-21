@@ -35,7 +35,6 @@ mkdir -p backup/$(date +%Y%m%d)
 
 # Backup existing files
 cp docker-compose.yml backup/$(date +%Y%m%d)/
-cp docker-compose.minimal.yml backup/$(date +%Y%m%d)/
 cp dokploy.yml backup/$(date +%Y%m%d)/
 ```
 
@@ -45,8 +44,8 @@ cp dokploy.yml backup/$(date +%Y%m%d)/
 # Stop all running containers
 docker-compose down
 
-# Or if using minimal version
-docker-compose -f docker-compose.minimal.yml down
+# Using the standard docker-compose.yml
+docker-compose -f docker-compose.yml down
 ```
 
 ### 3. Update Environment Variables

@@ -12,7 +12,7 @@ The "Compose file not found" error when deploying with Dokploy using `docker-com
 
 ### Step 1: Use the Fixed Docker Compose File
 
-We've created `docker-compose.consolidated.fixed.yml` with the following improvements:
+We've updated `docker-compose.yml` with the following improvements:
 
 1. **Changed to Internal Network**: Replaced external `dokploy-network` with internal `blytzwork-network`
 2. **Added Default Values**: Provided sensible defaults for environment variables
@@ -22,7 +22,7 @@ We've created `docker-compose.consolidated.fixed.yml` with the following improve
 
 In your Dokploy dashboard, update the deployment configuration:
 
-1. **Compose File Path**: Change from `./docker-compose.consolidated.yml` to `./docker-compose.consolidated.fixed.yml`
+1. **Compose File Path**: Use `./docker-compose.yml` as the single source of truth
 2. **Working Directory**: Ensure it's set to the project root directory
 3. **Environment Variables**: Add all required environment variables (see list below)
 
@@ -76,8 +76,8 @@ NODE_ENV=production
 
 If the fixed file doesn't work, try these alternatives:
 
-#### Option A: Use Minimal Docker Compose
-1. Change the compose file path to `./docker-compose.minimal.yml`
+#### Option A: Use Standard Docker Compose
+1. Change the compose file path to `./docker-compose.yml`
 2. Update environment variables accordingly
 
 #### Option B: Create External Network First
@@ -107,19 +107,19 @@ After deployment, verify all services are running:
 
 1. **Check Container Status**:
    ```bash
-   docker-compose -f docker-compose.consolidated.fixed.yml ps
+   docker-compose -f docker-compose.yml ps
    ```
 
 2. **Check Health Status**:
    ```bash
-   docker-compose -f docker-compose.consolidated.fixed.yml exec blytzwork-backend curl -f http://localhost:3000/health
-   docker-compose -f docker-compose.consolidated.fixed.yml exec blytzwork-frontend curl -f http://localhost:3001/
+   docker-compose -f docker-compose.yml exec blytzwork-backend curl -f http://localhost:3000/health
+   docker-compose -f docker-compose.yml exec blytzwork-frontend curl -f http://localhost:3001/
    ```
 
 3. **Check Logs**:
    ```bash
-   docker-compose -f docker-compose.consolidated.fixed.yml logs blytzwork-backend
-   docker-compose -f docker-compose.consolidated.fixed.yml logs blytzwork-frontend
+   docker-compose -f docker-compose.yml logs blytzwork-backend
+   docker-compose -f docker-compose.yml logs blytzwork-frontend
    ```
 
 ## Troubleshooting
@@ -156,11 +156,11 @@ cd /path/to/your/project
 # Create external network (if using original file)
 docker network create dokploy-network
 
-# Or use the fixed file directly
-docker-compose -f docker-compose.consolidated.fixed.yml up -d --build
+# Or use the standard file directly
+docker-compose -f docker-compose.yml up -d --build
 
 # Check status
-docker-compose -f docker-compose.consolidated.fixed.yml ps
+docker-compose -f docker-compose.yml ps
 ```
 
 ## Next Steps

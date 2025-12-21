@@ -34,8 +34,8 @@ if [ ! -f "docker-compose.consolidated.yml" ]; then
     exit 1
 fi
 
-if [ ! -f "docker-compose.consolidated.fixed.yml" ]; then
-    print_error "docker-compose.consolidated.fixed.yml not found in current directory"
+if [ ! -f "docker-compose.yml" ]; then
+    print_error "docker-compose.yml not found in current directory"
     exit 1
 fi
 
@@ -63,8 +63,7 @@ if docker ps -a | grep -q "blytzwork"; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_status "Stopping and removing existing containers..."
-        docker-compose -f docker-compose.consolidated.yml down -v 2>/dev/null || true
-        docker-compose -f docker-compose.consolidated.fixed.yml down -v 2>/dev/null || true
+        docker-compose -f docker-compose.yml down -v 2>/dev/null || true
         docker stop $(docker ps -aq --filter name=blytzwork) 2>/dev/null || true
         docker rm $(docker ps -aq --filter name=blytzwork) 2>/dev/null || true
     fi
@@ -101,11 +100,11 @@ fi
 
 # Test Docker Compose file syntax
 print_status "Testing Docker Compose file syntax..."
-if docker-compose -f docker-compose.consolidated.fixed.yml config > /dev/null 2>&1; then
-    print_status "docker-compose.consolidated.fixed.yml syntax is valid!"
+if docker-compose -f docker-compose.yml config > /dev/null 2>&1; then
+    print_status "docker-compose.yml syntax is valid!"
 else
-    print_error "docker-compose.consolidated.fixed.yml has syntax errors"
-    docker-compose -f docker-compose.consolidated.fixed.yml config
+    print_error "docker-compose.yml has syntax errors"
+    docker-compose -f docker-compose.yml config
     exit 1
 fi
 
@@ -122,8 +121,8 @@ read -p "Choose an option (1-4): " -n 1 -r
 echo
 case $REPLY in
     1)
-        print_status "Deploying with docker-compose.consolidated.fixed.yml..."
-        docker-compose -f docker-compose.consolidated.fixed.yml up -d --build
+        print_status "Deploying with docker-compose.yml..."
+        docker-compose -f docker-compose.yml up -d --build
         print_status "Deployment initiated!"
         ;;
     2)
@@ -132,14 +131,10 @@ case $REPLY in
         print_status "Deployment initiated!"
         ;;
     3)
-        if [ -f "docker-compose.minimal.yml" ]; then
-            print_status "Deploying with docker-compose.minimal.yml..."
-            docker-compose -f docker-compose.minimal.yml up -d --build
-            print_status "Deployment initiated!"
-        else
-            print_error "docker-compose.minimal.yml not found"
-            exit 1
-        fi
+        print_status "This option is no longer needed - using docker-compose.yml as the single source of truth"
+        print_status "Deploying with docker-compose.yml..."
+        docker-compose -f docker-compose.yml up -d --build
+        print_status "Deployment initiated!"
         ;;
     4)
         print_status "Exiting..."
@@ -157,7 +152,7 @@ sleep 10
 
 # Check container status
 print_status "Checking container status..."
-docker-compose -f docker-compose.consolidated.fixed.yml ps
+docker-compose -f docker-compose.yml ps
 
 # Check health
 print_status "Checking service health..."

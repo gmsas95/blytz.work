@@ -2,7 +2,7 @@
 
 ## Overview
 
-The service naming issue in `docker-compose.minimal.yml` has been fixed and committed to Git. The changes resolve the "service not found" error during deployment by updating service names to match what Dokploy expects:
+The service naming issue in `docker-compose.yml` has been fixed and committed to Git. The changes resolve the "service not found" error during deployment by updating service names to match what Dokploy expects:
 
 - `frontend-final` → `blytzwork-frontend`
 - `backend-final` → `blytzwork-backend`
@@ -19,7 +19,7 @@ git pull origin main
 
 ### 2. Deploy with Dokploy
 
-1. **Update your Dokploy project configuration** to use the `docker-compose.minimal.yml` file
+1. **Update your Dokploy project configuration** to use the `docker-compose.yml` file
 2. **Verify the service names** in your Dokploy routing configuration match:
    - Frontend: `blytzwork-frontend:3001`
    - Backend: `blytzwork-backend:3000`
@@ -31,10 +31,10 @@ After deployment, verify that all services are running correctly:
 
 ```bash
 # Check service status
-docker-compose -f docker-compose.minimal.yml ps
+docker-compose -f docker-compose.yml ps
 
 # Check service logs
-docker-compose -f docker-compose.minimal.yml logs -f
+docker-compose -f docker-compose.yml logs -f
 
 # Test health endpoints
 curl http://localhost:3002/health  # Backend health
@@ -90,14 +90,14 @@ cd /path/to/blytz.work
 git pull origin main
 
 # Verify the fixed file is present
-cat docker-compose.minimal.yml | grep -E "(blytzwork-backend|blytzwork-frontend)"
+cat docker-compose.yml | grep -E "(blytzwork-backend|blytzwork-frontend)"
 ```
 
 #### Step 2: Update Dokploy Configuration
 
 1. Log in to your Dokploy dashboard
 2. Navigate to your BlytzWork project
-3. Update the Docker Compose file path to point to `docker-compose.minimal.yml`
+3. Update the Docker Compose file path to point to `docker-compose.yml`
 4. Ensure the service names in your routing configuration match:
    - Frontend service: `blytzwork-frontend`
    - Backend service: `blytzwork-backend`
@@ -113,7 +113,7 @@ cat docker-compose.minimal.yml | grep -E "(blytzwork-backend|blytzwork-frontend)
 
 1. **Check Service Status**:
    ```bash
-   docker-compose -f docker-compose.minimal.yml ps
+   docker-compose -f docker-compose.yml ps
    ```
    You should see all services (postgres, redis, blytzwork-backend, blytzwork-frontend) as "healthy" or "running".
 
@@ -136,13 +136,13 @@ cat docker-compose.minimal.yml | grep -E "(blytzwork-backend|blytzwork-frontend)
 
 1. **Check Logs**:
    ```bash
-   docker-compose -f docker-compose.minimal.yml logs blytzwork-backend
-   docker-compose -f docker-compose.minimal.yml logs blytzwork-frontend
+   docker-compose -f docker-compose.yml logs blytzwork-backend
+   docker-compose -f docker-compose.yml logs blytzwork-frontend
    ```
 
 2. **Verify Environment Variables**:
    ```bash
-   docker-compose -f docker-compose.minimal.yml config
+   docker-compose -f docker-compose.yml config
    ```
 
 3. **Check Network Connectivity**:
@@ -168,7 +168,7 @@ cat docker-compose.minimal.yml | grep -E "(blytzwork-backend|blytzwork-frontend)
 
 ## What Was Fixed
 
-The issue was that the service names in `docker-compose.minimal.yml` didn't match what Dokploy expected:
+The issue was that the service names in `docker-compose.yml` didn't match what Dokploy expected:
 
 1. **Service Name Mismatch**:
    - Before: `frontend-final` and `backend-final`

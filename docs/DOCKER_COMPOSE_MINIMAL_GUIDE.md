@@ -26,7 +26,7 @@ This guide provides a minimal Docker Compose configuration that resolves network
 
 ## Solution: Minimal Docker Compose Configuration
 
-Create a new file `docker-compose.minimal.yml` with the following content:
+Use the `docker-compose.yml` file with the following content:
 
 ```yaml
 # Minimal Docker Compose for BlytzWork Platform
@@ -198,8 +198,8 @@ networks:
 
 ## Deployment Instructions
 
-### 1. Create the Minimal Docker Compose File
-Copy the configuration above to `docker-compose.minimal.yml` in your project root.
+### 1. Use the Standard Docker Compose File
+The configuration above is already included in `docker-compose.yml` in your project root.
 
 ### 2. Update Environment Variables
 Ensure your `.env` file contains all required variables:
@@ -230,7 +230,7 @@ ALLOWED_ORIGINS="https://blytz.work,https://staging.blytz.work,https://www.blytz
 ```
 
 ### 3. Deploy with Dokploy
-1. Update your Dokploy project to use `docker-compose.minimal.yml`
+1. Update your Dokploy project to use `docker-compose.yml`
 2. Ensure the domain routing matches the service names:
    - Frontend: `blytzwork-frontend:3001`
    - Backend: `blytzwork-backend:3000`
@@ -240,10 +240,10 @@ ALLOWED_ORIGINS="https://blytz.work,https://staging.blytz.work,https://www.blytz
 Check that all services are running and healthy:
 ```bash
 # Check service status
-docker-compose -f docker-compose.minimal.yml ps
+docker-compose -f docker-compose.yml ps
 
 # Check logs
-docker-compose -f docker-compose.minimal.yml logs -f
+docker-compose -f docker-compose.yml logs -f
 
 # Test health endpoints
 curl http://localhost:3002/health  # Backend health
@@ -257,7 +257,7 @@ If you still encounter 503 errors:
 
 1. **Check Service Health**: Verify all services are healthy:
    ```bash
-   docker-compose -f docker-compose.minimal.yml ps
+   docker-compose -f docker-compose.yml ps
    ```
 
 2. **Check Network Connectivity**: Test service communication:
@@ -267,13 +267,13 @@ If you still encounter 503 errors:
 
 3. **Check Environment Variables**: Verify all required variables are set:
    ```bash
-   docker-compose -f docker-compose.minimal.yml config
+   docker-compose -f docker-compose.yml config
    ```
 
 4. **Check Logs**: Review service logs for errors:
    ```bash
-   docker-compose -f docker-compose.minimal.yml logs backend
-   docker-compose -f docker-compose.minimal.yml logs frontend
+   docker-compose -f docker-compose.yml logs backend
+   docker-compose -f docker-compose.yml logs frontend
    ```
 
 ### Authentication Issues

@@ -25,13 +25,13 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if docker-compose.minimal.yml exists
-if [ ! -f "docker-compose.minimal.yml" ]; then
-    print_error "docker-compose.minimal.yml not found!"
+# Check if docker-compose.yml exists
+if [ ! -f "docker-compose.yml" ]; then
+    print_error "docker-compose.yml not found!"
     exit 1
 fi
 
-print_status "Found docker-compose.minimal.yml"
+print_status "Found docker-compose.yml"
 
 # Check if .env file exists
 if [ ! -f ".env" ]; then
@@ -41,11 +41,11 @@ fi
 
 # Test 1: Validate Docker Compose configuration
 print_status "Test 1: Validating Docker Compose configuration..."
-if docker-compose -f docker-compose.minimal.yml config > /dev/null 2>&1; then
+if docker-compose -f docker-compose.yml config > /dev/null 2>&1; then
     print_status "✅ Docker Compose configuration is valid"
 else
     print_error "❌ Docker Compose configuration has errors"
-    docker-compose -f docker-compose.minimal.yml config
+    docker-compose -f docker-compose.yml config
     exit 1
 fi
 
@@ -73,10 +73,10 @@ check_port 6379  # Redis
 print_status "Test 3: Starting services..."
 
 # Stop any existing containers from this compose file
-docker-compose -f docker-compose.minimal.yml down -v 2>/dev/null
+docker-compose -f docker-compose.yml down -v 2>/dev/null
 
 # Start services
-docker-compose -f docker-compose.minimal.yml up -d
+docker-compose -f docker-compose.yml up -d
 
 # Wait for services to start
 print_status "Waiting for services to start (60 seconds)..."
@@ -176,9 +176,9 @@ fi
 print_status "=============================================="
 print_status "Test Summary Complete"
 print_status ""
-print_status "To view service status: docker-compose -f docker-compose.minimal.yml ps"
-print_status "To view logs: docker-compose -f docker-compose.minimal.yml logs -f"
-print_status "To stop services: docker-compose -f docker-compose.minimal.yml down"
+print_status "To view service status: docker-compose -f docker-compose.yml ps"
+print_status "To view logs: docker-compose -f docker-compose.yml logs -f"
+print_status "To stop services: docker-compose -f docker-compose.yml down"
 print_status ""
 print_status "If all tests passed, the minimal configuration should resolve 503 errors."
 print_status "=============================================="
