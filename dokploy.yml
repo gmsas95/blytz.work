@@ -31,7 +31,7 @@ http:
     # Staging frontend routing
     blytzwork-staging-router-app:
       rule: Host(`staging.blytz.work`)
-      service: blytzwork-service-app
+      service: blytzwork-staging-service
       entryPoints:
         - web
         - websecure
@@ -57,7 +57,7 @@ http:
           - url: http://dokploy:3000
         passHostHeader: true
     
-    # Frontend service
+    # Frontend production service
     blytzwork-service-app:
       loadBalancer:
         servers:
@@ -65,19 +65,13 @@ http:
         passHostHeader: true
     
     # Frontend staging service
-    blytzwork-service-app-staging:
-      loadBalancer:
-        servers:
-          - url: http://blytzwork-frontend:3001
-        passHostHeader: true
-    # Frontend prod service
-    blytzwork-service-app-prod:
+    blytzwork-staging-service:
       loadBalancer:
         servers:
           - url: http://blytzwork-frontend:3001
         passHostHeader: true
     
-    # Backend service - Updated port and service name
+    # Backend service
     blytzwork-backend-service:
       loadBalancer:
         servers:
