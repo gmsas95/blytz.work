@@ -2,8 +2,6 @@
 # This file is specifically designed for clean deployment without cached state issues
 # Project name: blytzwork-webapp-uvey24
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -77,6 +75,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.backend.entrypoints=websecure
+      - traefik.http.routers.backend.tls.certresolver=letsencrypt
+      - traefik.http.services.backend.loadbalancer.server.port=3000
 
   # Frontend Application
   frontend-final:
@@ -120,6 +124,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.frontend.loadbalancer.server.port=3001
 
 volumes:
   postgres_data:
