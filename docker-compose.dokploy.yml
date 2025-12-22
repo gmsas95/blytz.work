@@ -75,6 +75,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.backend.loadbalancer.server.port=3000
+      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.backend.entrypoints=websecure
+      - traefik.http.routers.backend.tls.certresolver=letsencrypt
+      - traefik.http.routers.backend.service=backend
 
   # Frontend Application
   frontend-final:
@@ -118,6 +125,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.frontend.loadbalancer.server.port=3001
+      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.frontend.service=frontend
 
 volumes:
   postgres_data:
