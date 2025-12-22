@@ -51,28 +51,9 @@ app.register(rateLimit, {
 
 // Register plugins
 app.register(cors, {
-  origin: function (origin, callback) {
-    const allowedOrigins = process.env.NODE_ENV === "production"
-      ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work"])
-      : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://gateway.blytz.work"];
-    
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Always allow Firebase domains for authentication
-    const firebaseDomains = ["https://identitytoolkit.googleapis.com", "https://firebase.googleapis.com"];
-    if (firebaseDomains.some(domain => origin?.includes(domain))) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'), false);
-    }
-  },
+  origin: process.env.NODE_ENV === "production"
+    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work"])
+    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://gateway.blytz.work"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin"],

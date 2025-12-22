@@ -216,9 +216,6 @@ docker-compose.*.yml
 !docker-compose.yml
 !docker-compose.1-infrastructure.yml
 !docker-compose.2-database.yml
-!docker-compose.minimal.yml
-!docker-compose.consolidated.fixed.yml
-!docker-compose.dokploy.yml
 
 # Additional security exclusions
 scripts/*.log
@@ -226,10 +223,8 @@ scripts/*.tmp
 scripts/env-*.sh
 scripts/backup-*.sh
 scripts/test-*.sh
-!scripts/test-minimal-config.sh
 frontend/src/app/debug/
-# Firebase documentation (keep specific files)
-# docs/FIREBASE_*.md
+docs/FIREBASE_*.md
 
 # Exclude old/experimental docker compose files
 docker-compose.3-apigateway.yml

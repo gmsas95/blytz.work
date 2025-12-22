@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   console.log('🔍 Middleware called for path:', pathname);
@@ -27,61 +27,58 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // Get the token from the request headers
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader) {
-      console.log('🔍 No authorization header - redirecting to auth');
+    // Dynamically import auth to avoid build-time issues
+    let authModule;
+    try {
+      authModule = require('./lib/firebase-runtime-final');
+    } catch (importError) {
+      console.error('❌ Failed to import auth module:', importError);
+      // Redirect to auth page if auth module can't be loaded
       const url = request.nextUrl.clone();
       url.pathname = '/auth';
       return NextResponse.redirect(url);
     }
 
-    // Verify the token with Firebase Admin SDK (server-side)
-    const { getFirebase } = require('./lib/firebase-runtime-final');
-    let firebaseAdmin;
+    const { auth } = authModule;
+    let firebaseAuth;
     
     try {
-      const firebaseResult = getFirebase();
-      firebaseAdmin = firebaseResult.admin;
+      const authResult = auth();
+      firebaseAuth = authResult.auth;
     } catch (authError) {
-      console.error('❌ Failed to initialize Firebase Admin:', authError);
+      console.error('❌ Failed to initialize Firebase auth:', authError);
+      // Redirect to auth page if Firebase auth can't be initialized
       const url = request.nextUrl.clone();
       url.pathname = '/auth';
       return NextResponse.redirect(url);
     }
-
-    if (!firebaseAdmin) {
-      console.log('🔍 Firebase Admin not available - redirecting to auth');
+    
+    console.log('🔍 Firebase auth initialized:', !!firebaseAuth);
+    
+    // Check if auth has a currentUser method
+    if (!firebaseAuth || typeof firebaseAuth.currentUser === 'undefined') {
+      console.log('🔍 Firebase auth not properly initialized - redirecting to auth');
       const url = request.nextUrl.clone();
       url.pathname = '/auth';
       return NextResponse.redirect(url);
     }
+    
+    const user = firebaseAuth.currentUser;
+    console.log('🔍 Current user:', user?.email || 'None');
 
-    // Extract token from Bearer header
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      console.log('🔍 No token found - redirecting to auth');
-      const url = request.nextUrl.clone();
-      url.pathname = '/auth';
-      return NextResponse.redirect(url);
-    }
-
-    try {
-      // Verify token using Firebase Admin
-      const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
-      console.log('🔍 Token verified for user:', decodedToken.email);
-      
-      // User is authenticated, continue to the route
-      return NextResponse.next();
-    } catch (tokenError) {
-      console.error('❌ Invalid token:', tokenError);
+    // If it's a protected route and user is not authenticated, redirect to auth
+    if (!user) {
+      console.log('🔍 Redirecting to auth - no user found');
       const url = request.nextUrl.clone();
       url.pathname = '/auth';
       return NextResponse.redirect(url);
     }
   } catch (error) {
     console.error('❌ Middleware error:', error);
+    console.error('❌ Error details:', error.message);
+    
+    // If there's an error with auth, redirect to auth page for safety
+    console.log('🔍 Redirecting to auth - middleware error');
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     return NextResponse.redirect(url);

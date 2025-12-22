@@ -24,54 +24,21 @@ let firebaseAuth: admin.auth.Auth | null = null;
 // Initialize Firebase Admin if credentials are available
 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
   try {
-    // Handle both literal \n and single-line formats
+    // Handle private key formatting - ensure proper newlines
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
-    console.log('🔍 Firebase private key format check:', {
-      hasKey: !!privateKey,
-      length: privateKey?.length,
-      hasLiteralNewline: privateKey?.includes('\\n'),
-      hasActualNewline: privateKey?.includes('\n')
-    });
-    
-    if (privateKey && privateKey.includes('\\n')) {
+    // Replace literal \n with actual newlines if present
+    if (privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n');
-      console.log('✅ Fixed literal \\n in private key');
-    } else if (privateKey && !privateKey.includes('\n')) {
-      // Handle single-line key format
-      privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n');
-      privateKey = privateKey.replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
-      
-      // Add newlines every 64 characters for key content
-      const keyContent = privateKey.match(/-----BEGIN PRIVATE KEY-----(.+)-----END PRIVATE KEY-----/s);
-      if (keyContent && keyContent[1]) {
-        const keyParts = keyContent[1].match(/.{1,64}/g);
-        if (keyParts) {
-          const formattedContent = keyParts.join('\n');
-          privateKey = '-----BEGIN PRIVATE KEY-----\n' + formattedContent + '\n-----END PRIVATE KEY-----';
-        }
-      }
-      console.log('✅ Fixed single-line private key format');
     }
     
-    // Additional fix: Ensure proper PEM format for RS256
-    if (privateKey && !privateKey.includes('-----BEGIN PRIVATE KEY-----\n')) {
-      privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n');
-      privateKey = privateKey.replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+    // Ensure the key starts and ends correctly
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      privateKey = '-----BEGIN PRIVATE KEY-----\n' + privateKey;
     }
-    
-    // Remove any extra whitespace or special characters that might cause issues
-    if (privateKey) {
-      privateKey = privateKey.trim();
-      // Ensure proper line endings
-      privateKey = privateKey.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+      privateKey = privateKey + '\n-----END PRIVATE KEY-----';
     }
-    
-    console.log('🔍 Attempting Firebase Admin initialization with:', {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      keyLength: privateKey?.length
-    });
     
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -82,21 +49,8 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && proce
     });
     firebaseAuth = admin.auth();
     console.log("✅ Firebase Admin initialized successfully");
-    
-    // Test the auth instance
-    firebaseAuth.listUsers(1).then(() => {
-      console.log("✅ Firebase Auth instance working correctly");
-    }).catch((error) => {
-      console.error("❌ Firebase Auth instance test failed:", error.message);
-    });
-    
-  } catch (error: any) {
-    console.error("❌ Firebase Admin initialization failed:", error.message);
-    console.error("🔍 Error details:", {
-      name: error.name,
-      code: error.code,
-      stack: error.stack?.substring(0, 200) + '...'
-    });
+  } catch (error) {
+    console.error("❌ Firebase Admin initialization failed");
   }
 } else {
   console.warn("⚠️ Firebase credentials not provided, authentication will not work in production");
@@ -117,7 +71,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     });
   }
 
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
   
   if (!token) {
     return reply.code(401).send({ 
@@ -129,7 +83,10 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
   try {
     // Production: Verify Firebase token
     if (firebaseAuth) {
-      const decodedToken = await firebaseAuth.verifyIdToken(token);
+      const decodedToken = await firebaseAuth.verifyIdToken(token)
+        .catch(error => {
+          throw error;
+        });
       
       // Get user from database to get role and profile status
       const user = await prisma.user.findUnique({
@@ -150,7 +107,7 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
         role: user.role as 'company' | 'va' | 'admin',
         profileComplete: user.profileComplete
       };
-    }
+    } 
     // Development mode disabled for security
     // Remove development tokens to prevent authentication bypass
     // Production fallback when Firebase is not initialized

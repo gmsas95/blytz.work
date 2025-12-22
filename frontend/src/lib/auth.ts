@@ -20,92 +20,42 @@ const getAuthInstance = () => {
   });
 };
 
-// Sign in user using backend proxy to bypass network issues
+// Sign in user
 export const signInUser = async (email: string, password: string): Promise<AuthUser> => {
   try {
-    console.log('🔍 Attempting sign in with email via backend proxy:', email);
+    const auth = await getAuthInstance();
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
     
-    // Use backend proxy API instead of direct Firebase SDK call
-    const response = await fetch('/api/auth/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Backend sign-in error:', data.error);
-      // Convert backend error to Firebase-like error for compatibility
-      const firebaseError = new Error(data.error || 'Authentication failed');
-      (firebaseError as any).code = mapBackendErrorToFirebaseCode(data.error, response.status);
-      throw firebaseError;
-    }
-    
-    console.log('✅ Backend sign-in successful:', data.user.email);
-    
-    // Store token for future API calls
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-    }
+    console.log('✅ Runtime sign in successful:', user.email);
     
     return {
-      uid: data.user.uid,
-      email: data.user.email,
-      displayName: data.user.displayName || undefined,
+      uid: user.uid,
+      email: user.email!,
+      displayName: user.displayName || undefined,
     };
-  } catch (error: any) {
-    console.error('❌ Sign-in error:', error);
-    console.error('❌ Error code:', error.code);
-    console.error('❌ Error message:', error.message);
-    
+  } catch (error) {
+    console.error('Runtime sign in error:', error);
     throw error;
   }
 };
 
-// Register new user using backend proxy to bypass network issues
+// Register new user
 export const registerUser = async (email: string, password: string, name?: string): Promise<AuthUser> => {
   try {
-    console.log('🔍 Attempting registration with email via backend proxy:', email);
+    const auth = await getAuthInstance();
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
     
-    // Use backend proxy API instead of direct Firebase SDK call
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password, name }),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error('❌ Backend registration error:', data.error);
-      // Convert backend error to Firebase-like error for compatibility
-      const firebaseError = new Error(data.error || 'Registration failed');
-      (firebaseError as any).code = mapBackendErrorToFirebaseCode(data.error, response.status);
-      throw firebaseError;
-    }
-    
-    console.log('✅ Backend registration successful:', data.user.email);
-    
-    // Store token for future API calls
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-    }
+    console.log('✅ Runtime registration successful:', user.email);
     
     return {
-      uid: data.user.uid,
-      email: data.user.email,
-      displayName: data.user.displayName || name || undefined,
+      uid: user.uid,
+      email: user.email!,
+      displayName: user.displayName || name || undefined,
     };
-  } catch (error: any) {
-    console.error('❌ Registration error:', error);
-    console.error('❌ Error code:', error.code);
-    console.error('❌ Error message:', error.message);
-    
+  } catch (error) {
+    console.error('Runtime registration error:', error);
     throw error;
   }
 };
@@ -125,22 +75,7 @@ export const signOutUser = async (): Promise<void> => {
 // Get Firebase ID token for API calls
 export const getToken = async (): Promise<string | null> => {
   try {
-    // First check if we have a stored token from backend proxy
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      console.log('✅ Using stored auth token');
-      return storedToken;
-    }
-    
-    // Fallback to Firebase SDK if no stored token
     const auth = await getAuthInstance();
-    
-    // Ensure auth is properly initialized
-    if (!auth) {
-      console.warn('Firebase auth not initialized properly');
-      return null;
-    }
-    
     const user = auth.currentUser;
     
     if (!user) {
@@ -198,36 +133,6 @@ export const getAuthErrorMessage = (error: any): string => {
   
   return 'Authentication failed. Please try again.';
 };
-
-// Helper function to map backend errors to Firebase error codes for compatibility
-function mapBackendErrorToFirebaseCode(errorMessage: string, statusCode: number): string {
-  const errorMap: Record<string, string> = {
-    'No account found with this email address': 'auth/user-not-found',
-    'Incorrect password': 'auth/wrong-password',
-    'The email address is not valid': 'auth/invalid-email',
-    'An account already exists with this email address': 'auth/email-already-in-use',
-    'Password should be at least 6 characters': 'auth/weak-password',
-    'Too many failed attempts. Please try again later': 'auth/too-many-requests',
-    'Authentication service temporarily unavailable. Please try again later': 'auth/network-request-failed',
-  };
-  
-  // Map by error message first
-  if (errorMap[errorMessage]) {
-    return errorMap[errorMessage];
-  }
-  
-  // Map by HTTP status code as fallback
-  switch (statusCode) {
-    case 400: return 'auth/invalid-email';
-    case 401: return 'auth/wrong-password';
-    case 404: return 'auth/user-not-found';
-    case 409: return 'auth/email-already-in-use';
-    case 429: return 'auth/too-many-requests';
-    case 500: return 'auth/internal-error';
-    case 503: return 'auth/network-request-failed';
-    default: return 'auth/unknown-error';
-  }
-}
 
 // Export runtime auth state monitoring
 export { onAuthStateChange };

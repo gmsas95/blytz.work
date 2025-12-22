@@ -428,6 +428,7 @@ cd backend && npx prisma migrate deploy
 - ✅ Implemented comprehensive input validation with Zod schemas
 
 ### Files to Keep for Reference
+- `docker-compose.env-fix.yml` - Alternative environment configuration
 - `nginx/nginx.conf.fixed` - Alternative nginx configuration
 - `scripts/debug-auth.sh` - Authentication debugging tool
 - `SECURITY_FIXES_AND_GUIDE.md` - Comprehensive security implementation guide

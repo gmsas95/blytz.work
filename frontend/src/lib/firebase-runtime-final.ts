@@ -21,12 +21,7 @@ const getFirebaseConfig = () => {
       hasApiKey: !!config.apiKey,
       hasAuthDomain: !!config.authDomain,
       hasProjectId: !!config.projectId,
-      hasStorageBucket: !!config.storageBucket,
-      hasAppId: !!config.appId,
-      apiKeyPreview: config.apiKey ? `${config.apiKey.substring(0, 10)}...` : 'missing',
-      authDomain: config.authDomain || 'missing',
-      projectId: config.projectId || 'missing',
-      appUrl: typeof window !== 'undefined' ? window.location.origin : 'server-side'
+      apiKeyPreview: config.apiKey ? '[REDACTED]' : 'missing'
     });
   }
 
@@ -34,7 +29,7 @@ const getFirebaseConfig = () => {
   const essentialVars = ['apiKey', 'authDomain', 'projectId'];
   const hasEssentialVars = essentialVars.every(varName => {
     const value = config[varName as keyof typeof config];
-    return value && value.trim() !== '' && !value.includes('REPLACE_WITH_') && !value.includes('your-firebase-');
+    return value && value.trim() !== '' && !value.includes('REPLACE_WITH_');
   });
 
   // During build time, return null silently if config is incomplete
@@ -43,39 +38,57 @@ const getFirebaseConfig = () => {
       console.error('❌ Firebase configuration is incomplete');
       console.error('Missing essential variables:', essentialVars.filter(varName => {
         const value = config[varName as keyof typeof config];
-        return !value || value.trim() === '' || value.includes('REPLACE_WITH_') || value.includes('your-firebase-');
+        return !value || value.trim() === '' || value.includes('REPLACE_WITH_');
       }));
-      console.error('Please check your .env file and ensure all Firebase variables are set correctly');
-      console.error('Required variables:');
-      console.error('- NEXT_PUBLIC_FIREBASE_API_KEY');
-      console.error('- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
-      console.error('- NEXT_PUBLIC_FIREBASE_PROJECT_ID');
     }
     return null;
   }
 
-  // Additional validation for API key format
-  if (config.apiKey && !config.apiKey.startsWith('AIza')) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ Firebase API key format appears invalid (should start with "AIza")');
-    }
-  }
-
-  // Additional validation for project ID format
-  if (config.projectId && !config.projectId.match(/^[a-z0-9-]+$/)) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ Firebase project ID format appears invalid');
-    }
-  }
-
   if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
     console.log('✅ Firebase configuration is valid');
-    console.log(`🔗 Project: ${config.projectId}`);
-    console.log(`🌐 Auth Domain: ${config.authDomain}`);
   }
   return config;
 };
 
+// Mock Firebase services for when config is missing
+const createMockAuth = () => {
+  // Only log during runtime or development, not during build
+  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    console.log('🔧 Using mock Firebase auth - configuration incomplete');
+  }
+  
+  return {
+    currentUser: null,
+    onAuthStateChanged: () => () => {},
+    signInWithEmailAndPassword: async () => {
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signInWithEmailAndPassword called');
+      }
+      return { user: null };
+    },
+    createUserWithEmailAndPassword: async () => {
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock createUserWithEmailAndPassword called');
+      }
+      return { user: null };
+    },
+    signInWithPopup: async () => {
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signInWithPopup called');
+      }
+      return { user: null };
+    },
+    signOut: async () => {
+      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+        console.log('🔧 Mock signOut called');
+      }
+    },
+    getAuth: () => createMockAuth(),
+    GoogleAuthProvider: class {
+      static PROVIDER_ID = 'google.com';
+    },
+  };
+};
 
 // Initialize Firebase at runtime
 export const initializeFirebase = () => {
@@ -86,72 +99,31 @@ export const initializeFirebase = () => {
   const config = getFirebaseConfig();
   
   if (!config) {
-    const error = new Error('Firebase configuration is incomplete. Please check environment variables.');
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('❌ Cannot initialize Firebase - configuration incomplete');
-      console.error('Required environment variables:');
-      console.error('- NEXT_PUBLIC_FIREBASE_API_KEY');
-      console.error('- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
-      console.error('- NEXT_PUBLIC_FIREBASE_PROJECT_ID');
     }
-    throw error;
+    firebaseApp = { name: '[DEFAULT]', options: {} };
+    firebaseAuth = createMockAuth();
+    return { app: firebaseApp, auth: firebaseAuth };
   }
 
   try {
     // Import Firebase modules dynamically
     const { initializeApp } = require('firebase/app');
-    const { getAuth, connectAuthEmulator } = require('firebase/auth');
+    const { getAuth } = require('firebase/auth');
     
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
-    
-    // Add additional debugging for auth instance
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.log('✅ Firebase initialized successfully');
       console.log('🔗 Firebase app name:', firebaseApp.name);
-      console.log('🔗 Firebase app options:', {
-        apiKey: config.apiKey ? `${config.apiKey.substring(0, 10)}...` : 'missing',
-        authDomain: config.authDomain || 'missing',
-        projectId: config.projectId || 'missing',
-        storageBucket: config.storageBucket || 'missing',
-        appId: config.appId ? `${config.appId.substring(0, 10)}...` : 'missing'
-      });
-      console.log('🔍 Auth instance created:', !!firebaseAuth);
-      console.log('🌐 Current origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : 'No stack trace';
-    
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.error('❌ Firebase initialization failed:', errorMessage);
-      console.error('🔍 Error details:', {
-        message: errorMessage,
-        stack: errorStack,
-        config: {
-          hasApiKey: !!config.apiKey,
-          hasAuthDomain: !!config.authDomain,
-          hasProjectId: !!config.projectId,
-          projectId: config.projectId || 'missing'
-        }
-      });
-      console.error('💡 Possible solutions:');
-      console.error('  1. Check Firebase project configuration in console');
-      console.error('  2. Verify API key is valid and not restricted');
-      console.error('  3. Ensure project ID matches Firebase console');
-      console.error('  4. Check network connectivity to Firebase APIs');
+      console.error('❌ Firebase initialization failed:', error);
     }
-    
-    // Provide more specific error messages for common issues
-    if (errorMessage.includes('auth-domain-config-required')) {
-      throw new Error('Firebase auth domain is missing. Please check NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in your environment variables.');
-    } else if (errorMessage.includes('invalid-api-key')) {
-      throw new Error('Firebase API key is invalid. Please check NEXT_PUBLIC_FIREBASE_API_KEY in your environment variables.');
-    } else if (errorMessage.includes('project-not-found')) {
-      throw new Error('Firebase project not found. Please check NEXT_PUBLIC_FIREBASE_PROJECT_ID in your environment variables.');
-    } else {
-      throw new Error(`Firebase initialization failed: ${errorMessage}`);
-    }
+    firebaseApp = { name: '[DEFAULT]', options: config };
+    firebaseAuth = createMockAuth();
   }
 
   return { app: firebaseApp, auth: firebaseAuth };
@@ -164,23 +136,33 @@ export const getFirebase = () => {
 
 // Export auth state change monitoring
 export const onAuthStateChange = (callback: (user: any) => void) => {
-  try {
-    const { auth } = getFirebase();
-    if (!auth) {
-      throw new Error('Firebase auth not initialized');
+  const { auth } = getFirebase();
+  if (!auth) {
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.warn('Auth not available for state monitoring');
     }
-    
-    // Import onAuthStateChanged dynamically
+    return () => {}; // Return unsubscribe function
+  }
+  
+  // Import onAuthStateChanged dynamically
+  try {
     const { onAuthStateChanged } = require('firebase/auth');
     return onAuthStateChanged(auth, callback);
   } catch (error) {
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('Failed to setup auth state monitoring:', error);
     }
-    throw error;
+    return () => {}; // Return unsubscribe function
   }
 };
 
-// Export app and auth for compatibility - direct initialization
-export const app = initializeFirebase().app;
-export const auth = initializeFirebase().auth;
+// Export app and auth for compatibility
+export const app = (() => {
+  const { app } = getFirebase();
+  return app;
+})();
+
+export const auth = (() => {
+  const { auth } = getFirebase();
+  return auth;
+})();
