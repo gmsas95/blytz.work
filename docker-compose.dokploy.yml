@@ -79,7 +79,7 @@ services:
       start_period: 60s
 
   # Frontend Application
-  blytzwork-frontend:
+  frontend-final:
     build:
       context: ./frontend
       dockerfile: Dockerfile
