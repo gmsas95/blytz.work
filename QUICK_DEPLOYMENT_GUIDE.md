@@ -49,7 +49,7 @@ docker compose -p blytzwork-webapp-uvey24 -f docker-compose.dokploy.yml ps
 
 # Access URLs
 # Frontend: https://blytz.work
-# Backend API: https://gateway.blytz.work
+# Backend API: https://api.blytz.work
 ```
 
 ---

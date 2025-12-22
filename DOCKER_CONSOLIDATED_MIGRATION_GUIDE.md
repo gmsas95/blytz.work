@@ -77,9 +77,9 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 # Application URLs
-API_URL=https://gateway.blytz.work
+API_URL=https://api.blytz.work
 FRONTEND_URL=https://blytz.work
-NEXT_PUBLIC_API_URL=https://gateway.blytz.work/api
+NEXT_PUBLIC_API_URL=https://api.blytz.work/api
 NEXT_PUBLIC_APP_URL=https://blytz.work
 
 # Security
@@ -127,7 +127,7 @@ docker restart traefik
 - [ ] All containers start successfully
 - [ ] Health checks pass for all services
 - [ ] Frontend loads at https://blytz.work
-- [ ] Backend API responds at https://gateway.blytz.work
+- [ ] Backend API responds at https://api.blytz.work
 - [ ] Database connections work properly
 - [ ] Redis caching functions correctly
 - [ ] Firebase authentication works

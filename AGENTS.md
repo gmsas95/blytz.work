@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 
-BlytzWork is a comprehensive hiring platform that connects companies with virtual assistants. Built with modern web technologies, it features secure authentication, real-time messaging, integrated payment processing, and a sophisticated matching system. The platform is deployed at `blytz.work` with supporting services at `gateway.blytz.work` and `sudo.blytz.work`.
+BlytzWork is a comprehensive hiring platform that connects companies with virtual assistants. Built with modern web technologies, it features secure authentication, real-time messaging, integrated payment processing, and a sophisticated matching system. The platform is deployed at `blytz.work` with supporting services at `api.blytz.work` and `sudo.blytz.work`.
 
 **Current Status**: ✅ Production-ready with enhanced security fixes, comprehensive VA profiles, and real-time chat system
 

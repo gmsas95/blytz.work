@@ -76,11 +76,11 @@ Looking at the Docker Compose labels, there's a **mismatch in service names**:
 # Current configuration issues:
 
 # Backend service labels:
-- "traefik.http.routers.blytz-api.rule=Host(`gateway.blytz.work`)"
+- "traefik.http.routers.blytz-api.rule=Host(`api.blytz.work`)"
 - "traefik.http.services.blytz-api.loadbalancer.server.port=3000"
 
 # But container is exposed on port 3011, not 3000
-# And domain is gateway.blytz.work, not the configured domains
+# And domain is api.blytz.work, not the configured domains
 ```
 
 **Correct Configuration Should Be**:
@@ -177,7 +177,7 @@ NEXT_PUBLIC_API_URL=https://api.blytz.app
 # Test all endpoints after fixes
 curl -f https://api.blytz.app/health
 curl -f https://hyred.blytz.app
-curl -f https://gateway.blytz.work/health
+curl -f https://api.blytz.work/health
 
 # Check SSL certificates
 curl -I https://api.blytz.app | grep -i ssl

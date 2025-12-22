@@ -16,7 +16,7 @@ This document outlines the fixes applied to resolve authentication issues in the
 ### 2. CORS Policy Issues
 - **Problem**: Frontend requests to backend API were blocked by CORS policy
 - **Error**: `No 'Access-Control-Allow-Origin' header is present on the requested resource`
-- **Impact**: API calls from `https://staging.blytz.work` to `https://gateway.blytz.work` were blocked
+- **Impact**: API calls from `https://staging.blytz.work` to `https://api.blytz.work` were blocked
 
 ### 3. Mock Authentication Fallbacks
 - **Problem**: Application was falling back to mock authentication when Firebase failed
@@ -34,7 +34,7 @@ app.register(cors, {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.NODE_ENV === "production"
       ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work"])
-      : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://gateway.blytz.work"];
+      : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://api.blytz.work"];
     
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
@@ -98,7 +98,7 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="123456789"
 NEXT_PUBLIC_FIREBASE_APP_ID="1:123456789:web:abcdef"
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-XXXXXXXXXX"
-NEXT_PUBLIC_API_URL="https://gateway.blytz.work/api"
+NEXT_PUBLIC_API_URL="https://api.blytz.work/api"
 NEXT_PUBLIC_APP_URL="https://blytz.work"
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 ```
@@ -131,7 +131,7 @@ echo $FIREBASE_PRIVATE_KEY
 ### 2. CORS Test
 ```bash
 # Test CORS preflight request
-curl -X OPTIONS https://gateway.blytz.work/api/auth/profile \
+curl -X OPTIONS https://api.blytz.work/api/auth/profile \
   -H "Origin: https://staging.blytz.work" \
   -H "Access-Control-Request-Method: GET" \
   -H "Access-Control-Request-Headers: authorization,content-type"

@@ -28,7 +28,7 @@ grep -E "(FIREBASE|NEXT_PUBLIC_FIREBASE)" .env.dokploy
 ### Visit These Pages
 
 - Firebase Debug Page: `https://blytz.work/debug/firebase`
-- Backend Health Check: `https://gateway.blytz.work/api/health`
+- Backend Health Check: `https://api.blytz.work/api/health`
 
 ## Common Issues
 
@@ -128,7 +128,7 @@ grep -E "(FIREBASE|NEXT_PUBLIC_FIREBASE)" .env.dokploy
    - Go to Firebase Console > Authentication > Settings
    - Add these domains to authorized domains:
      - `blytz.work`
-     - `gateway.blytz.work`
+     - `api.blytz.work`
      - `sudo.blytz.work`
 
 2. **Check Auth Domain Configuration**
@@ -208,7 +208,7 @@ grep -E "(REPLACE_WITH_|your-|XXXXX)" .env.dokploy
 curl -s https://blytz.work/debug/firebase | grep -E "(firebaseInitialized|error)"
 
 # Test backend
-curl -s https://gateway.blytz.work/api/health | grep -E "(firebase|auth)"
+curl -s https://api.blytz.work/api/health | grep -E "(firebase|auth)"
 ```
 
 ### Step 3: Check Firebase Console
@@ -231,7 +231,7 @@ curl -s https://gateway.blytz.work/api/health | grep -E "(firebase|auth)"
 ```bash
 # Test with a valid Firebase token (get from browser)
 TOKEN="your_firebase_token_here"
-curl -H "Authorization: Bearer $TOKEN" https://gateway.blytz.work/api/auth/profile
+curl -H "Authorization: Bearer $TOKEN" https://api.blytz.work/api/auth/profile
 ```
 
 ## Advanced Debugging

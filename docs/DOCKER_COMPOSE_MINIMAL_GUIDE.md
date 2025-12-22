@@ -90,7 +90,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-https://gateway.blytz.work}
+      API_URL: ${API_URL:-https://api.blytz.work}
       FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://staging.blytz.work,https://www.blytz.work}
     ports:
@@ -123,7 +123,7 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work/api}
     container_name: blytzwork-frontend
     restart: unless-stopped
     environment:
@@ -137,7 +137,7 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://gateway.blytz.work/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work/api}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     ports:
       - "3001:3001"  # Host port 3001 -> Container port 3001 (matches Dokploy config)
@@ -219,9 +219,9 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
 NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-firebase-project-id"
 
 # Application URLs
-NEXT_PUBLIC_API_URL="https://gateway.blytz.work/api"
+NEXT_PUBLIC_API_URL="https://api.blytz.work/api"
 NEXT_PUBLIC_APP_URL="https://blytz.work"
-API_URL="https://gateway.blytz.work"
+API_URL="https://api.blytz.work"
 FRONTEND_URL="https://blytz.work"
 
 # Security

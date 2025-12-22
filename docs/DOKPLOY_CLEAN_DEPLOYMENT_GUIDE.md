@@ -49,7 +49,7 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 # API Configuration
-API_URL=https://gateway.blytz.work
+API_URL=https://api.blytz.work
 FRONTEND_URL=https://blytz.work
 ALLOWED_ORIGINS=https://blytz.work,https://staging.blytz.work,https://www.blytz.work
 
@@ -62,7 +62,7 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-NEXT_PUBLIC_API_URL=https://gateway.blytz.work/api
+NEXT_PUBLIC_API_URL=https://api.blytz.work/api
 NEXT_PUBLIC_APP_URL=https://blytz.work
 ```
 
@@ -127,7 +127,7 @@ docker compose -p blytzwork-webapp-uvey24 -f docker-compose.dokploy.yml ps
 docker compose -p blytzwork-webapp-uvey24 -f docker-compose.dokploy.yml logs -f
 
 # Test API endpoints
-curl https://gateway.blytz.work/health
+curl https://api.blytz.work/health
 
 # Test frontend
 curl -I https://blytz.work
@@ -138,7 +138,7 @@ curl -I https://blytz.work
 | Service | Container Name | Internal Port | External URL |
 |---------|----------------|---------------|--------------|
 | Frontend | blytzwork-frontend | 3001 | https://blytz.work |
-| Backend | blytzwork-backend | 3000 | https://gateway.blytz.work |
+| Backend | blytzwork-backend | 3000 | https://api.blytz.work |
 | Database | blytzwork-postgres | 5432 | Internal only |
 | Cache | blytzwork-redis | 6379 | Internal only |
 

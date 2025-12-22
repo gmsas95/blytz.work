@@ -63,9 +63,9 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
 NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-firebase-project-id"
 
 # Application URLs
-NEXT_PUBLIC_API_URL="https://gateway.blytz.work/api"
+NEXT_PUBLIC_API_URL="https://api.blytz.work/api"
 NEXT_PUBLIC_APP_URL="https://blytz.work"
-API_URL="https://gateway.blytz.work"
+API_URL="https://api.blytz.work"
 FRONTEND_URL="https://blytz.work"
 
 # Security
@@ -128,7 +128,7 @@ cat docker-compose.yml | grep -E "(blytzwork-backend|blytzwork-frontend)"
 
 3. **Check Application URLs**:
    - Frontend: https://blytz.work
-   - Backend API: https://gateway.blytz.work/api/health
+   - Backend API: https://api.blytz.work/api/health
 
 ## Troubleshooting
 

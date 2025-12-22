@@ -35,7 +35,7 @@ This guide provides detailed, step-by-step instructions to properly configure Fi
 Make sure to add these domains to your authorized domains list:
 - `localhost` (for development)
 - `blytz.work` (production frontend)
-- `gateway.blytz.work` (production backend)
+- `api.blytz.work` (production backend)
 - `sudo.blytz.work` (admin panel)
 
 ## Get Frontend Credentials
@@ -243,7 +243,7 @@ After deploying, visit `https://blytz.work/debug/firebase` to see:
 
 **Solutions**:
 1. Add your production domains to Firebase Auth settings
-2. Include both `blytz.work` and `gateway.blytz.work`
+2. Include both `blytz.work` and `api.blytz.work`
 3. Wait a few minutes for changes to propagate
 
 ### Debug Commands

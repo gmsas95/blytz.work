@@ -128,7 +128,7 @@ telnet your-server-ip 5432
 telnet your-server-ip 6379
 
 # Should succeed - through reverse proxy
-curl -I https://gateway.blytz.work/health
+curl -I https://api.blytz.work/health
 curl -I https://blytz.work
 ```
 

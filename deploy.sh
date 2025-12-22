@@ -93,5 +93,5 @@ echo "- Restart services: docker compose -p blytzwork-webapp-uvey24 -f ./docker-
 echo ""
 echo "🌐 Access URLs:"
 echo "- Frontend: https://blytz.work"
-echo "- Backend API: https://gateway.blytz.work"
+echo "- Backend API: https://api.blytz.work"
 echo ""

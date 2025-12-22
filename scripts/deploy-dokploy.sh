@@ -149,7 +149,7 @@ echo "- Update services: docker compose -p $PROJECT_NAME -f ./$COMPOSE_FILE up -
 echo ""
 print_status "🌐 Access URLs:"
 echo "- Frontend: https://blytz.work"
-echo "- Backend API: https://gateway.blytz.work"
+echo "- Backend API: https://api.blytz.work"
 echo ""
 print_status "🔍 Troubleshooting:"
 echo "- If services are not accessible, check Traefik configuration in dokploy.yml"

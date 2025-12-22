@@ -63,9 +63,9 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 #### Application Configuration
 ```
-API_URL=https://gateway.blytz.work
+API_URL=https://api.blytz.work
 FRONTEND_URL=https://blytz.work
-NEXT_PUBLIC_API_URL=https://gateway.blytz.work/api
+NEXT_PUBLIC_API_URL=https://api.blytz.work/api
 NEXT_PUBLIC_APP_URL=https://blytz.work
 ALLOWED_ORIGINS=https://blytz.work,https://staging.blytz.work,https://www.blytz.work
 JWT_SECRET=your-jwt-secret-here
