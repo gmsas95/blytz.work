@@ -77,11 +77,11 @@ services:
       start_period: 60s
     labels:
       - traefik.enable=true
-      - traefik.http.services.backend.loadbalancer.server.port=3000
-      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
-      - traefik.http.routers.backend.entrypoints=websecure
-      - traefik.http.routers.backend.tls.certresolver=letsencrypt
-      - traefik.http.routers.backend.service=backend
+      - traefik.http.services.blytzwork-backend.loadbalancer.server.port=3000
+      - traefik.http.routers.blytzwork-backend.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.blytzwork-backend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-backend.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytzwork-backend.service=blytzwork-backend
 
   # Frontend Application
   frontend-final:
@@ -127,11 +127,11 @@ services:
       start_period: 60s
     labels:
       - traefik.enable=true
-      - traefik.http.services.frontend.loadbalancer.server.port=3001
-      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`staging.blytz.work`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
-      - traefik.http.routers.frontend.service=frontend
+      - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001
+      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-frontend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytzwork-frontend.service=blytzwork-frontend
 
 volumes:
   postgres_data:
