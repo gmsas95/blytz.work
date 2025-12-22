@@ -131,9 +131,6 @@ networks:
   blytzwork-internal:
     driver: bridge
     internal: false
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
   dokploy-network:
     external: true
     name: dokploy-network
