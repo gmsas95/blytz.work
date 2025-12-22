@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: blytzwork-postgres
+    container_name: blytz-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
@@ -11,10 +11,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
     networks:
-      - dokploy-network
+      - blytz-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
@@ -24,14 +22,12 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: blytzwork-redis
+    container_name: blytz-redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     networks:
-      - dokploy-network
+      - blytz-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -39,11 +35,11 @@ services:
       retries: 5
 
   # Backend API
-  backend-final:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytzwork-backend-final
+    container_name: blytz-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -58,18 +54,22 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
-    ports:
-      - "3002:3000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - blytz-network
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.backend.entrypoints=websecure
+      - traefik.http.routers.backend.tls.certresolver=letsencrypt
+      - traefik.http.services.backend.loadbalancer.server.port=3000
 
   # Frontend
-  frontend-final:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -83,7 +83,7 @@ services:
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-    container_name: blytzwork-frontend-final
+    container_name: blytz-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -97,17 +97,21 @@ services:
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-    ports:
-      - "3001:3001"
     depends_on:
-      - backend-final
+      - backend
     networks:
-      - dokploy-network
+      - blytz-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.frontend.loadbalancer.server.port=3001
 
 volumes:
   postgres_data:
@@ -116,6 +120,5 @@ volumes:
     driver: local
 
 networks:
-  dokploy-network:
-    external: true
-    name: dokploy-network
+  blytz-network:
+    driver: bridge

@@ -57,14 +57,14 @@ http:
     blytzwork-service-app:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytz-frontend:3001
         passHostHeader: true
     
-    # Backend service - THIS WAS MISSING!
+    # Backend service - FIXED CONTAINER NAME
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-backend-final:3002
+          - url: http://blytz-backend:3000
         passHostHeader: true
 
   middlewares:
