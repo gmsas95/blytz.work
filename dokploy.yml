@@ -53,18 +53,18 @@ http:
           - url: http://dokploy:3000
         passHostHeader: true
     
-    # Frontend service
+    # Frontend service - UPDATE TO USE CORRECT SERVICE NAME
     blytzwork-service-app:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend:3001
+          - url: http://frontend-final:3001
         passHostHeader: true
     
-    # Backend service - FIXED CONTAINER NAME
+    # Backend service - UPDATE TO USE CORRECT SERVICE NAME  
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-backend:3000
+          - url: http://backend-final:3000
         passHostHeader: true
 
   middlewares:
