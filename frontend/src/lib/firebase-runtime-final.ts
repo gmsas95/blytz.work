@@ -50,45 +50,6 @@ const getFirebaseConfig = () => {
   return config;
 };
 
-// Mock Firebase services for when config is missing
-const createMockAuth = () => {
-  // Only log during runtime or development, not during build
-  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-    console.log('🔧 Using mock Firebase auth - configuration incomplete');
-  }
-  
-  return {
-    currentUser: null,
-    onAuthStateChanged: () => () => {},
-    signInWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    createUserWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock createUserWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    signInWithPopup: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithPopup called');
-      }
-      return { user: null };
-    },
-    signOut: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signOut called');
-      }
-    },
-    getAuth: () => createMockAuth(),
-    GoogleAuthProvider: class {
-      static PROVIDER_ID = 'google.com';
-    },
-  };
-};
 
 // Initialize Firebase at runtime
 export const initializeFirebase = () => {
@@ -99,12 +60,7 @@ export const initializeFirebase = () => {
   const config = getFirebaseConfig();
   
   if (!config) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.error('❌ Cannot initialize Firebase - configuration incomplete');
-    }
-    firebaseApp = { name: '[DEFAULT]', options: {} };
-    firebaseAuth = createMockAuth();
-    return { app: firebaseApp, auth: firebaseAuth };
+    throw new Error('❌ Cannot initialize Firebase - configuration incomplete. Please check environment variables.');
   }
 
   try {
@@ -134,12 +90,8 @@ export const initializeFirebase = () => {
       console.log('🔍 Auth instance created:', !!firebaseAuth);
     }
   } catch (error) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.error('❌ Firebase initialization failed:', error);
-      console.error('❌ Falling back to mock authentication');
-    }
-    firebaseApp = { name: '[MOCK_DEFAULT]', options: config || {} };
-    firebaseAuth = createMockAuth();
+    console.error('❌ Firebase initialization failed:', error);
+    throw new Error(`Firebase initialization failed: ${error.message}`);
   }
 
   return { app: firebaseApp, auth: firebaseAuth };

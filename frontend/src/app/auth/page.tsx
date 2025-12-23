@@ -31,31 +31,13 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         let authUser;
-        let isMockAuth = false;
         
-        try {
-          // Try Firebase auth first
-          authUser = await signInUser(formData.email, formData.password);
-          console.log('✅ Firebase authentication successful');
-        } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          isMockAuth = true;
-          
-          // For demo purposes, accept any email/password and assign role based on email
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          
-          // Create a mock user object for demo purposes
-          authUser = {
-            uid: 'demo-user-' + Date.now(),
-            email: formData.email,
-            displayName: formData.name || formData.email.split('@')[0],
-          };
-        }
+        // Use Firebase auth only - no mock fallback for production
+        authUser = await signInUser(formData.email, formData.password);
+        console.log('✅ Firebase authentication successful');
         
         // Store authentication state
         localStorage.setItem('authUser', JSON.stringify(authUser));
-        localStorage.setItem('isMockAuth', JSON.stringify(isMockAuth));
         
         // Get Firebase ID token and store it for API calls
         let token;
@@ -168,21 +150,8 @@ export default function AuthPage() {
       } else {
         let authUser;
         
-        try {
-          // Try Firebase auth first
-          authUser = await registerUser(formData.email, formData.password, formData.name);
-        } catch (firebaseError: any) {
-          // If Firebase is not configured or fails, use mock auth
-          console.log('Firebase auth failed, using mock auth:', firebaseError.message);
-          const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
-          
-          // Create a mock user object for demo purposes
-          authUser = {
-            uid: 'demo-user-' + Date.now(),
-            email: formData.email,
-            displayName: formData.name || formData.email.split('@')[0],
-          };
-        }
+        // Use Firebase auth only - no mock fallback for production
+        authUser = await registerUser(formData.email, formData.password, formData.name);
         
         // Get Firebase ID token and store it for API calls
         let token;
@@ -192,8 +161,8 @@ export default function AuthPage() {
             throw new Error('Failed to get authentication token');
           }
         } catch (tokenError) {
-          console.log('Token generation failed, using mock token');
-          token = 'demo-token-' + Date.now();
+          console.error('Token generation failed:', tokenError);
+          throw new Error('Authentication token generation failed');
         }
         
         // Get Firebase user UID and create basic profile in backend
