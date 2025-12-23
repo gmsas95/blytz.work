@@ -1,6 +1,6 @@
 import { getToken } from './auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gateway.blytz.work/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.blytz.work/api';
 
 // Helper function to add timeout to fetch
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000): Promise<Response> => {
@@ -23,32 +23,50 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
   }
 };
 
-export const apiCall = async (endpoint: string, options: RequestInit = {}, timeout = 3000) => {
+export const apiCall = async (endpoint: string, options: RequestInit = {}, timeout = 5000) => {
   let token = localStorage.getItem('authToken');
   let retryCount = 0;
-  const maxRetries = 1;
+  const maxRetries = 2;
   
   // Helper function to make the actual API call
   const makeRequest = async (authToken: string | null) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+    
+    // Add auth header if token is available
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    // Add custom header to indicate auth state for middleware
+    if (authToken || localStorage.getItem('authUser')) {
+      headers['x-has-auth'] = 'true';
+    }
+    
     return fetchWithTimeout(`${API_URL}${endpoint}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
-        ...options.headers,
-      }
+      headers
     }, timeout);
   };
   
   // Helper function to handle auth errors
   const handleAuthError = async () => {
-    // Token refresh failed after retry, clearing auth state
+    console.log('🔍 Handling authentication error...');
+    // Clear all auth-related storage
     localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('isMockAuth');
+    
     // Use a more graceful redirect
     if (typeof window !== 'undefined') {
-      window.location.href = '/auth?expired=true';
+      // Only redirect if we're not already on the auth page
+      if (!window.location.pathname.includes('/auth')) {
+        window.location.href = '/auth?expired=true';
+      }
     }
     throw new Error('Authentication expired. Please sign in again.');
   };
@@ -57,7 +75,14 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
     try {
       // If no token, try to get a fresh one
       if (!token) {
-        token = await getToken();
+        try {
+          token = await getToken();
+          if (token) {
+            localStorage.setItem('authToken', token);
+          }
+        } catch (tokenError) {
+          console.log('🔍 Could not get fresh token:', tokenError);
+        }
       }
       
       const response = await makeRequest(token);
@@ -66,17 +91,30 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       if (response.status === 401 && retryCount < maxRetries) {
         console.log('🔄 Token expired, attempting refresh...');
         // Try to refresh token
-        const freshToken = await getToken();
-        if (freshToken && freshToken !== token) {
-          // Retry with fresh token
-          console.log('🔄 Retrying with fresh token...');
-          token = freshToken;
-          retryCount++;
-          continue;
-        } else {
-          // Token refresh failed
+        try {
+          const freshToken = await getToken();
+          if (freshToken && freshToken !== token) {
+            // Retry with fresh token
+            console.log('🔄 Retrying with fresh token...');
+            token = freshToken;
+            localStorage.setItem('authToken', freshToken);
+            retryCount++;
+            continue;
+          } else {
+            // Token refresh failed
+            await handleAuthError();
+          }
+        } catch (refreshError) {
+          console.log('🔄 Token refresh failed:', refreshError);
           await handleAuthError();
         }
+      }
+      
+      // Handle other auth-related errors
+      if (response.status === 403) {
+        console.log('🔍 Access forbidden - checking permissions...');
+        // Don't automatically redirect for 403, let the component handle it
+        throw new Error('Access denied. You do not have permission to perform this action.');
       }
       
       return response;
@@ -91,6 +129,17 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       // For network errors, provide more helpful message
       if (error instanceof Error && error.message.includes('Failed to fetch')) {
         throw new Error('Network error. Please check your connection and try again.');
+      }
+      
+      // For abort errors (user cancelled)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request was cancelled');
+      }
+      
+      // If we've exhausted retries and it's an auth error, handle it
+      if (retryCount >= maxRetries && error instanceof Error &&
+          (error.message.includes('Authentication') || error.message.includes('401'))) {
+        await handleAuthError();
       }
       
       // Re-throw other errors

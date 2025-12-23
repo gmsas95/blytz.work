@@ -1,33 +1,39 @@
+# Clean Docker Compose for BlytzWork Platform - Dokploy Deployment
+# This file is specifically designed for clean deployment without cached state issues
+# Project name: blytzwork-webapp-uvey24
+
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: blytz-postgres
+    container_name: blytzwork-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blytzwork_secure_password_2024}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
     networks:
-      - blytz-network
+      - blytzwork-internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD", "sh", "-c", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: blytz-redis
+    container_name: blytzwork-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     networks:
-      - blytz-network
+      - blytzwork-internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -35,11 +41,11 @@ services:
       retries: 5
 
   # Backend API
-  backend:
+  backend-final:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytz-backend
+    container_name: blytzwork-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -52,24 +58,33 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-http://localhost:3000}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      API_URL: ${API_URL:-https://api.blytz.work}
+      FRONTEND_URL: ${FRONTEND_URL:-https://blytz.work}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://staging.blytz.work,https://www.blytz.work}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - blytz-network
+      - blytzwork-internal
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
-      - traefik.http.routers.backend.entrypoints=websecure
-      - traefik.http.routers.backend.tls.certresolver=letsencrypt
-      - traefik.http.services.backend.loadbalancer.server.port=3000
+      - traefik.http.services.blytzwork-backend.loadbalancer.server.port=3000
+      - traefik.http.routers.blytzwork-backend.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.blytzwork-backend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-backend.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytzwork-backend.service=blytzwork-backend
 
-  # Frontend
-  frontend:
+  # Frontend Application
+  frontend-final:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -82,8 +97,8 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-    container_name: blytz-frontend
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work/api}
+    container_name: blytzwork-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -96,22 +111,27 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work/api}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
-      - backend
+      backend-final:
+        condition: service_healthy
     networks:
-      - blytz-network
+      - blytzwork-internal
+      - dokploy-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:3001/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
-      - traefik.http.services.frontend.loadbalancer.server.port=3001
+      - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001
+      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-frontend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytzwork-frontend.service=blytzwork-frontend
 
 volumes:
   postgres_data:
@@ -120,5 +140,9 @@ volumes:
     driver: local
 
 networks:
-  blytz-network:
+  blytzwork-internal:
     driver: bridge
+    internal: false
+  dokploy-network:
+    external: true
+    name: dokploy-network

@@ -50,45 +50,6 @@ const getFirebaseConfig = () => {
   return config;
 };
 
-// Mock Firebase services for when config is missing
-const createMockAuth = () => {
-  // Only log during runtime or development, not during build
-  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-    console.log('🔧 Using mock Firebase auth - configuration incomplete');
-  }
-  
-  return {
-    currentUser: null,
-    onAuthStateChanged: () => () => {},
-    signInWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    createUserWithEmailAndPassword: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock createUserWithEmailAndPassword called');
-      }
-      return { user: null };
-    },
-    signInWithPopup: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signInWithPopup called');
-      }
-      return { user: null };
-    },
-    signOut: async () => {
-      if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-        console.log('🔧 Mock signOut called');
-      }
-    },
-    getAuth: () => createMockAuth(),
-    GoogleAuthProvider: class {
-      static PROVIDER_ID = 'google.com';
-    },
-  };
-};
 
 // Initialize Firebase at runtime
 export const initializeFirebase = () => {
@@ -99,31 +60,38 @@ export const initializeFirebase = () => {
   const config = getFirebaseConfig();
   
   if (!config) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.error('❌ Cannot initialize Firebase - configuration incomplete');
-    }
-    firebaseApp = { name: '[DEFAULT]', options: {} };
-    firebaseAuth = createMockAuth();
-    return { app: firebaseApp, auth: firebaseAuth };
+    throw new Error('❌ Cannot initialize Firebase - configuration incomplete. Please check environment variables.');
   }
 
   try {
-    // Import Firebase modules dynamically
-    const { initializeApp } = require('firebase/app');
-    const { getAuth } = require('firebase/auth');
+    // Import Firebase modules dynamically with better error handling
+    let initializeApp, getAuth;
+    
+    try {
+      const firebaseApp = require('firebase/app');
+      const firebaseAuth = require('firebase/auth');
+      initializeApp = firebaseApp.initializeApp;
+      getAuth = firebaseAuth.getAuth;
+    } catch (importError) {
+      console.error('❌ Failed to import Firebase modules:', importError);
+      throw new Error('Firebase modules not available');
+    }
+    
+    if (!initializeApp || !getAuth) {
+      throw new Error('Firebase functions not available');
+    }
     
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
+    
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.log('✅ Firebase initialized successfully');
       console.log('🔗 Firebase app name:', firebaseApp.name);
+      console.log('🔍 Auth instance created:', !!firebaseAuth);
     }
   } catch (error) {
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.error('❌ Firebase initialization failed:', error);
-    }
-    firebaseApp = { name: '[DEFAULT]', options: config };
-    firebaseAuth = createMockAuth();
+    console.error('❌ Firebase initialization failed:', error);
+    throw new Error(`Firebase initialization failed: ${error.message}`);
   }
 
   return { app: firebaseApp, auth: firebaseAuth };

@@ -1,16 +1,30 @@
-import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  console.log('🔍 Middleware called for path:', pathname);
+  // Skip middleware for static files, API routes, and auth page
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/static') ||
+    pathname.includes('.') ||
+    pathname === '/auth' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-email-sent'
+  ) {
+    return NextResponse.next();
+  }
 
   // Protected routes that require authentication
   const protectedRoutes = [
     '/employer/dashboard',
     '/va/dashboard',
-    '/select-role'
+    '/select-role',
+    '/employer/onboarding',
+    '/va/onboarding',
+    '/chat',
+    '/contract'
   ];
 
   // Check if the current path is a protected route
@@ -18,73 +32,45 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  console.log('🔍 Is protected route:', isProtectedRoute);
-
   // Skip authentication check for non-protected routes
   if (!isProtectedRoute) {
-    console.log('🔍 Skipping auth check for non-protected route');
     return NextResponse.next();
   }
 
-  try {
-    // Dynamically import auth to avoid build-time issues
-    let authModule;
-    try {
-      authModule = require('./lib/firebase-runtime-final');
-    } catch (importError) {
-      console.error('❌ Failed to import auth module:', importError);
-      // Redirect to auth page if auth module can't be loaded
-      const url = request.nextUrl.clone();
-      url.pathname = '/auth';
-      return NextResponse.redirect(url);
-    }
+  // Check for authentication token in cookies or headers
+  const token = request.cookies.get('authToken')?.value ||
+                request.headers.get('authorization')?.replace('Bearer ', '');
 
-    const { auth } = authModule;
-    let firebaseAuth;
-    
-    try {
-      const authResult = auth();
-      firebaseAuth = authResult.auth;
-    } catch (authError) {
-      console.error('❌ Failed to initialize Firebase auth:', authError);
-      // Redirect to auth page if Firebase auth can't be initialized
-      const url = request.nextUrl.clone();
-      url.pathname = '/auth';
-      return NextResponse.redirect(url);
-    }
-    
-    console.log('🔍 Firebase auth initialized:', !!firebaseAuth);
-    
-    // Check if auth has a currentUser method
-    if (!firebaseAuth || typeof firebaseAuth.currentUser === 'undefined') {
-      console.log('🔍 Firebase auth not properly initialized - redirecting to auth');
-      const url = request.nextUrl.clone();
-      url.pathname = '/auth';
-      return NextResponse.redirect(url);
-    }
-    
-    const user = firebaseAuth.currentUser;
-    console.log('🔍 Current user:', user?.email || 'None');
+  // Check for user role in cookies
+  const userRole = request.cookies.get('userRole')?.value;
 
-    // If it's a protected route and user is not authenticated, redirect to auth
-    if (!user) {
-      console.log('🔍 Redirecting to auth - no user found');
-      const url = request.nextUrl.clone();
-      url.pathname = '/auth';
-      return NextResponse.redirect(url);
-    }
-  } catch (error) {
-    console.error('❌ Middleware error:', error);
-    console.error('❌ Error details:', error.message);
-    
-    // If there's an error with auth, redirect to auth page for safety
-    console.log('🔍 Redirecting to auth - middleware error');
+  // If no token, check localStorage fallback via header (client-side should set this)
+  const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
+
+  if (!token && !hasAuthHeader) {
+    // No authentication found - redirect to auth page
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
+    url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 
-  // For all other routes, continue as normal
+  // Additional role-based checks
+  if (pathname.startsWith('/employer') && userRole !== 'employer') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname.startsWith('/va') && userRole !== 'va') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // User is authenticated - continue to the protected route
   return NextResponse.next();
 }
 
