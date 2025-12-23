@@ -31,13 +31,16 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         let authUser;
+        let isMockAuth = false;
         
         try {
           // Try Firebase auth first
           authUser = await signInUser(formData.email, formData.password);
+          console.log('✅ Firebase authentication successful');
         } catch (firebaseError: any) {
           // If Firebase is not configured or fails, use mock auth
           console.log('Firebase auth failed, using mock auth:', firebaseError.message);
+          isMockAuth = true;
           
           // For demo purposes, accept any email/password and assign role based on email
           const role = formData.email.includes('company') || formData.email.includes('employer') ? 'company' : 'va';
@@ -48,11 +51,11 @@ export default function AuthPage() {
             email: formData.email,
             displayName: formData.name || formData.email.split('@')[0],
           };
-          
-          toast.success(`Welcome back!`, {
-            description: "Successfully signed in to your account",
-          });
         }
+        
+        // Store authentication state
+        localStorage.setItem('authUser', JSON.stringify(authUser));
+        localStorage.setItem('isMockAuth', JSON.stringify(isMockAuth));
         
         // Get Firebase ID token and store it for API calls
         let token;
@@ -61,19 +64,36 @@ export default function AuthPage() {
           if (!token) {
             throw new Error('Failed to get authentication token');
           }
+          localStorage.setItem('authToken', token);
         } catch (tokenError) {
           console.log('Token generation failed, using mock token');
           token = 'demo-token-' + Date.now();
+          localStorage.setItem('authToken', token);
+        }
+        
+        // Show success message
+        toast.success(`Welcome back!`, {
+          description: "Successfully signed in to your account",
+        });
+        
+        // Determine user role and redirect
+        let userRole = 'va'; // default
+        let redirectPath = '/va/onboarding';
+        
+        // Try to determine role from email first (fallback)
+        if (formData.email.includes('company') || formData.email.includes('employer')) {
+          userRole = 'employer';
+          redirectPath = '/employer/onboarding';
         }
         
         // Check user role from backend with timeout
         try {
           console.log('Checking user profile...');
           
-          // Add timeout to prevent infinite loading  
+          // Add timeout to prevent infinite loading
           const profileResponse = await Promise.race([
             apiCall('/auth/profile'),
-            new Promise((_, reject) => 
+            new Promise((_, reject) =>
               setTimeout(() => reject(new Error('API call timeout')), 3000)
             )
           ]) as Response;
@@ -86,59 +106,48 @@ export default function AuthPage() {
             console.log('User role from backend:', role);
             
             if (role === 'company') {
+              userRole = 'employer';
               localStorage.setItem("userRole", "employer");
+              
               // Check if company has profile with timeout
               try {
                 const companyResponse = await Promise.race([
                   apiCall('/company/profile'),
-                  new Promise((_, reject) => 
+                  new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('API call timeout')), 2000)
                   )
                 ]) as Response;
                 
-                if (!companyResponse.ok) {
-                  router.push("/employer/onboarding");
-                  return;
-                }
-                router.push("/employer/dashboard");
-                return;
+                redirectPath = companyResponse.ok ? "/employer/dashboard" : "/employer/onboarding";
               } catch {
-                router.push("/employer/onboarding");
-                return;
+                redirectPath = "/employer/onboarding";
               }
             } else if (role === 'va') {
+              userRole = 'va';
               localStorage.setItem("userRole", "va");
+              
               // Check if VA has profile with timeout
               try {
                 const vaResponse = await Promise.race([
                   apiCall('/va/profile'),
-                  new Promise((_, reject) => 
+                  new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('API call timeout')), 2000)
                   )
                 ]) as Response;
                 
-                if (!vaResponse.ok) {
-                  router.push("/va/onboarding");
-                  return;
-                }
-                router.push("/va/dashboard");
-                return;
+                redirectPath = vaResponse.ok ? "/va/dashboard" : "/va/onboarding";
               } catch {
-                router.push("/va/onboarding");
-                return;
+                redirectPath = "/va/onboarding";
               }
             } else {
               // User exists but no role - send to role selection
               console.log('User has no role, going to role selection');
-              router.push("/select-role");
-              return;
+              redirectPath = "/select-role";
             }
           } else if (profileResponse.status === 404) {
-            // User doesn't exist in backend - create fallback user
+            // User doesn't exist in backend - use fallback
             console.log('User not found in backend, using fallback...');
-            const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-            localStorage.setItem('userRole', emailRole);
-            router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+            redirectPath = userRole === 'employer' ? "/employer/onboarding" : "/va/onboarding";
           } else {
             // Other HTTP error - use fallback
             throw new Error(`Backend returned ${profileResponse.status}`);
@@ -146,13 +155,16 @@ export default function AuthPage() {
         } catch (error) {
           console.error('Error checking user role:', error);
           console.log('Backend is unavailable, using fallback...');
-          
-          // Backend is down - determine role from email and redirect to onboarding
-          const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-          console.log('Determining role from email:', emailRole);
-          localStorage.setItem('userRole', emailRole);
-          router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+          // Backend is down - use the role determined from email
+          redirectPath = userRole === 'employer' ? "/employer/onboarding" : "/va/onboarding";
         }
+        
+        // Store final role and redirect
+        localStorage.setItem('userRole', userRole);
+        console.log('Redirecting to:', redirectPath);
+        
+        // Use window.location.href for more reliable redirect
+        window.location.href = redirectPath;
       } else {
         let authUser;
         

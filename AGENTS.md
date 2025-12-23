@@ -444,7 +444,47 @@ cd backend && npx prisma migrate deploy
 
 ---
 
-*This guide is intended for AI coding agents working on the Hyred platform. For questions or clarifications, refer to the codebase comments and documentation before making assumptions about the project structure or implementation details.*
+## 🎯 CORE NARRATIVE: SERVING THE UNDERSERVED
+
+BlytzWork is not just a hiring platform - we are building a **lifeline for overwhelmed professionals** who are drowning in their own success. Our mission is to serve the underserved market that giant platforms ignore because they're "uneconomical" to serve at scale.
+
+### The Real Vision
+We serve **overwhelmed professionals** (35-44 year old managers making $75-150K) who:
+- Work 50+ hours/week and can't keep up
+- Are paralyzed by decision fatigue from too many options
+- Are intimidated by complex BPO/agency processes
+- Need help but don't know where to start
+- Feel shame about not being able to "handle it all"
+
+### What "Underserved" Means to Us
+**Upwork ignores them** because they need hand-holding that kills self-service margins
+**BPOs reject them** because they're too small for enterprise minimums
+**Enterprise solutions** overwhelm them with complexity they don't need
+
+### Our Competitive Moat: Empathy at Scale
+We don't optimize for **transactions** like Upwork or **contracts** like BPOs. We optimize for **transformation** - helping people go from "drowning" to "in control" in 7 days or less.
+
+### The Language We Speak
+- **Not**: "We provide efficient staffing solutions"
+- **But**: "What if you could breathe again?"
+- **Not**: "AI-powered matching algorithm"
+- **But**: "We understand that hiring someone feels like adding another full-time job to your already impossible schedule"
+
+### Metrics That Matter to Us
+- Hours worked per week (before/after)
+- Stress level (1-10 scale)
+- Family time increase
+- "Do you feel in control again?" (yes/no)
+- **Not**: Platform engagement time or feature usage
+
+### Our Promise
+We help overwhelmed professionals hire qualified virtual assistants in 7 days or less, with guaranteed quality and transparent pricing. We give people **permission to not be superhuman** and charge premium for that transformation.
+
+*This narrative should guide every decision, message, and interaction at Blytz.work. When you serve the underserved with empathy and excellence, you don't just build a business - you build a movement.*
+
+---
+
+*This guide is intended for AI coding agents working on the BlytzWork platform. For questions or clarifications, refer to the codebase comments and documentation before making assumptions about the project structure or implementation details.*
 
 **Last Updated**: December 2024 - Production deployment successful with enhanced security fixes, comprehensive VA profiles (34+ fields), real-time chat system, and complete TypeScript compilation resolution.
 

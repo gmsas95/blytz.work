@@ -1,12 +1,13 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // Disable Turbopack completely for CI/CD compatibility
-  ...(process.env.NODE_ENV === 'production' ? { 
-    webpack: (config, { dev }) => {
-      return config
-    }
-  } : {}),
+  // Use webpack instead of Turbopack for compatibility
+  webpack: (config, { dev }) => {
+    return config
+  },
+  
+  // Add empty turbopack config to silence the warning
+  turbopack: {},
   
   reactStrictMode: true,
   output: 'standalone',

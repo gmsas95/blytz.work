@@ -108,21 +108,37 @@ export const initializeFirebase = () => {
   }
 
   try {
-    // Import Firebase modules dynamically
-    const { initializeApp } = require('firebase/app');
-    const { getAuth } = require('firebase/auth');
+    // Import Firebase modules dynamically with better error handling
+    let initializeApp, getAuth;
+    
+    try {
+      const firebaseApp = require('firebase/app');
+      const firebaseAuth = require('firebase/auth');
+      initializeApp = firebaseApp.initializeApp;
+      getAuth = firebaseAuth.getAuth;
+    } catch (importError) {
+      console.error('❌ Failed to import Firebase modules:', importError);
+      throw new Error('Firebase modules not available');
+    }
+    
+    if (!initializeApp || !getAuth) {
+      throw new Error('Firebase functions not available');
+    }
     
     firebaseApp = initializeApp(config);
     firebaseAuth = getAuth(firebaseApp);
+    
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.log('✅ Firebase initialized successfully');
       console.log('🔗 Firebase app name:', firebaseApp.name);
+      console.log('🔍 Auth instance created:', !!firebaseAuth);
     }
   } catch (error) {
     if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
       console.error('❌ Firebase initialization failed:', error);
+      console.error('❌ Falling back to mock authentication');
     }
-    firebaseApp = { name: '[DEFAULT]', options: config };
+    firebaseApp = { name: '[MOCK_DEFAULT]', options: config || {} };
     firebaseAuth = createMockAuth();
   }
 
