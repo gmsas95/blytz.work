@@ -51,15 +51,27 @@ app.register(rateLimit, {
 
 // Register plugins
 app.register(cors, {
-  origin: process.env.NODE_ENV === "production"
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work"])
-    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://api.blytz.work"],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.NODE_ENV === "production"
+      ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work"])
+      : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://api.blytz.work"];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin", "x-has-auth"],
+  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin", "x-has-auth", "Access-Control-Request-Headers", "Access-Control-Request-Method"],
   exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // Cache preflight for 24 hours
 });
 
 app.register(env, {
@@ -119,10 +131,10 @@ const start = async () => {
 
     await app.ready();
     await app.listen({
-      port: parseInt(process.env.PORT || "3002"), // Use different port for database-only backend
+      port: parseInt(process.env.PORT || "3000"), // Use port 3000 to match Docker configuration
       host: "0.0.0.0"
     });
-    app.log.info(`Server listening on port ${process.env.PORT || 3002}`);
+    app.log.info(`Server listening on port ${process.env.PORT || 3000}`);
     app.log.info(`🗄️ Database status: ${dbConnected ? 'Connected' : 'Disconnected'}`);
     app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
     app.log.info(`👤 VA profiles system ready at /api/va/*`);
