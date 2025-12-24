@@ -39,7 +39,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytz-backend
+    container_name: blytzwork-backend
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -63,10 +63,10 @@ services:
       - blytz-network
     labels:
       - traefik.enable=true
-      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
-      - traefik.http.routers.backend.entrypoints=websecure
-      - traefik.http.routers.backend.tls.certresolver=letsencrypt
-      - traefik.http.services.backend.loadbalancer.server.port=3000
+      - traefik.http.routers.blytzwork-backend-router.rule=Host(`api.blytz.work`)
+      - traefik.http.routers.blytzwork-backend-router.entrypoints=websecure
+      - traefik.http.routers.blytzwork-backend-router.tls.certresolver=letsencrypt
+      - traefik.http.services.blytzwork-backend-service.loadbalancer.server.port=3000
 
   # Frontend
   frontend:
@@ -108,10 +108,10 @@ services:
       retries: 3
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
-      - traefik.http.services.frontend.loadbalancer.server.port=3001
+      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-frontend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001
 
 volumes:
   postgres_data:
