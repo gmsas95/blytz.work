@@ -53,7 +53,7 @@ app.register(rateLimit, {
 app.register(cors, {
   origin: process.env.NODE_ENV === "production"
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work"])
-    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://api.blytz.work"],
+    : ["http://localhost:3000", "http://localhost:3001", "http://localhost:3003", "https://blytz.work", "https://staging.blytz.work", "https://www.blytz.work", "https://api.blytz.work"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin", "x-has-auth", "Access-Control-Request-Headers", "Access-Control-Request-Method"],
