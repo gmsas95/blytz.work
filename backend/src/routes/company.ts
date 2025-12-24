@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
+import { calculateCompanyCompletion } from "../utils/profileHelpers.js";
 
 // Validation schemas
 const createCompanyProfileSchema = z.object({
