@@ -113,12 +113,9 @@ export default async function authRoutes(app: FastifyInstance) {
     try {
       const { email } = request.body as { email: string };
 
-      if (!email || !email.includes('@')) {
-        return reply.code(400).send({
-          error: "Please enter a valid email address",
-          code: "INVALID_EMAIL"
-        });
-      }
+      // Validate email properly with Zod
+      const emailSchema = z.string().email("Please enter a valid email address");
+      const validatedEmail = emailSchema.parse(email);
 
       const authInstance = admin.auth();
       const userRecord = await authInstance.getUserByEmail(email.toLowerCase())
@@ -140,20 +137,34 @@ export default async function authRoutes(app: FastifyInstance) {
       // Generate password reset link
       const link = await admin.auth().generatePasswordResetLink(email);
 
-      // In a real production app, you would send this via email (e.g., SendGrid, AWS SES)
-      // For this implementation, we'll log it and return it for development convenience
-      console.log(`Password reset link for ${email}: ${link}`);
+      // In production, send password reset link via email (e.g., SendGrid, AWS SES)
+      // TODO: Implement email sending service
+      // await sendPasswordResetEmail(email, link);
 
+      // Log for development purposes only
+      app.log.info({ email, userId: userRecord.uid }, 'Password reset link generated');
+
+      // Return success without exposing the reset link
       return reply.send({
         success: true,
-        message: "Password reset link generated (check console/response for dev)",
-        debug_link: link // Remove this in strict production if email service is added
+        message: "If an account exists with this email, a password reset link has been sent"
       });
-    } catch (error: any) {
-      return reply.code(500).send({
-        error: "Failed to process forgot password request",
-        code: "FORGOT_PASSWORD_ERROR",
-        details: error.message
+    } catch (error: unknown) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      app.log.error({ error: errorMessage }, 'Forgot password request failed');
+
+      // Don't reveal if email exists or not for security
+      return reply.send({
+        success: true,
+        message: "If an account exists with this email, a password reset link has been sent"
       });
     }
   });

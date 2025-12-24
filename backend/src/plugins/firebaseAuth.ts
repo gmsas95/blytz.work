@@ -1,3 +1,8 @@
+// Production-ready Firebase Authentication
+import { FastifyReply, FastifyRequest } from "fastify";
+import admin from "firebase-admin";
+import { prisma } from "../utils/prisma.js";
+
 // Type definition for user object
 interface AuthenticatedUser {
   uid: string;
@@ -5,18 +10,14 @@ interface AuthenticatedUser {
   role: 'company' | 'va' | 'admin';
   profileComplete: boolean;
 }
-
+ 
 // Extend FastifyRequest type
 declare module 'fastify' {
   export interface FastifyRequest {
-    user?: AuthenticatedUser;
+    user: AuthenticatedUser;
   }
 }
 
-// Production-ready Firebase Authentication
-import { FastifyReply, FastifyRequest } from "fastify";
-import admin from "firebase-admin";
-import { prisma } from "../utils/prisma.js";
 
 // Initialize Firebase Admin SDK
 let firebaseAuth: admin.auth.Auth | null = null;

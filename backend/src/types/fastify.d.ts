@@ -1,11 +1,13 @@
 import { FastifyRequest } from "fastify";
 
+import { AuthenticatedUser, UserRole } from './index.js';
+
 declare module "fastify" {
   export interface FastifyRequest {
-    user?: {
-      uid: string;
-      email: string;
-      role?: string;
-    };
+    user: AuthenticatedUser;
+  }
+  
+  export interface FastifyInstance {
+    log: any;
   }
 }

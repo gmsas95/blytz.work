@@ -673,32 +673,70 @@ export default async function paymentRoutes(app: FastifyInstance) {
 
   // Helper functions
   async function createStripePaymentIntent(data: any) {
-    // Mock implementation - would integrate with actual Stripe
-    return {
-      id: 'pi_' + Date.now(),
-      client_secret: 'pi_' + Date.now() + '_secret_' + Math.random().toString(36).substr(2, 9),
-      status: 'requires_payment_method',
-      amount: data.amount,
-      currency: data.currency
-    };
+    const { stripe } = await import('../utils/stripe.js');
+    
+    if (!stripe) {
+      throw new Error('Stripe is not configured');
+    }
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: data.amount,
+        currency: data.currency || 'usd',
+        metadata: data.metadata || {},
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      return paymentIntent;
+    } catch (error: any) {
+      throw new Error(`Failed to create Stripe payment intent: ${error.message}`);
+    }
   }
 
   async function verifyStripePaymentIntent(paymentIntentId: string) {
-    // Mock implementation
-    return {
-      id: paymentIntentId,
-      status: 'succeeded',
-      amount: 2999
-    };
+    const { stripe } = await import('../utils/stripe.js');
+    
+    if (!stripe) {
+      throw new Error('Stripe is not configured');
+    }
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        throw new Error('Payment not successful');
+      }
+
+      return paymentIntent;
+    } catch (error: any) {
+      throw new Error(`Failed to verify payment intent: ${error.message}`);
+    }
   }
 
   async function createStripeRefund(data: any) {
-    // Mock implementation
-    return {
-      success: true,
-      id: 're_' + Date.now(),
-      amount: data.amount
-    };
+    const { stripe } = await import('../utils/stripe.js');
+    
+    if (!stripe) {
+      throw new Error('Stripe is not configured');
+    }
+
+    try {
+      const refund = await stripe.refunds.create({
+        payment_intent: data.paymentIntentId,
+        amount: data.amount,
+        reason: data.reason || 'requested_by_customer',
+      });
+
+      return {
+        success: true,
+        id: refund.id,
+        amount: refund.amount
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to create refund: ${error.message}`);
+    }
   }
 
   async function updatePaymentRelatedRecords(payment: any) {

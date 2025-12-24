@@ -1,7 +1,8 @@
-// Simplified Upload Routes for Week 2 MVP
+// Simplified Upload Routes with Cloudflare R2 Storage
 import { FastifyInstance } from "fastify";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
+import { generatePresignedUrl, deleteObject, generatePresignedGetUrl } from "../utils/s3.js";
 
 // Validation schemas
 const uploadRequestSchema = z.object({
@@ -130,8 +131,15 @@ export default async function uploadRoutes(app: FastifyInstance) {
     const { fileKey } = request.params as { fileKey: string };
 
     try {
-      // Mock deletion
-      console.log(`🗑️ Deleting file from S3: ${fileKey}`);
+      // Verify user owns the file (user ID should be in fileKey path)
+      if (!fileKey.startsWith(`${user.uid}/`)) {
+        return reply.code(403).send({ 
+          error: "You can only delete files you uploaded",
+          code: "ACCESS_DENIED"
+        });
+      }
+
+      await deleteObject({ key: fileKey });
 
       return {
         success: true,
@@ -274,6 +282,11 @@ function generateFileKey(userId: string, fileName: string, uploadType: string, f
 }
 
 async function generateS3PresignedUrl(fileKey: string, fileType: string, fileSize: number): Promise<string> {
-  // Mock presigned URL - in production, use AWS SDK
-  return `https://s3.amazonaws.com/mock-bucket/${fileKey}?presigned=${Date.now()}&type=${encodeURIComponent(fileType)}`;
+  const result = await generatePresignedUrl({
+    key: fileKey,
+    contentType: fileType,
+    maxSize: fileSize,
+    expiresIn: 3600, // 1 hour
+  });
+  return result.url;
 }

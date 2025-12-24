@@ -1,7 +1,5 @@
 // Minimal Contract Helpers
-import { PrismaClient } from '@prisma/client';
-
-export const prisma = new PrismaClient();
+import { prisma } from './prisma.js';
 
 export async function submitTimesheet(timesheetData: any, user: any) {
   try {
