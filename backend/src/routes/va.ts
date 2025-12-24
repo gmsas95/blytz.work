@@ -3,7 +3,6 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
-import { calculateProfileCompletion, generateThumbnailUrl } from "../utils/profileHelpers.js";
 
 // Validation schemas
 const createVAProfileSchema = z.object({
