@@ -89,6 +89,17 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       
       // Handle 401 unauthorized - token might be expired
       if (response.status === 401 && retryCount < maxRetries) {
+        const errorData = await response.json().catch(() => null);
+        const isSyncError = errorData?.code === 'USER_NOT_FOUND' ||
+                           errorData?.code === 'MISSING_AUTH_HEADER' ||
+                           errorData?.code === 'MISSING_TOKEN';
+        
+        // NEW: Don't retry on user sync errors - these will be handled by middleware sync
+        if (isSyncError) {
+          console.log('🔍 User sync error detected, skipping retry');
+          throw new Error(errorData?.error || 'User needs to be synced to database');
+        }
+        
         console.log('🔄 Token expired, attempting refresh...');
         // Try to refresh token
         try {

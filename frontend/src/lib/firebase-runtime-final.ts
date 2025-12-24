@@ -58,8 +58,12 @@ export const initializeFirebase = () => {
   }
 
   const config = getFirebaseConfig();
-  
+
   if (!config) {
+    // During build time, return mock values to avoid build failures
+    if (typeof window === 'undefined') {
+      return { app: null, auth: null };
+    }
     throw new Error('❌ Cannot initialize Firebase - configuration incomplete. Please check environment variables.');
   }
 
@@ -111,6 +115,10 @@ export const onAuthStateChange = (callback: (user: any) => void) => {
     }
     return () => {}; // Return unsubscribe function
   }
+
+  if (typeof window === 'undefined') {
+    return () => {}; // Return unsubscribe function during build
+  }
   
   // Import onAuthStateChanged dynamically
   try {
@@ -126,11 +134,19 @@ export const onAuthStateChange = (callback: (user: any) => void) => {
 
 // Export app and auth for compatibility
 export const app = (() => {
-  const { app } = getFirebase();
-  return app;
+  try {
+    const { app } = getFirebase();
+    return app;
+  } catch {
+    return null;
+  }
 })();
 
 export const auth = (() => {
-  const { auth } = getFirebase();
-  return auth;
+  try {
+    const { auth } = getFirebase();
+    return auth;
+  } catch {
+    return null;
+  }
 })();

@@ -120,12 +120,16 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     }
     
     return;
-  } catch (error: any) {
-    return reply.code(401).send({ 
-      error: "Invalid or expired token",
-      code: "INVALID_TOKEN"
-    });
-  }
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('❌ Firebase token verification failed:', errorMessage);
+      
+      return reply.code(401).send({ 
+        error: "Invalid or expired Firebase ID token",
+        code: "INVALID_TOKEN",
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      });
+    }
 }
 
 // Export requireAuth for other routes

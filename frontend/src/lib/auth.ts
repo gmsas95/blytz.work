@@ -60,6 +60,40 @@ export const registerUser = async (email: string, password: string, name?: strin
   }
 };
 
+// NEW: Sync user to database after registration
+export const syncUserToDatabase = async (user: AuthUser): Promise<void> => {
+  try {
+    const idToken = await getToken();
+    
+    if (!idToken) {
+      console.warn('⚠️ No token available for sync');
+      return;
+    }
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/sync-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        role: 'va'
+      })
+    });
+    
+    if (response.ok) {
+      console.log('✅ User synced to database after registration');
+    } else {
+      const errorData = await response.json();
+      console.warn('⚠️ User sync failed:', errorData.error);
+    }
+  } catch (error) {
+    console.error('❌ User sync error:', error);
+  }
+};
+
 // Sign out user
 export const signOutUser = async (): Promise<void> => {
   try {

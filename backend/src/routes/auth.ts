@@ -173,6 +173,51 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/sync", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
+    const { uid, email } = request.body as { uid: string, email: string };
+    
+    try {
+      let userProfile = await prisma.user.findUnique({
+        where: { id: uid }
+      });
+
+      if (!userProfile) {
+        // Create user from Firebase auth data
+        userProfile = await prisma.user.create({
+          data: {
+            id: uid,
+            email: email,
+            role: 'va',
+            profileComplete: false
+          }
+        });
+        console.log(`✅ User synced to database: ${userProfile.id} from Firebase sync`);
+      }
+
+      return reply.send({
+        success: true,
+        data: userProfile
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      return reply.code(500).send({
+        error: "Failed to sync user",
+        code: "USER_SYNC_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // NEW: Update user role
+  app.patch("/auth/role", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
     const { uid, email } = request.body as any;
 
     try {
@@ -206,11 +251,12 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   // Create new user from Firebase
+  // Create user from Firebase auth data
   app.post("/auth/create", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const { uid, email, role } = request.body as any;
-
+    
     try {
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
@@ -224,20 +270,21 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       }
 
-      // Create new user
+      // Create user from Firebase auth data
       const newUser = await prisma.user.create({
         data: {
           id: uid,
-          email: email,
-          role: role
+          email,
+          role: 'va', // Default to VA
+          profileComplete: false
         }
       });
 
-      return {
+      return reply.code(201).send({
         success: true,
-        data: newUser,
-        message: "User created successfully"
-      };
+        message: "User created from Firebase",
+        data: { userId: newUser.id, email: newUser.email, role: newUser.role }
+      });
     } catch (error: any) {
       return reply.code(500).send({
         error: "Failed to create user",
@@ -268,6 +315,76 @@ export default async function authRoutes(app: FastifyInstance) {
       return reply.code(500).send({
         error: "Failed to generate token",
         code: "TOKEN_GENERATION_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Sync Firebase user to database
+  app.post("/auth/sync-user", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    
+    try {
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { id: user.uid }
+      });
+    
+      if (existingUser) {
+        return reply.send({ 
+          success: true,
+          message: "User already synced to database"
+        });
+      }
+      
+      // Create user from Firebase auth data
+      const newUser = await prisma.user.create({
+        data: {
+          id: user.uid,
+          email: user.email,
+          role: 'va', // Default to VA, can be updated via role selection
+          profileComplete: false
+        }
+      });
+      
+      return reply.code(201).send({
+        success: true,
+        message: "User synced to database",
+        data: { userId: user.uid, email: user.email, role: 'va' }
+      });
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to sync user",
+        code: "USER_SYNC_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // NEW: Verify user exists in database
+  app.get("/auth/verify-user", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+    
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.uid },
+        select: { id: true, email: true, role: true, profileComplete: true }
+      });
+
+      return {
+        exists: !!dbUser,
+        userId: dbUser?.id,
+        email: dbUser?.email,
+        role: dbUser?.role,
+        profileComplete: dbUser?.profileComplete
+      };
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to verify user",
         details: error.message
       });
     }

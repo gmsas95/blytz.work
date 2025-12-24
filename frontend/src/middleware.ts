@@ -48,13 +48,12 @@ export function middleware(request: NextRequest) {
   // If no token, check localStorage fallback via header (client-side should set this)
   const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
 
-  // Special handling for expired=true - allow access to auth page but clear any existing auth
-  if (pathname === '/auth' && request.nextUrl.searchParams.has('expired')) {
-    // Clear auth cookies when expired=true is present
-    const response = NextResponse.next();
-    response.cookies.delete('authToken');
-    response.cookies.delete('userRole');
-    return response;
+  if (!token && !hasAuthHeader) {
+    // No authentication found - redirect to auth page
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
   }
 
   if (!token && !hasAuthHeader) {
