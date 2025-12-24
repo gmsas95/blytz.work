@@ -99,11 +99,16 @@ const VADashboard = () => {
         method: 'GET'
       });
 
-      if (profileResponse.ok) {
+      console.log('Profile response status:', profileResponse.status);
+      console.log('Profile response:', profileResponse);
+
+      if (profileResponse.status === 200) {
         const profileData = await profileResponse.json();
+        console.log('Profile data:', profileData);
         setProfile(profileData.data);
       } else {
         // Profile doesn't exist, redirect to creation
+        console.log('Profile not found, redirecting to creation');
         router.push('/va/profile/create');
         return;
       }

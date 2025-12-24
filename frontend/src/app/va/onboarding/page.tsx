@@ -53,6 +53,8 @@ export default function VAOnboardingPage() {
         description: "Welcome to BlytzWork as a Virtual Assistant",
       });
 
+      console.log('Profile created successfully');
+      
       // Add a small delay to ensure the profile is created before redirecting
       setTimeout(() => {
         router.push("/va/dashboard");
