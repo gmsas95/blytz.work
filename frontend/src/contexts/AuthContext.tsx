@@ -25,6 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Check for stored auth state on mount
     const storedUser = localStorage.getItem('authUser');
     const storedToken = localStorage.getItem('authToken');
@@ -33,8 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedUser && storedToken) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
+        if (isMounted) {
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        }
         console.log('🔍 Restored auth state from localStorage');
       } catch (error) {
         console.error('❌ Failed to parse stored user:', error);
@@ -47,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set up auth state change monitoring
     const unsubscribeAuth = onAuthStateChange((firebaseUser: User | null) => {
+      if (!isMounted) return;
+      
       if (firebaseUser) {
         const authUser = {
           uid: firebaseUser.uid,
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Get fresh token
         getToken().then(token => {
-          if (token) {
+          if (token && isMounted) {
             localStorage.setItem('authToken', token);
           }
         }).catch(error => {
@@ -85,9 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Set loading to false after initial check
-    setLoading(false);
+    if (isMounted) {
+      setLoading(false);
+    }
 
     return () => {
+      isMounted = false;
       unsubscribeAuth();
     };
   }, []);

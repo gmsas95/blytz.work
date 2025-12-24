@@ -63,7 +63,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
     
     // Use a more graceful redirect
     if (typeof window !== 'undefined') {
-      // Only redirect if we're not already on the auth page
+      // Only redirect if we're not already on auth page
       if (!window.location.pathname.includes('/auth')) {
         window.location.href = '/auth?expired=true';
       }
@@ -101,12 +101,20 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
             retryCount++;
             continue;
           } else {
-            // Token refresh failed
-            await handleAuthError();
+            // Token refresh failed, but don't redirect immediately
+            console.log('🔄 Token refresh failed, will retry...');
+            retryCount++;
+            continue;
           }
         } catch (refreshError) {
           console.log('🔄 Token refresh failed:', refreshError);
-          await handleAuthError();
+          // Only handle auth error on final retry
+          if (retryCount >= maxRetries - 1) {
+            await handleAuthError();
+          } else {
+            retryCount++;
+            continue;
+          }
         }
       }
       

@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Zap } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage, getToken } from "@/lib/auth";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -22,6 +23,24 @@ export default function AuthPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Check for expired=true parameter and clear auth state
+  useEffect(() => {
+    const isExpired = searchParams?.get('expired');
+    if (isExpired === 'true') {
+      console.log('🔍 Authentication expired, clearing local storage...');
+      // Clear all auth-related storage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('isMockAuth');
+      
+      // Show message to user
+      toast.error("Session Expired", {
+        description: "Please sign in again to continue",
+      });
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

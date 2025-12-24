@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files, API routes, and auth page
+  // Skip middleware for static files, API routes, and auth-related pages
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -11,7 +11,8 @@ export function middleware(request: NextRequest) {
     pathname.includes('.') ||
     pathname === '/auth' ||
     pathname === '/forgot-password' ||
-    pathname === '/reset-email-sent'
+    pathname === '/reset-email-sent' ||
+    pathname === '/select-role'
   ) {
     return NextResponse.next();
   }
@@ -46,6 +47,15 @@ export function middleware(request: NextRequest) {
 
   // If no token, check localStorage fallback via header (client-side should set this)
   const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
+
+  // Special handling for expired=true - allow access to auth page but clear any existing auth
+  if (pathname === '/auth' && request.nextUrl.searchParams.has('expired')) {
+    // Clear auth cookies when expired=true is present
+    const response = NextResponse.next();
+    response.cookies.delete('authToken');
+    response.cookies.delete('userRole');
+    return response;
+  }
 
   if (!token && !hasAuthHeader) {
     // No authentication found - redirect to auth page
