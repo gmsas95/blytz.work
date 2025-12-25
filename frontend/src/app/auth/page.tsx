@@ -87,7 +87,7 @@ function AuthPageContent() {
           redirectPath = '/employer/onboarding';
         }
         
-        // Check user role from backend with timeout
+         // Check user role from backend with timeout
         try {
           console.log('Checking user profile...');
           
@@ -100,6 +100,26 @@ function AuthPageContent() {
           ]) as Response;
           
           console.log('Profile response status:', profileResponse.status);
+          
+          if (profileResponse.status === 404 || profileResponse.status === 401) {
+            // User doesn't exist in database - create them from Firebase auth data
+            console.log('User not found in database, creating from Firebase...');
+            
+            try {
+              const createResponse = await apiCall('/auth/sync-user', {
+                method: 'POST',
+                body: JSON.stringify({
+                  uid: authUser.uid,
+                  email: authUser.email
+                })
+              });
+              
+              console.log('User sync response:', createResponse);
+            } catch (syncError) {
+              console.error('Failed to sync user to database:', syncError);
+              // Continue anyway with fallback logic
+            }
+          }
           
           if (profileResponse.status === 200) {
             const userData = await profileResponse.json();

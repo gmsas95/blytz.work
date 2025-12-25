@@ -374,7 +374,7 @@ export default async function authRoutes(app: FastifyInstance) {
         where: { id: user.uid },
         select: { id: true, email: true, role: true, profileComplete: true }
       });
-
+ 
       return {
         exists: !!dbUser,
         userId: dbUser?.id,
@@ -387,6 +387,119 @@ export default async function authRoutes(app: FastifyInstance) {
         error: "Failed to verify user",
         details: error.message
       });
+    });
+
+  // NEW: Create user from Firebase WITHOUT requiring auth
+  // This fixes the chicken-and-egg problem where user exists in Firebase but not in database
+  app.post("/auth/create-from-firebase", async (request, reply) => {
+    const { uid, email, role = 'va' } = request.body as { 
+      uid: string; 
+      email: string; 
+      role?: 'va' | 'company' | 'admin' 
+    };
+    
+    if (!uid || !email) {
+      return reply.code(400).send({ 
+        error: "Missing required fields",
+        code: "MISSING_FIELDS"
+      });
     }
+    
+    try {
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { id: uid }
+      });
+ 
+      if (existingUser) {
+        return reply.send({
+          success: true,
+          message: "User already exists in database",
+          data: { userId: existingUser.id, email: existingUser.email, role: existingUser.role }
+        });
+      }
+      
+      // Create user from Firebase auth data
+      const newUser = await prisma.user.create({
+        data: {
+          id: uid,
+          email: email,
+          role: role,
+          profileComplete: false
+        }
+      });
+      
+      console.log(`✅ User created from Firebase: ${newUser.id} (${newUser.email})`);
+      
+      return reply.code(201).send({
+        success: true,
+        message: "User created from Firebase",
+        data: { userId: newUser.id, email: newUser.email, role: newUser.role }
+      });
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to create user from Firebase",
+        code: "USER_CREATION_ERROR",
+        details: error.message
+      });
+    });
+  });
+
+  // NEW: Create user from Firebase WITHOUT requiring auth
+  // This fixes the chicken-and-egg problem where user exists in Firebase but not in database
+  app.post("/auth/create-from-firebase", async (request, reply) => {
+    const { uid, email, role = 'va' } = request.body as { 
+      uid: string; 
+      email: string; 
+      role?: 'va' | 'company' | 'admin' 
+    };
+    
+    if (!uid || !email) {
+      return reply.code(400).send({ 
+        error: "Missing required fields",
+        code: "MISSING_FIELDS"
+      });
+    }
+    
+    try {
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { id: uid }
+      });
+
+      if (existingUser) {
+        return reply.send({
+          success: true,
+          message: "User already exists in database",
+          data: { userId: existingUser.id, email: existingUser.email, role: existingUser.role }
+        });
+      }
+      
+      // Create user from Firebase auth data
+      const newUser = await prisma.user.create({
+        data: {
+          id: uid,
+          email: email,
+          role: role,
+          profileComplete: false
+        }
+      });
+      
+      console.log(`✅ User created from Firebase: ${newUser.id} (${newUser.email})`);
+      
+      return reply.code(201).send({
+        success: true,
+        message: "User created from Firebase",
+        data: { userId: newUser.id, email: newUser.email, role: newUser.role }
+      });
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to create user from Firebase",
+        code: "USER_CREATION_ERROR",
+        details: error.message
+      });
+    }
+  });
+}
   });
 }

@@ -91,13 +91,42 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       if (response.status === 401 && retryCount < maxRetries) {
         const errorData = await response.json().catch(() => null);
         const isSyncError = errorData?.code === 'USER_NOT_FOUND' ||
-                           errorData?.code === 'MISSING_AUTH_HEADER' ||
-                           errorData?.code === 'MISSING_TOKEN';
+                            errorData?.code === 'MISSING_AUTH_HEADER' ||
+                            errorData?.code === 'MISSING_TOKEN';
         
-        // NEW: Don't retry on user sync errors - these will be handled by middleware sync
+        // NEW: Handle USER_NOT_FOUND by calling create-from-firebase directly
         if (isSyncError) {
-          console.log('🔍 User sync error detected, skipping retry');
-          throw new Error(errorData?.error || 'User needs to be synced to database');
+          console.log('🔍 User not found in database, calling create-from-firebase...');
+          
+          // Call create-from-firebase directly to sync user to database
+          try {
+            const createResponse = await apiCall('/auth/create-from-firebase', {
+              method: 'POST',
+              body: JSON.stringify({
+                uid: JSON.parse(localStorage.getItem('authUser') || '{}')?.uid,
+                email: JSON.parse(localStorage.getItem('authUser') || '{}')?.email
+              })
+            });
+            
+            console.log('User sync response:', createResponse);
+            
+            // If sync was successful, retry the original request
+            if (createResponse.ok) {
+              console.log('✅ User synced successfully, retrying original request...');
+              token = await getToken();
+              if (token) {
+                localStorage.setItem('authToken', token);
+              }
+              retryCount++;
+              continue;
+            } else {
+              console.log('❌ User sync failed, cannot continue');
+              throw new Error('Failed to sync user to database');
+            }
+          } catch (syncError) {
+            console.error('Failed to sync user to database:', syncError);
+            throw new Error('Failed to sync user to database');
+          }
         }
         
         console.log('🔄 Token expired, attempting refresh...');
