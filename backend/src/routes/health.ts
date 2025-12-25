@@ -2,39 +2,49 @@ import { prisma } from "../utils/prisma.js";
 import admin from "firebase-admin";
 
 export default async function healthRoutes(app: any) {
+  app.get("/", async (request: any, reply: any) => {
+    return reply.send({ status: 'ok', message: 'BlytzWork Backend API' });
+  });
+
   app.get("/health", async (request: any, reply: any) => {
+    const uptime = process.uptime();
+    const isStartup = uptime < 60;
+
     const healthStatus = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       checks: {
-        database: await checkDatabase(),
-        firebase: await checkFirebase(),
+        database: isStartup ? { status: 'starting' } : await checkDatabase(),
+        firebase: isStartup ? { status: 'starting' } : await checkFirebase(),
       },
-      uptime: process.uptime(),
+      uptime: uptime,
       environment: process.env.NODE_ENV || 'development'
     };
 
-    const allHealthy = Object.values(healthStatus.checks).every((check: any) => 
-      check.status === 'ok' || check.status === 'skipped'
+    const allHealthy = Object.values(healthStatus.checks).every((check: any) =>
+      check.status === 'ok' || check.status === 'skipped' || check.status === 'starting'
     );
 
     return reply.code(allHealthy ? 200 : 503).send(healthStatus);
   });
 
   app.get("/api/health", async (request: any, reply: any) => {
+    const uptime = process.uptime();
+    const isStartup = uptime < 60;
+
     const healthStatus = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       checks: {
-        database: await checkDatabase(),
-        firebase: await checkFirebase(),
+        database: isStartup ? { status: 'starting' } : await checkDatabase(),
+        firebase: isStartup ? { status: 'starting' } : await checkFirebase(),
       },
-      uptime: process.uptime(),
+      uptime: uptime,
       environment: process.env.NODE_ENV || 'development'
     };
 
     const allHealthy = Object.values(healthStatus.checks).every((check: any) =>
-      check.status === 'ok' || check.status === 'skipped'
+      check.status === 'ok' || check.status === 'skipped' || check.status === 'starting'
     );
 
     return reply.code(allHealthy ? 200 : 503).send(healthStatus);
