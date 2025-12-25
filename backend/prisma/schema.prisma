@@ -3,10 +3,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
+ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["blytz_hire"]
 }
 
 model User {
@@ -26,7 +25,6 @@ model User {
   payments        Payment[]
 
   @@map("users")
-  @@schema("blytz_hire")
 }
 
 model VAProfile {
@@ -71,7 +69,6 @@ model VAProfile {
   matches               Match[]       // Add matches relation
 
   @@map("va_profiles")
-  @@schema("blytz_hire")
 }
 
 model Company {
@@ -106,7 +103,6 @@ model Company {
   contracts         Contract[]
 
   @@map("companies")
-  @@schema("blytz_hire")
 }
 
 model Notification {
@@ -125,7 +121,6 @@ model Notification {
   user        User      @relation(fields: [userId], references: [id])
 
   @@map("notifications")
-  @@schema("blytz_hire")
 }
 
 model PortfolioItem {
@@ -145,7 +140,6 @@ model PortfolioItem {
   vaProfile    VAProfile @relation(fields: [vaProfileId], references: [id])
 
   @@map("portfolio_items")
-  @@schema("blytz_hire")
 }
 
 model SkillsAssessment {
@@ -162,7 +156,6 @@ model SkillsAssessment {
   vaProfile     VAProfile @relation(fields: [vaProfileId], references: [id])
 
   @@map("skills_assessments")
-  @@schema("blytz_hire")
 }
 
 model Badge {
@@ -179,7 +172,6 @@ model Badge {
   vaProfile    VAProfile @relation(fields: [vaProfileId], references: [id])
 
   @@map("badges")
-  @@schema("blytz_hire")
 }
 
 model Review {
@@ -199,7 +191,6 @@ model Review {
   company     Company?    @relation("companyReviews", fields: [targetId], references: [id], map: "reviews_company_targetId_fkey")
 
   @@map("reviews")
-  @@schema("blytz_hire")
 }
 
 model JobPosting {
@@ -241,7 +232,6 @@ model JobPosting {
   matches      Match[]       // Add matches relation
 
   @@map("job_postings")
-  @@schema("blytz_hire")
 }
 
 model Job {
@@ -271,7 +261,6 @@ model Job {
   timesheets  Timesheet[]
 
   @@map("jobs")
-  @@schema("blytz_hire")
 }
 
 model Proposal {
@@ -298,7 +287,6 @@ model Proposal {
   contracts     Contract[]
 
   @@map("proposals")
-  @@schema("blytz_hire")
 }
 
 model Contract {
@@ -334,7 +322,6 @@ model Contract {
   timesheets        Timesheet[]
 
   @@map("contracts")
-  @@schema("blytz_hire")
 }
 
 model Milestone {
@@ -355,7 +342,6 @@ model Milestone {
   job         Job       @relation(fields: [jobId], references: [id])
 
   @@map("milestones")
-  @@schema("blytz_hire")
 }
 
 model Timesheet {
@@ -379,7 +365,6 @@ model Timesheet {
   job         Job        @relation(fields: [jobId], references: [id])
 
   @@map("timesheets")
-  @@schema("blytz_hire")
 }
 
 model Payment {
@@ -410,7 +395,6 @@ model Payment {
   user          User       @relation(fields: [userId], references: [id])
 
   @@map("payments")
-  @@schema("blytz_hire")
 }
 
 model Invoice {
@@ -433,7 +417,6 @@ model Invoice {
   updatedAt       DateTime @updatedAt
 
   @@map("invoices")
-  @@schema("blytz_hire")
 }
 
 // Matching System Models (Disabled for now but added for test compatibility)
@@ -450,7 +433,6 @@ model MatchVote {
 
   @@unique([jobPostingId, vaProfileId, userId]) // One vote per user per VA per job
   @@map("match_votes")
-  @@schema("blytz_hire")
 }
 
 model Match {
@@ -468,5 +450,4 @@ model Match {
 
   @@unique([jobPostingId, vaProfileId]) // Each job posting can only match with each VA once
   @@map("matches")
-  @@schema("blytz_hire")
 }

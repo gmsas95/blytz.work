@@ -22,7 +22,7 @@ RUN npx prisma generate
 # Build application
 RUN npm run build
 
-# Production image, copy all the files and run the app
+# Production image, copy all the files and run app
 FROM base AS runner
 WORKDIR /app
 
@@ -38,6 +38,12 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 
+# Create migration script
+RUN echo '#!/bin/bash\n\
+npx prisma migrate deploy\n\
+npm start\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 # Set permissions
 USER backend
 
@@ -46,4 +52,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["npm", "start"]
+CMD ["/bin/bash", "/app/entrypoint.sh"]
