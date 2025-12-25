@@ -14,11 +14,13 @@ export default async function healthRoutes(app: any) {
       environment: process.env.NODE_ENV || 'development'
     };
 
-    const allHealthy = Object.values(healthStatus.checks).every((check: any) => check.status === 'ok');
-    
+    const allHealthy = Object.values(healthStatus.checks).every((check: any) => 
+      check.status === 'ok' || check.status === 'skipped'
+    );
+
     return reply.code(allHealthy ? 200 : 503).send(healthStatus);
   });
-  
+
   app.get("/api/health", async (request: any, reply: any) => {
     const healthStatus = {
       status: 'ok',
@@ -31,8 +33,10 @@ export default async function healthRoutes(app: any) {
       environment: process.env.NODE_ENV || 'development'
     };
 
-    const allHealthy = Object.values(healthStatus.checks).every((check: any) => check.status === 'ok');
-    
+    const allHealthy = Object.values(healthStatus.checks).every((check: any) =>
+      check.status === 'ok' || check.status === 'skipped'
+    );
+
     return reply.code(allHealthy ? 200 : 503).send(healthStatus);
   });
 }
