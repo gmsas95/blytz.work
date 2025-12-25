@@ -388,6 +388,7 @@ export default async function authRoutes(app: FastifyInstance) {
         details: error.message
       });
     });
+  });
 
   // NEW: Create user from Firebase WITHOUT requiring auth
   // This fixes the chicken-and-egg problem where user exists in Firebase but not in database
