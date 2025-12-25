@@ -9,15 +9,20 @@ services:
     container_name: blytzwork-postgres
     restart: unless-stopped
     environment:
+      # Superuser for initialization only
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Restricted application user (set these in Dokploy environment)
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:-blytzwork_app}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - blytzwork-internal
     healthcheck:
-      test: ["CMD", "sh", "-c", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD", "sh", "-c", "pg_isready -U ${POSTGRES_APP_USER:-blytzwork_app} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
       timeout: 5s
       retries: 5
