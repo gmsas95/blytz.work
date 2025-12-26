@@ -87,6 +87,12 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       
       const response = await makeRequest(token);
       
+      // Check if response was successful before processing
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `Request failed with status ${response.status}`);
+      }
+      
       // Handle 401 unauthorized - token might be expired
       if (response.status === 401 && retryCount < maxRetries) {
         const errorData = await response.json().catch(() => null);
@@ -165,6 +171,12 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
         throw new Error('Access denied. You do not have permission to perform this action.');
       }
       
+      // Check if response was successful (2xx status)
+      if (!response.ok || response.status === 401) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `Request failed with status ${response.status}`);
+      }
+      
       return response;
     } catch (error) {
       console.error(`API call failed for ${endpoint}:`, error);
@@ -193,8 +205,6 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
       // Re-throw other errors
       throw error;
     }
+      }
   }
-  
-  // If we've exhausted retries, handle auth error
-  await handleAuthError();
 };
