@@ -202,9 +202,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}, timeo
         await handleAuthError();
       }
       
-      // Re-throw other errors
       throw error;
-    }
       }
   }
-};
+}
