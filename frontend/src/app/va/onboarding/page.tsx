@@ -90,7 +90,10 @@ export default function VAOnboardingPage() {
 
       console.log('Profile created successfully');
       
-      // Add a small delay to ensure the profile is created before redirecting
+      // Sync user role before redirecting
+      await syncUserRole('va');
+      
+      // Add a small delay to ensure profile is created before redirecting
       setTimeout(() => {
         router.push("/va/dashboard");
       }, 1000);
