@@ -24,9 +24,44 @@ export default function VAOnboardingPage() {
     availability: true,
   });
 
+  const validateForm = () => {
+    const errors = [];
+    
+    if (formData.name.length < 2) {
+      errors.push("Name must be at least 2 characters");
+    }
+    
+    if (formData.country.length < 2) {
+      errors.push("Country must be at least 2 characters");
+    }
+    
+    if (formData.bio.length < 10) {
+      errors.push("Bio must be at least 10 characters");
+    }
+    
+    if (!formData.skills.trim()) {
+      errors.push("At least one skill is required");
+    }
+    
+    if (!formData.hourlyRate || parseInt(formData.hourlyRate) <= 0) {
+      errors.push("Hourly rate must be greater than 0");
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = async () => {
     try {
-      // Ensure we have a fresh token before making the API call
+      // Validate form first
+      const errors = validateForm();
+      if (errors.length > 0) {
+        toast.error("Please fix the following errors", {
+          description: errors.join(", "),
+        });
+        return;
+      }
+
+      // Ensure we have a fresh token before making API call
       const token = await getToken();
       if (!token) {
         toast.error("Authentication error", {
