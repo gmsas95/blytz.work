@@ -89,17 +89,26 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
           throw error;
         });
       
-      // Get user from database to get role and profile status
-      const user = await prisma.user.findUnique({
-        where: { email: decodedToken.email },
+      // Get user from database using Firebase UID (not email!)
+      let user = await prisma.user.findUnique({
+        where: { id: decodedToken.uid },
         select: { id: true, role: true, profileComplete: true, email: true }
       });
 
+      // Auto-create user if doesn't exist (solves chicken-and-egg problem)
       if (!user) {
-        return reply.code(401).send({ 
-          error: "User not found in database",
-          code: "USER_NOT_FOUND"
+        console.log(`🔍 Auto-creating user ${decodedToken.uid} from Firebase login`);
+        user = await prisma.user.create({
+          data: {
+            id: decodedToken.uid,
+            email: decodedToken.email || '',
+            role: 'va', // Default role, can be updated during onboarding
+            profileComplete: false,
+            emailVerified: decodedToken.email_verified || false
+          },
+          select: { id: true, role: true, profileComplete: true, email: true }
         });
+        console.log(`✅ User ${user.id} created in database`);
       }
 
       request.user = {
@@ -113,14 +122,14 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
     // Remove development tokens to prevent authentication bypass
     // Production fallback when Firebase is not initialized
     else {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Firebase Admin not properly initialized",
         code: "FIREBASE_NOT_INITIALIZED"
       });
     }
-    
+
     return;
-    } catch (error: any) {
+  } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ Firebase token verification failed:', errorMessage);
       
