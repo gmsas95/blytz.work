@@ -15,14 +15,14 @@ const updateProfileSchema = z.object({
 });
 
 export default async function authRoutes(app: FastifyInstance) {
-  // Get current user profile
+  // Get current user profile (auto-creates user if not exists)
   app.get("/auth/profile", {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
 
     try {
-      const userProfile = await prisma.user.findUnique({
+      let userProfile = await prisma.user.findUnique({
         where: { id: user.uid },
         include: {
           vaProfile: true,
@@ -34,11 +34,26 @@ export default async function authRoutes(app: FastifyInstance) {
         }
       });
 
+      // Auto-create user if doesn't exist in database
       if (!userProfile) {
-        return reply.code(404).send({
-          error: "User profile not found",
-          code: "USER_NOT_FOUND"
+        userProfile = await prisma.user.create({
+          data: {
+            id: user.uid,
+            email: user.email,
+            role: 'va', // Default to VA role, can be updated during onboarding
+            profileComplete: false,
+            emailVerified: user.email_verified || false
+          },
+          include: {
+            vaProfile: true,
+            company: true,
+            payments: {
+              orderBy: { createdAt: 'desc' },
+              take: 5
+            }
+          }
         });
+        console.log(`✅ Auto-created user in database: ${userProfile.id} from Firebase login`);
       }
 
       return {
