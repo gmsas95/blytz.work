@@ -216,3 +216,4 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   // Generate custom token for client
+}
