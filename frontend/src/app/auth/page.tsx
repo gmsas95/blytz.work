@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage, getToken } from "@/lib/auth";
 import { apiCall } from "@/lib/api";
+import { setClientCookie, clearClientCookie } from "@/lib/cookies";
 import { toast } from "sonner";
 
 function AuthPageContent() {
@@ -34,6 +35,10 @@ function AuthPageContent() {
       localStorage.removeItem('authUser');
       localStorage.removeItem('userRole');
       localStorage.removeItem('isMockAuth');
+      
+      // Clear cookies
+      clearClientCookie('authToken');
+      clearClientCookie('userRole');
       
       // Show message to user
       toast.error("Session Expired", {
@@ -66,10 +71,12 @@ function AuthPageContent() {
             throw new Error('Failed to get authentication token');
           }
           localStorage.setItem('authToken', token);
+          setClientCookie('authToken', token);
         } catch (tokenError) {
           console.log('Token generation failed, using mock token');
           token = 'demo-token-' + Date.now();
           localStorage.setItem('authToken', token);
+          setClientCookie('authToken', token);
         }
         
         // Show success message
@@ -109,6 +116,7 @@ function AuthPageContent() {
             if (role === 'company') {
               userRole = 'employer';
               localStorage.setItem("userRole", "employer");
+              setClientCookie("userRole", "employer");
               
               // Check if company has profile with timeout
               try {
@@ -126,6 +134,7 @@ function AuthPageContent() {
             } else if (role === 'va') {
               userRole = 'va';
               localStorage.setItem("userRole", "va");
+              setClientCookie("userRole", "va");
               
               // Check if VA has profile with timeout
               try {
@@ -162,6 +171,7 @@ function AuthPageContent() {
         
         // Store final role and redirect
         localStorage.setItem('userRole', userRole);
+        setClientCookie('userRole', userRole);
         console.log('Redirecting to:', redirectPath);
         
         // Use window.location.href for more reliable redirect

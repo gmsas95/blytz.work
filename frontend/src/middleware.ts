@@ -56,14 +56,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!token && !hasAuthHeader) {
-    // No authentication found - redirect to auth page
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
-
   // Additional role-based checks
   if (pathname.startsWith('/employer') && userRole !== 'employer') {
     const url = request.nextUrl.clone();

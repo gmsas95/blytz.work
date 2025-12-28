@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange, signOutUser, getToken } from '@/lib/auth';
+import { setClientCookie, clearClientCookie } from '@/lib/cookies';
 
 interface AuthUser {
   uid: string;
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         getToken().then(token => {
           if (token && isMounted) {
             localStorage.setItem('authToken', token);
+            setClientCookie('authToken', token);
           }
         }).catch(error => {
           console.error('❌ Failed to get token:', error);
@@ -84,6 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('authUser');
         localStorage.removeItem('authToken');
         localStorage.removeItem('userRole');
+        
+        // Clear cookies
+        clearClientCookie('authToken');
+        clearClientCookie('userRole');
         
         console.log('🔍 User signed out, auth state cleared');
       }
@@ -112,6 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('authUser');
       localStorage.removeItem('userRole');
       localStorage.removeItem('isMockAuth');
+      
+      // Clear cookies
+      clearClientCookie('authToken');
+      clearClientCookie('userRole');
       
       // Redirect to auth page
       window.location.href = '/auth';
