@@ -45,11 +45,23 @@ export function middleware(request: NextRequest) {
   // Check for user role in cookies
   const userRole = request.cookies.get('userRole')?.value;
 
-  // If no token, check localStorage fallback via header (client-side should set this)
+  // Check localStorage fallback via header (client-side should set this)
   const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
+
+  // Log authentication state for debugging
+  console.log('🔐 Middleware auth check:', {
+    pathname,
+    hasToken: !!token,
+    tokenLength: token?.length,
+    hasRole: !!userRole,
+    userRole,
+    hasAuthHeader,
+    cookies: request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value }))
+  });
 
   if (!token && !hasAuthHeader) {
     // No authentication found - redirect to auth page
+    console.log('🚫 Redirecting to auth: No token found');
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     url.searchParams.set('redirect', pathname);
@@ -58,6 +70,7 @@ export function middleware(request: NextRequest) {
 
   // Additional role-based checks
   if (pathname.startsWith('/employer') && userRole !== 'employer') {
+    console.log('🚫 Redirecting to auth: Wrong role for employer route');
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     url.searchParams.set('redirect', pathname);
@@ -65,6 +78,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith('/va') && userRole !== 'va') {
+    console.log('🚫 Redirecting to auth: Wrong role for VA route');
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     url.searchParams.set('redirect', pathname);
@@ -72,6 +86,7 @@ export function middleware(request: NextRequest) {
   }
 
   // User is authenticated - continue to the protected route
+  console.log('✅ Auth verified, proceeding to protected route');
   return NextResponse.next();
 }
 

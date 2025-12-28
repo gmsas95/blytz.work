@@ -9,7 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInUser, registerUser, getAuthErrorMessage, getToken } from "@/lib/auth";
 import { apiCall } from "@/lib/api";
-import { setClientCookie, clearClientCookie } from "@/lib/cookies";
+import { setClientCookie, clearClientCookie, getClientCookie } from "@/lib/cookies";
 import { toast } from "sonner";
 
 function AuthPageContent() {
@@ -78,6 +78,17 @@ function AuthPageContent() {
           localStorage.setItem('authToken', token);
           setClientCookie('authToken', token);
         }
+        
+        // Verify cookie was set
+        setTimeout(() => {
+          const cookieToken = getClientCookie('authToken');
+          console.log('🔍 Token verification:', {
+            hasLocalStorage: !!localStorage.getItem('authToken'),
+            hasCookie: !!cookieToken,
+            cookieLength: cookieToken?.length,
+            allCookies: document.cookie
+          });
+        }, 100);
         
         // Show success message
         toast.success(`Welcome back!`, {
@@ -172,6 +183,20 @@ function AuthPageContent() {
         // Store final role and redirect
         localStorage.setItem('userRole', userRole);
         setClientCookie('userRole', userRole);
+        
+        // Verify all cookies before redirect
+        setTimeout(() => {
+          console.log('🔍 Final auth state before redirect:', {
+            authToken: !!localStorage.getItem('authToken'),
+            authCookie: !!getClientCookie('authToken'),
+            userRole: localStorage.getItem('userRole'),
+            roleCookie: getClientCookie('userRole'),
+            redirectPath,
+            userAgent: navigator.userAgent,
+            isHTTPS: window.location.protocol === 'https:'
+          });
+        }, 200);
+        
         console.log('Redirecting to:', redirectPath);
         
         // Use window.location.href for more reliable redirect
