@@ -90,10 +90,4 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: [
-    '/employer/dashboard/:path*',
-    '/va/dashboard/:path*',
-    '/select-role/:path*'
-  ]
-};
+

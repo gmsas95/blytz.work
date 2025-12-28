@@ -79,16 +79,26 @@ function AuthPageContent() {
           setClientCookie('authToken', token);
         }
         
+        // Wait for cookie to be set synchronously
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Verify cookie was set
-        setTimeout(() => {
-          const cookieToken = getClientCookie('authToken');
-          console.log('🔍 Token verification:', {
-            hasLocalStorage: !!localStorage.getItem('authToken'),
-            hasCookie: !!cookieToken,
-            cookieLength: cookieToken?.length,
-            allCookies: document.cookie
+        const cookieToken = getClientCookie('authToken');
+        console.log('🔍 Token verification:', {
+          hasLocalStorage: !!localStorage.getItem('authToken'),
+          hasCookie: !!cookieToken,
+          cookieLength: cookieToken?.length,
+          allCookies: document.cookie.substring(0, 200) + '...'
+        });
+        
+        if (!cookieToken) {
+          console.error('❌ Cookie was not set! Browser may be blocking cookies.');
+          toast.error("Cookie Error", {
+            description: "Please enable cookies in your browser settings",
           });
-        }, 100);
+          setIsLoading(false);
+          return;
+        }
         
         // Show success message
         toast.success(`Welcome back!`, {
@@ -135,8 +145,8 @@ function AuthPageContent() {
                   apiCall('/company/profile'),
                   new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
+                )
+              ]) as Response;
                 
                 redirectPath = companyResponse.ok ? "/employer/dashboard" : "/employer/onboarding";
               } catch {
@@ -153,8 +163,8 @@ function AuthPageContent() {
                   apiCall('/va/profile'),
                   new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
+                )
+              ]) as Response;
                 
                 redirectPath = vaResponse.ok ? "/va/dashboard" : "/va/onboarding";
               } catch {
@@ -180,24 +190,37 @@ function AuthPageContent() {
           redirectPath = userRole === 'employer' ? "/employer/onboarding" : "/va/onboarding";
         }
         
-        // Store final role and redirect
+        // Store final role
         localStorage.setItem('userRole', userRole);
         setClientCookie('userRole', userRole);
         
-        // Verify all cookies before redirect
-        setTimeout(() => {
-          console.log('🔍 Final auth state before redirect:', {
-            authToken: !!localStorage.getItem('authToken'),
-            authCookie: !!getClientCookie('authToken'),
-            userRole: localStorage.getItem('userRole'),
-            roleCookie: getClientCookie('userRole'),
-            redirectPath,
-            userAgent: navigator.userAgent,
-            isHTTPS: window.location.protocol === 'https:'
-          });
-        }, 200);
+        // Wait for role cookie to be set
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-        console.log('Redirecting to:', redirectPath);
+        // Verify all cookies before redirect
+        const finalAuthToken = getClientCookie('authToken');
+        const finalUserRole = getClientCookie('userRole');
+        console.log('🔍 Final auth state before redirect:', {
+          authToken: !!localStorage.getItem('authToken'),
+          authCookie: !!finalAuthToken,
+          userRole: localStorage.getItem('userRole'),
+          roleCookie: finalUserRole,
+          redirectPath,
+          userAgent: navigator.userAgent.substring(0, 100) + '...',
+          isHTTPS: window.location.protocol === 'https:',
+          documentCookieLength: document.cookie.length
+        });
+        
+        if (!finalAuthToken || !finalUserRole) {
+          console.error('❌ Critical: Cookies not set before redirect!');
+          toast.error("Authentication Error", {
+            description: "Failed to set cookies. Please check browser settings.",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('✅ All checks passed, redirecting to:', redirectPath);
         
         // Use window.location.href for more reliable redirect
         window.location.href = redirectPath;
