@@ -45,10 +45,51 @@ export default function EmployerOnboardingPage() {
     country: "",
     industry: "",
     description: "",
+    mission: "",
     website: "",
   });
 
+  const validateForm = () => {
+    const errors = [];
+
+    if (!formData.name.trim()) {
+      errors.push("Company name is required");
+    } else if (formData.name.length < 2) {
+      errors.push("Company name must be at least 2 characters");
+    }
+
+    if (!formData.country.trim()) {
+      errors.push("Country is required");
+    } else if (formData.country.length < 2) {
+      errors.push("Country must be at least 2 characters");
+    }
+
+    if (!formData.industry.trim()) {
+      errors.push("Industry is required");
+    } else if (formData.industry.length < 2) {
+      errors.push("Industry must be at least 2 characters");
+    }
+
+    if (formData.description.trim() && formData.description.length < 20) {
+      errors.push("Company description must be at least 20 characters");
+    }
+
+    if (formData.mission.trim() && formData.mission.length < 10) {
+      errors.push("Mission statement must be at least 10 characters");
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      toast.error("Please fix the following errors", {
+        description: errors.join(", "),
+      });
+      return;
+    }
+
     try {
       await apiCall('/company/profile', {
         method: 'POST',
@@ -57,6 +98,7 @@ export default function EmployerOnboardingPage() {
           country: formData.country,
           industry: formData.industry,
           description: formData.description,
+          mission: formData.mission,
           website: formData.website,
         })
       });
@@ -210,7 +252,7 @@ export default function EmployerOnboardingPage() {
               {currentStep === 2 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Company Description</label>
+                    <label className="block text-sm font-medium mb-2">Company Description <span className="text-gray-500 text-xs">(min 20 chars)</span></label>
                     <textarea
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
                       rows={6}
@@ -218,6 +260,22 @@ export default function EmployerOnboardingPage() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
+                    {formData.description.length > 0 && formData.description.length < 20 && (
+                      <p className="text-xs text-gray-500 mt-1">{formData.description.length}/20 characters</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Mission Statement <span className="text-gray-500 text-xs">(min 10 chars)</span></label>
+                    <textarea
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      rows={4}
+                      placeholder="What is your company's mission and how do you make an impact?"
+                      value={formData.mission}
+                      onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
+                    />
+                    {formData.mission.length > 0 && formData.mission.length < 10 && (
+                      <p className="text-xs text-gray-500 mt-1">{formData.mission.length}/10 characters</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Team Size</label>
