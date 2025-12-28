@@ -33,14 +33,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('authToken');
     const storedRole = localStorage.getItem('userRole');
     
+    // IMPORTANT: Initialize from localStorage FIRST to prevent race condition
+    // This fixes the issue where dashboard redirects to auth on refresh
     if (storedUser && storedToken) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        if (isMounted) {
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-        }
-        console.log('🔍 Restored auth state from localStorage');
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        setLoading(false);
+        console.log('🔍 Restored auth state from localStorage (immediate)');
       } catch (error) {
         console.error('❌ Failed to parse stored user:', error);
         // Clear invalid stored data
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Set up auth state change monitoring
+    // Set up auth state change monitoring (for Firebase auth events)
     const unsubscribeAuth = onAuthStateChange((firebaseUser: User | null) => {
       if (!isMounted) return;
       
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(authUser);
         setIsAuthenticated(true);
+        setLoading(false);
         
         // Update localStorage with fresh auth state
         localStorage.setItem('authUser', JSON.stringify(authUser));
@@ -93,14 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         console.log('🔍 User signed out, auth state cleared');
       }
-      setLoading(false);
     });
 
-    // Set loading to false after initial check
-    if (isMounted) {
-      setLoading(false);
-    }
-
+    // Cleanup on unmount
     return () => {
       isMounted = false;
       unsubscribeAuth();

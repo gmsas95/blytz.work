@@ -56,7 +56,9 @@ export function middleware(request: NextRequest) {
     hasRole: !!userRole,
     userRole,
     hasAuthHeader,
-    cookies: request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value }))
+    allCookies: request.cookies.getAll(),
+    cookieString: request.cookies.toString(),
+    userAgent: request.headers.get('user-agent')?.substring(0, 100)
   });
 
   if (!token && !hasAuthHeader) {
