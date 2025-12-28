@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,31 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { apiCall } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-
-const syncUserRole = async (role: 'company' | 'va') => {
-  const token = await getToken();
-  if (!token) return;
-  
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/role`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ role })
-    });
-    
-    if (response.ok) {
-      console.log('✅ User role updated to:', role);
-      const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
-      authUser.role = role;
-      localStorage.setItem('authUser', JSON.stringify(authUser));
-    }
-  } catch (error) {
-    console.error('Failed to update user role:', error);
-  }
-};
 
 export default function EmployerOnboardingPage() {
   const router = useRouter();
@@ -106,8 +81,6 @@ export default function EmployerOnboardingPage() {
       toast.success("Company profile created!", {
         description: "Welcome to BlytzWork as an Employer",
       });
-
-      await syncUserRole('company');
       
       setTimeout(() => {
         router.push("/employer/dashboard");
@@ -190,58 +163,94 @@ export default function EmployerOnboardingPage() {
                 {currentStep === 3 && "Review & Complete"}
               </CardTitle>
               <CardDescription>
-                {currentStep === 1 && "Help us understand your company and what you do"}
-                {currentStep === 2 && "Let us know what kind of talent you're looking for"}
-                {currentStep === 3 && "Review your company profile and start hiring"}
+                {currentStep === 1 && "Let's start with the basics about your company"}
+                {currentStep === 2 && "Help us understand your team and needs"}
+                {currentStep === 3 && "Review your information and complete setup"}
               </CardDescription>
             </CardHeader>
-            
-            <CardContent className="space-y-6">
+
+            <CardContent>
+              {/* Step 1: Company Information */}
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Company Name</label>
+                    <label className="block text-sm font-medium mb-2">Company Name *</label>
                     <input
                       type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
-                      placeholder="Acme Corp"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="e.g., Acme Technologies"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium mb-2">Country</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
-                      placeholder="United States"
+                    <label className="block text-sm font-medium mb-2">Country *</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
                       value={formData.country}
                       onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    />
+                    >
+                      <option value="">Select a country</option>
+                      <option value="US">United States</option>
+                      <option value="CA">Canada</option>
+                      <option value="GB">United Kingdom</option>
+                      <option value="AU">Australia</option>
+                      <option value="DE">Germany</option>
+                      <option value="PH">Philippines</option>
+                      <option value="IN">India</option>
+                      <option value="OTHER">Other</option>
+                    </select>
                   </div>
+
                   <div>
-                    <label className="block text-sm font-medium mb-2">Industry</label>
+                    <label className="block text-sm font-medium mb-2">Industry *</label>
                     <select
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
                       value={formData.industry}
                       onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                     >
                       <option value="">Select an industry</option>
-                      <option value="technology">Technology</option>
-                      <option value="healthcare">Healthcare</option>
-                      <option value="finance">Finance</option>
-                      <option value="ecommerce">E-commerce</option>
-                      <option value="education">Education</option>
-                      <option value="consulting">Consulting</option>
-                      <option value="other">Other</option>
+                      <option value="Technology">Technology</option>
+                      <option value="Finance">Finance & Banking</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Education">Education</option>
+                      <option value="Retail">Retail & E-commerce</option>
+                      <option value="Manufacturing">Manufacturing</option>
+                      <option value="Real Estate">Real Estate</option>
+                      <option value="Marketing">Marketing & Advertising</option>
+                      <option value="Consulting">Consulting</option>
+                      <option value="Legal">Legal Services</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Company Description</label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black min-h-[120px]"
+                      placeholder="Describe what your company does (at least 20 characters if provided)"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Mission Statement</label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black min-h-[100px]"
+                      placeholder="What's your company's mission? (at least 10 characters if provided)"
+                      value={formData.mission}
+                      onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-2">Website (Optional)</label>
                     <input
                       type="url"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
-                      placeholder="https://example.com"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      placeholder="https://www.yourcompany.com"
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     />
@@ -249,47 +258,21 @@ export default function EmployerOnboardingPage() {
                 </div>
               )}
 
+              {/* Step 2: About Team */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Company Description <span className="text-gray-500 text-xs">(min 20 chars)</span></label>
-                    <textarea
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
-                      rows={6}
-                      placeholder="Describe your company, culture, and what makes it a great place to work..."
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    />
-                    {formData.description.length > 0 && formData.description.length < 20 && (
-                      <p className="text-xs text-gray-500 mt-1">{formData.description.length}/20 characters</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Mission Statement <span className="text-gray-500 text-xs">(min 10 chars)</span></label>
-                    <textarea
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
-                      rows={4}
-                      placeholder="What is your company's mission and how do you make an impact?"
-                      value={formData.mission}
-                      onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
-                    />
-                    {formData.mission.length > 0 && formData.mission.length < 10 && (
-                      <p className="text-xs text-gray-500 mt-1">{formData.mission.length}/10 characters</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Team Size</label>
-                    <select className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]">
-                      <option value="">Select team size</option>
-                      <option value="1-10">1-10 employees</option>
-                      <option value="11-50">11-50 employees</option>
-                      <option value="51-200">51-200 employees</option>
-                      <option value="201+">201+ employees</option>
-                    </select>
+                <div className="space-y-6">
+                  <div className="text-center py-8">
+                    <Building className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                    <h3 className="text-xl font-semibold mb-2">Team Information Coming Soon</h3>
+                    <p className="text-gray-600">
+                      This section will include team size, structure, and specific requirements.
+                      For now, continue to review your company profile.
+                    </p>
                   </div>
                 </div>
               )}
 
+              {/* Step 3: Review */}
               {currentStep === 3 && (
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-6 rounded-lg">

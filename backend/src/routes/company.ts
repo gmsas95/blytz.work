@@ -4,12 +4,12 @@ import { prisma } from "../utils/prisma.js";
 import { verifyAuth } from "../plugins/firebaseAuth.js";
 import { z } from "zod";
 
-// Validation schemas
+// Validation schemas - Frontend must match this exactly
 const createCompanyProfileSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
-  bio: z.string().min(10, "Bio must be at least 10 characters"),
   country: z.string().min(2, "Country is required"),
-  website: z.string().url().optional(),
+  bio: z.string().min(10, "Bio must be at least 10 characters").optional(),
+  website: z.string().optional().transform((val) => val && val.trim() !== "" ? val : null),
   industry: z.string().min(2, "Industry is required"),
   companySize: z.enum(["1-10", "11-50", "51-200", "201+"]).optional(),
   foundedYear: z.number().min(1800).max(new Date().getFullYear()).optional(),
@@ -20,11 +20,11 @@ const createCompanyProfileSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   socialLinks: z.object({
-    linkedin: z.string().url().optional(),
-    twitter: z.string().url().optional(),
-    facebook: z.string().url().optional(),
-    instagram: z.string().url().optional(),
-    youtube: z.string().url().optional()
+    linkedin: z.string().url("Invalid url").optional(),
+    twitter: z.string().url("Invalid url").optional(),
+    facebook: z.string().url("Invalid url").optional(),
+    instagram: z.string().url("Invalid url").optional(),
+    youtube: z.string().url("Invalid url").optional()
   }).optional(),
   techStack: z.array(z.string()).optional()
 });
@@ -54,7 +54,6 @@ export default async function companyRoutes(app: FastifyInstance) {
         });
       }
 
-      // Calculate profile completion
       const completionPercentage = calculateCompanyCompletion(profile);
 
       return {
@@ -63,7 +62,8 @@ export default async function companyRoutes(app: FastifyInstance) {
           ...profile,
           completionPercentage,
           jobPostings: profile.jobPostings || [],
-          reviews: [] // Mock empty reviews for now
+          reviews: [],
+          featuredProfile: profile.featuredCompany || false
         }
       };
     } catch (error: any) {
@@ -83,7 +83,6 @@ export default async function companyRoutes(app: FastifyInstance) {
     const data = createCompanyProfileSchema.parse(request.body);
 
     try {
-      // Check if user already has a profile
       const existingProfile = await prisma.company.findUnique({
         where: { userId: user.uid }
       });
@@ -95,7 +94,6 @@ export default async function companyRoutes(app: FastifyInstance) {
         });
       }
 
-      // Auto-set user role to company if not already set
       const userData = await prisma.user.findUnique({
         where: { id: user.uid }
       });
@@ -115,7 +113,6 @@ export default async function companyRoutes(app: FastifyInstance) {
         app.log.info({ userId: user.uid, previousRole: userData.role }, 'User role auto-updated to company');
       }
 
-      // Create company profile
       const profile = await prisma.company.create({
         data: {
           ...data,
@@ -174,14 +171,14 @@ export default async function companyRoutes(app: FastifyInstance) {
       };
     } catch (error: any) {
       if (error instanceof z.ZodError) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "Validation error",
           code: "VALIDATION_ERROR",
           details: error.errors
         });
       }
 
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to update company profile",
         code: "PROFILE_UPDATE_ERROR",
         details: error.message
@@ -194,9 +191,8 @@ export default async function companyRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-
+    
     try {
-      // Get file URL from request (uploaded via file upload service)
       const fileUrl = (request as any).fileUrl;
       if (!fileUrl) {
         return reply.code(400).send({ 
@@ -205,7 +201,6 @@ export default async function companyRoutes(app: FastifyInstance) {
         });
       }
 
-      // Update company logo
       const profile = await prisma.company.update({
         where: { userId: user.uid },
         data: {
@@ -235,7 +230,6 @@ export default async function companyRoutes(app: FastifyInstance) {
     const { level } = request.body as { level: 'professional' | 'premium' };
 
     try {
-      // Update verification level
       const profile = await prisma.company.update({
         where: { userId: user.uid },
         data: {
@@ -250,7 +244,7 @@ export default async function companyRoutes(app: FastifyInstance) {
         message: `Verification request submitted for ${level} level`
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to submit verification request",
         code: "VERIFICATION_ERROR",
         details: error.message
@@ -263,11 +257,14 @@ export default async function companyRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-
+    
     try {
       const profile = await prisma.company.findUnique({
         where: { userId: user.uid },
         include: {
+          user: {
+            select: { email: true }
+          },
           jobPostings: {
             select: { id: true }
           }
@@ -281,7 +278,6 @@ export default async function companyRoutes(app: FastifyInstance) {
         });
       }
 
-      // Mock analytics for now
       const analytics = {
         conversionRate: 12.5,
         averageTimeToHire: 14.3,
@@ -292,7 +288,7 @@ export default async function companyRoutes(app: FastifyInstance) {
         trends: [
           { date: '2024-01-01', jobs: 5, matches: 23, hires: 3 },
           { date: '2024-01-02', jobs: 8, matches: 37, hires: 5 },
-          { date: '2024-01-03', jobs: 6, matches: 28, hires: 4 }
+          { date: '2024-01-03', jobs: 6, matches: 12, hires: 4 }
         ]
       };
 
@@ -303,13 +299,16 @@ export default async function companyRoutes(app: FastifyInstance) {
             name: profile.name,
             verificationLevel: profile.verificationLevel,
             totalJobs: profile.jobPostings?.length || 0,
-            totalReviews: true,
+            totalReviews: 0
           },
           performance: {
             totalMatches: 47,
             conversionRate: analytics.conversionRate,
             averageTimeToHire: analytics.averageTimeToHire,
-            costPerHire: analytics.costPerHire
+            costPerHire: analytics.costPerHire,
+            averageRating: analytics.averageRating,
+            responseRate: analytics.responseRate,
+            satisfactionScore: analytics.satisfactionScore
           },
           quality: {
             averageRating: analytics.averageRating,
@@ -320,7 +319,7 @@ export default async function companyRoutes(app: FastifyInstance) {
         }
       };
     } catch (error: any) {
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to fetch analytics",
         code: "ANALYTICS_ERROR",
         details: error.message
@@ -329,7 +328,6 @@ export default async function companyRoutes(app: FastifyInstance) {
   });
 }
 
-// Helper functions
 function calculateCompanyCompletion(profile: any): number {
   const fields = [
     profile.name,
@@ -340,9 +338,11 @@ function calculateCompanyCompletion(profile: any): number {
     profile.description,
     profile.mission,
     profile.website,
-    profile.logoUrl,
     profile.values?.length,
     profile.benefits?.length,
+    profile.email,
+    profile.phone,
+    profile.logoUrl,
     profile.socialLinks,
     profile.techStack?.length
   ];
