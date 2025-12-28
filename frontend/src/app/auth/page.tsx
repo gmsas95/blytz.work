@@ -222,8 +222,22 @@ function AuthPageContent() {
         
         console.log('✅ All checks passed, redirecting to:', redirectPath);
         
-        // Use window.location.href for more reliable redirect
-        window.location.href = redirectPath;
+        // Reset loading state before redirect
+        setIsLoading(false);
+        
+        // Force a small delay to ensure all state is settled
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        try {
+          console.log('🔄 Attempting router.push to:', redirectPath);
+          // Use Next.js router for proper navigation
+          router.push(redirectPath);
+        } catch (redirectError) {
+          console.error('❌ Router redirect failed:', redirectError);
+          // Fallback to window.location.href if router fails
+          console.log('🔄 Fallback: Using window.location.href');
+          window.location.href = redirectPath;
+        }
       } else {
         let authUser;
         
