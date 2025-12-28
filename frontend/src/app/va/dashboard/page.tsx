@@ -84,17 +84,15 @@ const VADashboard = () => {
   });
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // Only fetch data if user is authenticated
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const fetchDashboardData = async () => {
     try {
-      if (!user) {
-        router.push('/auth');
-        return;
-      }
-
-      // Fetch VA profile using the centralized API call function
+      // Fetch VA profile using centralized API call function
       const profileResponse = await apiCall('/va/profile', {
         method: 'GET'
       });
