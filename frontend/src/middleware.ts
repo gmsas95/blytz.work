@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Normalize role values between frontend (employer/va) and backend (company/va)
+function normalizeRole(role: string | null | undefined): string | null {
+  if (!role) return null;
+  // Frontend uses 'employer', backend uses 'company'
+  return role === 'employer' ? 'company' : role;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -30,7 +37,6 @@ export function middleware(request: NextRequest) {
   const protectedRoutes = [
     '/employer/dashboard',
     '/va/dashboard',
-    '/select-role',
     '/employer/onboarding',
     '/va/onboarding',
     '/chat',
@@ -53,7 +59,7 @@ export function middleware(request: NextRequest) {
                 request.headers.get('authorization')?.replace('Bearer ', '');
 
   // Check for user role in cookies
-  const userRole = request.cookies.get('userRole')?.value;
+  const userRole = normalizeRole(request.cookies.get('userRole')?.value);
 
   // Check localStorage fallback via header (client-side should set this)
   const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
@@ -86,23 +92,23 @@ export function middleware(request: NextRequest) {
   }
 
   // Additional role-based checks
-  if (pathname.startsWith('/employer') && userRole !== 'employer') {
-    console.log('🚫 Redirecting to auth: Wrong role for employer route');
+  // Note: Frontend uses 'employer', backend uses 'company' - normalize before comparison
+  const expectedRole = pathname.startsWith('/employer') ? 'company' : 'va';
+
+  if (userRole && userRole !== expectedRole) {
+    console.log('🚫 Redirecting to auth: Wrong role for route', {
+      pathname,
+      userRole,
+      expectedRole
+    });
     const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
+    url.pathname = '/select-role';
+    url.searchParams.set('error', 'invalid_role');
+    url.searchParams.set('current_role', userRole || 'none');
     return NextResponse.redirect(url);
   }
 
-  if (pathname.startsWith('/va') && userRole !== 'va') {
-    console.log('🚫 Redirecting to auth: Wrong role for VA route');
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
-
-  // User is authenticated - continue to protected route
+  // User is authenticated with correct role - continue to protected route
   console.log('✅ Auth verified, proceeding to protected route');
   return NextResponse.next();
 }

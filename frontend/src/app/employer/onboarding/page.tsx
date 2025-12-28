@@ -9,6 +9,32 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { apiCall } from "@/lib/api";
+import { getToken } from "@/lib/auth";
+
+const syncUserRole = async (role: 'company' | 'va') => {
+  const token = await getToken();
+  if (!token) return;
+  
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/role`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ role })
+    });
+    
+    if (response.ok) {
+      console.log('✅ User role updated to:', role);
+      const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
+      authUser.role = role;
+      localStorage.setItem('authUser', JSON.stringify(authUser));
+    }
+  } catch (error) {
+    console.error('Failed to update user role:', error);
+  }
+};
 
 export default function EmployerOnboardingPage() {
   const router = useRouter();
@@ -24,7 +50,6 @@ export default function EmployerOnboardingPage() {
 
   const handleSubmit = async () => {
     try {
-      // Update company profile
       await apiCall('/company/profile', {
         method: 'POST',
         body: JSON.stringify({
@@ -40,7 +65,11 @@ export default function EmployerOnboardingPage() {
         description: "Welcome to BlytzWork as an Employer",
       });
 
-      router.push("/employer/dashboard");
+      await syncUserRole('company');
+      
+      setTimeout(() => {
+        router.push("/employer/dashboard");
+      }, 500);
     } catch (error) {
       toast.error("Failed to create company profile", {
         description: "Please try again",

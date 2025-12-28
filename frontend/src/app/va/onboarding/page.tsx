@@ -109,13 +109,12 @@ export default function VAOnboardingPage() {
     if (currentStep < 3) setCurrentStep(currentStep + 1);
   };
 
-  // NEW: Add user sync function for role selection
   const syncUserRole = async (role: 'company' | 'va') => {
     const token = await getToken();
     if (!token) return;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/update-role`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +125,6 @@ export default function VAOnboardingPage() {
       
       if (response.ok) {
         console.log('✅ User role updated to:', role);
-        // Update local storage
         const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
         authUser.role = role;
         localStorage.setItem('authUser', JSON.stringify(authUser));

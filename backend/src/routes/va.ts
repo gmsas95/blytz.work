@@ -111,22 +111,30 @@ export default async function vaRoutes(app: FastifyInstance) {
       });
 
       if (existingProfile) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "VA profile already exists",
           code: "PROFILE_EXISTS"
         });
       }
 
-      // Check if user role is VA
+      // Auto-set user role to VA if not already set
       const userData = await prisma.user.findUnique({
         where: { id: user.uid }
       });
 
-      if (!userData || userData.role !== "va") {
-        return reply.code(403).send({ 
-          error: "User is not a VA",
-          code: "INVALID_ROLE"
+      if (!userData) {
+        return reply.code(404).send({
+          error: "User not found",
+          code: "USER_NOT_FOUND"
         });
+      }
+
+      if (userData.role !== "va") {
+        await prisma.user.update({
+          where: { id: user.uid },
+          data: { role: "va" }
+        });
+        app.log.info({ userId: user.uid, previousRole: userData.role }, 'User role auto-updated to VA');
       }
 
       // Create VA profile
@@ -152,14 +160,14 @@ export default async function vaRoutes(app: FastifyInstance) {
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
-        return reply.code(400).send({ 
+        return reply.code(400).send({
           error: "Validation error",
           code: "VALIDATION_ERROR",
           details: error.errors
         });
       }
 
-      return reply.code(500).send({ 
+      return reply.code(500).send({
         error: "Failed to create VA profile",
         code: "PROFILE_CREATION_ERROR",
         details: error.message

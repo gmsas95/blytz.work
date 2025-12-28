@@ -23,17 +23,17 @@ export default function SelectRolePage() {
       // Update role in backend
       const backendRole = role === 'employer' ? 'company' : 'va';
       await apiCall('/auth/profile', {
-        method: 'PUT', 
+        method: 'PUT',
         body: JSON.stringify({ role: backendRole })
       });
-      
+
       toast.success(`Welcome as ${role === "employer" ? "Employer" : "Virtual Assistant"}!`, {
         description: "Redirecting to your dashboard...",
       });
 
       // Store role in localStorage
       localStorage.setItem("userRole", role);
-      
+
       // Redirect to appropriate onboarding
       if (role === "employer") {
         router.push("/employer/onboarding");
