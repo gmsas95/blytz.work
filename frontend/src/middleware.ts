@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
     '/contract'
   ];
 
-  // Check if the current path is a protected route
+  // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
@@ -53,8 +53,12 @@ export function middleware(request: NextRequest) {
     pathname,
     hasToken: !!token,
     tokenLength: token?.length,
+    tokenPreview: token?.substring(0, 20) + '...',
     hasRole: !!userRole,
     userRole,
+    userRoleType: typeof userRole,
+    userRoleLength: userRole?.length,
+    userRoleValue: userRole,
     hasAuthHeader,
     allCookies: request.cookies.getAll(),
     cookieString: request.cookies.toString(),
@@ -92,4 +96,13 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-
+export const config = {
+  // Match all paths except:
+  // - api routes
+  // - _next (Next.js internals)
+  // - static files (images, etc)
+  // - auth-related pages
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|auth|forgot-password|reset-email-sent|select-role).*)',
+  ]
+};
