@@ -26,8 +26,23 @@ function AuthPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Check for expired=true parameter and clear auth state
+  // Also check if user is already authenticated and redirect to dashboard
   useEffect(() => {
     const isExpired = searchParams?.get('expired');
+    
+    // Check if user is already logged in
+    const hasAuth = localStorage.getItem('authToken') && localStorage.getItem('authUser');
+    if (hasAuth) {
+      console.log('✅ User already authenticated, redirecting to dashboard');
+      // Determine redirect based on role or default to dashboard
+      const userRole = localStorage.getItem('userRole') || 'va';
+      const redirectPath = userRole === 'employer' ? '/employer/dashboard' : '/va/dashboard';
+      
+      // Use window.location.replace for immediate redirect
+      window.location.replace(redirectPath);
+      return;
+    }
+    
     if (isExpired === 'true') {
       console.log('🔍 Authentication expired, clearing local storage...');
       // Clear all auth-related storage

@@ -3,6 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ALWAYS log middleware execution for debugging
+  console.log('🔐 MIDDLEWARE CALLED:', {
+    pathname,
+    method: request.method,
+    hasCookies: request.cookies.getAll().length > 0,
+    cookieNames: request.cookies.getAll().map(c => c.name)
+  });
+
   // Skip middleware for static files, API routes, and auth-related pages
   if (
     pathname.startsWith('/_next') ||
@@ -14,6 +22,7 @@ export function middleware(request: NextRequest) {
     pathname === '/reset-email-sent' ||
     pathname === '/select-role'
   ) {
+    console.log('🔐 Middleware skipped (public route)');
     return NextResponse.next();
   }
 
@@ -35,6 +44,7 @@ export function middleware(request: NextRequest) {
 
   // Skip authentication check for non-protected routes
   if (!isProtectedRoute) {
+    console.log('🔐 Not a protected route, skipping auth check');
     return NextResponse.next();
   }
 
@@ -51,17 +61,18 @@ export function middleware(request: NextRequest) {
   // Log authentication state for debugging
   console.log('🔐 Middleware auth check:', {
     pathname,
+    isProtectedRoute,
     hasToken: !!token,
     tokenLength: token?.length,
-    tokenPreview: token?.substring(0, 20) + '...',
+    tokenPreview: token?.substring(0, 30) + '...',
     hasRole: !!userRole,
     userRole,
     userRoleType: typeof userRole,
     userRoleLength: userRole?.length,
     userRoleValue: userRole,
     hasAuthHeader,
-    allCookies: request.cookies.getAll(),
-    cookieString: request.cookies.toString(),
+    allCookies: request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value, length: c.value?.length })),
+    cookieString: request.cookies.toString().substring(0, 200),
     userAgent: request.headers.get('user-agent')?.substring(0, 100)
   });
 
@@ -91,7 +102,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // User is authenticated - continue to the protected route
+  // User is authenticated - continue to protected route
   console.log('✅ Auth verified, proceeding to protected route');
   return NextResponse.next();
 }
