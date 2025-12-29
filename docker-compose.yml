@@ -16,8 +16,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 15s
+      retries: 10
+      start_period: 30s
 
   # Redis Cache
   redis:
