@@ -54,6 +54,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://blytz.app,https://www.blytz.app,https://blytz.cloud,https://www.blytz.cloud}
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,8 +68,12 @@ services:
       - traefik.http.routers.blytzwork-backend-router.entrypoints=websecure
       - traefik.http.routers.blytzwork-backend-router.tls.certresolver=letsencrypt
       - traefik.http.services.blytzwork-backend-service.loadbalancer.server.port=3000
+      - traefik.http.routers.blytzwork-backend-cloud-router.rule=Host(`api.blytz.cloud`)
+      - traefik.http.routers.blytzwork-backend-cloud-router.entrypoints=websecure
+      - traefik.http.routers.blytzwork-backend-cloud-router.tls.certresolver=letsencrypt
+      - traefik.http.routers.blytzwork-backend-cloud-router.service=blytzwork-backend-service
 
-  # Frontend
+   # Frontend
   frontend:
     build:
       context: ./frontend
@@ -82,7 +87,8 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     container_name: blytz-frontend
     restart: unless-stopped
     environment:
@@ -96,7 +102,8 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
       - backend
     networks:
