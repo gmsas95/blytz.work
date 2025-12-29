@@ -7,27 +7,32 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Search, 
-  Filter, 
-  Users, 
-  Briefcase, 
-  DollarSign, 
-  Star, 
-  Eye, 
-  Calendar, 
-  TrendingUp, 
-  Clock, 
-  MapPin, 
-  Award, 
-  CheckCircle, 
-  AlertCircle, 
-  MessageSquare, 
-  Heart, 
-  ChevronDown, 
-  ChevronUp, 
-  UserPlus
+import {
+  Search,
+  Filter,
+  Users,
+  Briefcase,
+  DollarSign,
+  Star,
+  Eye,
+  Calendar,
+  TrendingUp,
+  Clock,
+  MapPin,
+  Award,
+  CheckCircle,
+  AlertCircle,
+  MessageSquare,
+  Heart,
+  ChevronDown,
+  ChevronUp,
+  UserPlus,
+  Edit,
+  FileText,
+  BarChart3,
+  Settings
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { apiCall } from '@/lib/api';
@@ -355,35 +360,7 @@ const VADashboard = () => {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold text-slate-900">
-                    {profile?.name?.charAt(0) || 'V'}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewMode('vas')}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Find VAs
-                      </Button>
-                    </div>
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewMode('employers')}
-                      >
-                        <Briefcase className="h-4 w-4 mr-2" />
-                        Browse Companies
-                      </Button>
-                    </div>
-                  </div>
-                  {getVerificationBadge(profile?.verificationLevel ?? 'basic')}
-                </div>
-              </div>
+              <div className="text-2xl font-bold">{analytics.averageRating}</div>
               <p className="text-xs text-muted-foreground">
                 {analytics.totalReviews} reviews
               </p>
@@ -478,76 +455,31 @@ const VADashboard = () => {
 
         {/* Quick Actions & Upgrades */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-               <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline" onClick={handleEditProfile}>
-                    <Edit className="h-4 w-4 mr-1" />
-                    Update Profile Information
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={handleViewApplications}>
-                    <FileText className="h-4 w-4 mr-1" />
-                    Applications
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
-                    <BarChart3 className="h-4 w-4 mr-1" />
-                    Analytics
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={handleUpgradeVerification}>
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    Upgrade Verification
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Discover Employers - VAs can browse companies */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Discover Employers</CardTitle>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewMode('employers')}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Browse Companies
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-              {viewMode === 'employers' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Search employers by name or industry..."
-                      value={employerSearchTerm}
-                      onChange={(e) => setEmployerSearchTerm(e.target.value)}
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <Select value={employerIndustryFilter} onValueChange={setEmployerIndustryFilter}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="All Industries" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Industries</SelectItem>
-                            <SelectItem value="Technology">Technology</SelectItem>
-                            <SelectItem value="E-commerce">E-commerce</SelectItem>
-                            <SelectItem value="Finance">Finance</SelectItem>
-                            <SelectItem value="Healthcare">Healthcare</SelectItem>
-                            <SelectItem value="Education">Education</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
+          {viewMode === 'employers' ? (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Browse Companies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 mb-4">
+                  <Input
+                    placeholder="Search employers by name or industry..."
+                    value={employerSearchTerm}
+                    onChange={(e) => setEmployerSearchTerm(e.target.value)}
+                  />
+                  <Select value={employerIndustryFilter} onValueChange={setEmployerIndustryFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Industries" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Industries</SelectItem>
+                      <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="E-commerce">E-commerce</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Healthcare">Healthcare</SelectItem>
+                      <SelectItem value="Education">Education</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {employerProfiles.length === 0 ? (
@@ -567,44 +499,90 @@ const VADashboard = () => {
                               alt={company.name}
                               className="w-16 h-16 rounded-full object-cover border border-slate-200"
                               onError={(e) => e.currentTarget.src = '/placeholder-logo.png'}
-                              />
+                            />
                             <div className="flex-1">
                               <h3 className="text-lg font-bold text-slate-900">{company.name}</h3>
-                              {company.verificationLevel && (
-                                <Badge className="ml-2">
-                                  {company.verificationLevel === 'premium' && 'Verified Employer'}
-                                  {company.verificationLevel === 'Company profile && 'Verified Company'}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {company.verificationLevel === 'premium' && (
+                                  <Badge className="ml-0">Verified Employer</Badge>
                                 )}
+                                {company.verificationLevel === 'basic' && (
+                                  <Badge variant="outline">Company</Badge>
                                 )}
-                              {company.industry && (
-                                <Badge variant="outline" className="ml-2">{company.industry}</Badge>
-                              )}
-                              <div className="text-sm text-slate-600">
-                                {company.companySize && <Badge variant="outline" className="ml-2">{company.companySize}</Badge>}
+                                {company.industry && (
+                                  <Badge variant="outline">{company.industry}</Badge>
+                                )}
+                                {company.companySize && (
+                                  <Badge variant="outline">{company.companySize}</Badge>
+                                )}
                               </div>
-                              <div className="flex gap-2 text-sm text-slate-600 mt-1">
+                              <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
                                 {company.jobPostings && (
                                   <span className="flex items-center gap-1">
                                     <Briefcase className="h-3 w-3" />
-                                    {company.jobPostings}
+                                    {company.jobPostings} job posting{company.jobPostings !== 1 ? 's' : ''}
                                   </span>
                                 )}
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-                </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleEditProfile}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    Update Profile Information
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewApplications}>
+                    <FileText className="h-4 w-4 mr-1" />
+                    Applications
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Analytics
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleUpgradeVerification}>
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Upgrade Verification
+                  </Button>
+                </CardContent>
               </Card>
-            </div>
-                  </CardContent>
-                </Card>
-          </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>Discover Employers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewMode('employers')}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Browse Companies
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
+
+        {/* Verification & Upgrades */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
