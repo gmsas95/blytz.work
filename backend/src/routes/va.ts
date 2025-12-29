@@ -421,6 +421,10 @@ export default async function vaRoutes(app: FastifyInstance) {
       const skip = (Number(page) - 1) * Number(limit);
       const take = Number(limit);
       
+      // Set proper response headers
+      reply.header('Content-Type', 'application/json; charset=utf-8');
+      reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      
       // Build where clause
       const where: any = {};
       
@@ -486,7 +490,7 @@ export default async function vaRoutes(app: FastifyInstance) {
         prisma.vAProfile.count({ where })
       ]);
       
-      return {
+      return reply.code(200).send({
         success: true,
         data: profiles,
         pagination: {
@@ -495,7 +499,7 @@ export default async function vaRoutes(app: FastifyInstance) {
           total,
           totalPages: Math.ceil(total / take)
         }
-      };
+      });
     } catch (error: any) {
       return reply.code(500).send({ 
         error: "Failed to search VA profiles",
