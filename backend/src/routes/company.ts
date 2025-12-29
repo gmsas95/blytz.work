@@ -275,9 +275,9 @@ export default async function companyRoutes(app: FastifyInstance) {
             { mission: { contains: search, mode: 'insensitive' } }
           ]
         }),
-        ...(industry && { industry }),
-        ...(companySize && { companySize }),
-        ...(verificationLevel && { verificationLevel })
+        ...(industry && industry !== 'all' && { industry }),
+        ...(companySize && companySize !== 'all' && { companySize }),
+        ...(verificationLevel && verificationLevel !== 'all' && { verificationLevel })
       };
 
       const [profiles, total] = await Promise.all([

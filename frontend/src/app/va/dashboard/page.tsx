@@ -472,7 +472,7 @@ const VADashboard = () => {
                       <SelectValue placeholder="All Industries" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Industries</SelectItem>
+                      <SelectItem value="all">All Industries</SelectItem>
                       <SelectItem value="Technology">Technology</SelectItem>
                       <SelectItem value="E-commerce">E-commerce</SelectItem>
                       <SelectItem value="Finance">Finance</SelectItem>
