@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: blytz-postgres
+    container_name: blytzwork-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
@@ -23,7 +23,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: blytz-redis
+    container_name: blytzwork-redis
     restart: unless-stopped
     volumes:
       - blytzwork_persistent_redis_data:/data
@@ -40,7 +40,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytzwork-backend
+    container_name: blytzwork-backend-final
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -96,7 +96,7 @@ services:
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
-    container_name: blytz-frontend
+    container_name: blytzwork-frontend-final
     restart: unless-stopped
     environment:
       NODE_ENV: production
