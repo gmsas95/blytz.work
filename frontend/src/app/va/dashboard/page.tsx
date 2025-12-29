@@ -144,48 +144,53 @@ const VADashboard = () => {
   }, [viewMode, employerSearchTerm, employerIndustryFilter]);
   
   useEffect(() => {
-      // Fetch VA profile using centralized API call function
-      const profileResponse = await apiCall('/va/profile', {
-        method: 'GET'
-      });
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch VA profile using centralized API call function
+        const profileResponse = await apiCall('/va/profile', {
+          method: 'GET'
+        });
 
-      console.log('Profile response status:', profileResponse.status);
-      console.log('Profile response:', profileResponse);
+        console.log('Profile response status:', profileResponse.status);
+        console.log('Profile response:', profileResponse);
 
-      if (profileResponse.status === 200) {
-        const profileData = await profileResponse.json();
-        console.log('Profile data:', profileData);
-        setProfile(profileData.data);
-      } else {
-        // Profile doesn't exist, redirect to creation
-        console.log('Profile not found, redirecting to creation');
-        router.push('/va/profile/create');
-        return;
+        if (profileResponse.status === 200) {
+          const profileData = await profileResponse.json();
+          console.log('Profile data:', profileData);
+          setProfile(profileData.data);
+        } else {
+          // Profile doesn't exist, redirect to creation
+          console.log('Profile not found, redirecting to creation');
+          router.push('/va/profile/create');
+          return;
+        }
+
+        // Fetch dashboard analytics (mock for now, will be real API)
+        const analyticsData = {
+          views: Math.floor(Math.random() * 1000) + 100,
+          contactRequests: Math.floor(Math.random() * 50) + 5,
+          responseRate: Math.floor(Math.random() * 30) + 70,
+          averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
+          totalReviews: Math.floor(Math.random() * 100) + 10,
+          completedJobs: Math.floor(Math.random() * 50) + 5,
+          earnedAmount: Math.floor(Math.random() * 10000) + 1000,
+          profileViews: Math.floor(Math.random() * 2000) + 200,
+          skillsPassed: Math.floor(Math.random() * 10) + 5,
+          skillsTotal: Math.floor(Math.random() * 5) + 10
+        };
+        
+        setAnalytics(analyticsData);
+
+      } catch (error) {
+        console.error('Dashboard data fetch error:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
       }
-
-      // Fetch dashboard analytics (mock for now, will be real API)
-      const analyticsData = {
-        views: Math.floor(Math.random() * 1000) + 100,
-        contactRequests: Math.floor(Math.random() * 50) + 5,
-        responseRate: Math.floor(Math.random() * 30) + 70,
-        averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
-        totalReviews: Math.floor(Math.random() * 100) + 10,
-        completedJobs: Math.floor(Math.random() * 50) + 5,
-        earnedAmount: Math.floor(Math.random() * 10000) + 1000,
-        profileViews: Math.floor(Math.random() * 2000) + 200,
-        skillsPassed: Math.floor(Math.random() * 10) + 5,
-        skillsTotal: Math.floor(Math.random() * 5) + 10
-      };
-      
-      setAnalytics(analyticsData);
-
-    } catch (error) {
-      console.error('Dashboard data fetch error:', error);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    
+    fetchDashboardData();
+  }, []);
 
   const handleEditProfile = () => {
     router.push('/va/profile/edit');
@@ -461,7 +466,7 @@ const VADashboard = () => {
               </Button>
             </CardContent>
           </Card>
-          {viewMode === 'employers' && (
+          {viewMode === 'employers' ? (
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Browse Companies</CardTitle>
@@ -518,34 +523,11 @@ const VADashboard = () => {
                                 {company.industry && (
                                   <Badge variant="outline">{company.industry}</Badge>
                                 )}
-                                <div className="text-sm text-slate-600">
-                                  {company.companySize && <Badge variant="outline" className="ml-2">{company.companySize}</Badge>}
-                                  <div className="flex items-center gap-2 text-sm text-slate-600 mt-1">
-                                    <Briefcase className="h-3 w-3" />
-                                    {company.jobPostings} job posting{company.jobPostings !== 1 ? 's' : ''}
-                                  </div>
-                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-                                {company.verificationLevel === 'basic' && (
-                                  <Badge variant="outline">Company</Badge>
-                                )}
-                                {company.industry && (
-                                  <Badge variant="outline">{company.industry}</Badge>
-                                )}
+                              <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
                                 {company.companySize && (
                                   <Badge variant="outline">{company.companySize}</Badge>
                                 )}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
                                 {company.jobPostings && (
                                   <span className="flex items-center gap-1">
                                     <Briefcase className="h-3 w-3" />
