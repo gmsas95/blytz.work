@@ -262,7 +262,7 @@ export default async function companyRoutes(app: FastifyInstance) {
       const page = parseInt((request.query as any).page || '1');
       const limit = parseInt((request.query as any).limit || '20');
       const search = (request.query as any).search || '';
-      const sortBy = (request.query as any).sortBy || 'rating';
+      const sortBy = (request.query as any).sortBy || 'createdAt';
       const industry = (request.query as any).industry || '';
       const companySize = (request.query as any).companySize || '';
       const verificationLevel = (request.query as any).verificationLevel || '';
@@ -303,7 +303,7 @@ export default async function companyRoutes(app: FastifyInstance) {
         return {
           ...profile,
           completionPercentage,
-          jobPostings: profile.jobPostings || [],
+          jobPostings: profile.jobPostings?.length || 0,
           reviews: [],
           featuredCompany: profile.featuredCompany || false
         };
