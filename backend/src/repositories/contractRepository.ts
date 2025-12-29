@@ -15,11 +15,11 @@ export class ContractRepository {
     });
   }
 
-  async findByCompanyId(companyId: string, pagination?: { skip?: number; take?: number }) {
+  async findByCompanyId(companyId: string, pagination?: { skip?: number; take?: number }, include?: any) {
     return await prisma.contract.findMany({
       where: { companyId },
       ...pagination,
-      include: {
+      include: include || {
         job: {
           include: {
             vaProfile: true
@@ -90,5 +90,65 @@ export class ContractRepository {
       where: { id },
       data: { status }
     });
+  }
+
+  async count(where?: any): Promise<number> {
+    return await prisma.contract.count({ where });
+  }
+
+  async findWithAccessCheck(id: string, userId: string, role: string, include?: any) {
+    const contract = await prisma.contract.findUnique({
+      where: { id },
+      include: include || {
+        job: {
+          include: {
+            payments: true
+          }
+        },
+        jobPosting: {
+          select: {
+            id: true,
+            title: true,
+            category: true,
+            tags: true
+          }
+        },
+        vaProfile: {
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            bio: true,
+            averageRating: true,
+            totalReviews: true,
+            skills: true,
+            hourlyRate: true,
+            avatarUrl: true
+          }
+        },
+        company: {
+          select: {
+            id: true,
+            name: true,
+            logoUrl: true,
+            verificationLevel: true
+          }
+        },
+        proposal: {
+          select: {
+            id: true,
+            coverLetter: true,
+            bidAmount: true,
+            bidType: true,
+            deliveryTime: true
+          }
+        },
+        payments: true,
+        milestones: true,
+        timesheets: true
+      }
+    });
+
+    return contract;
   }
 }
