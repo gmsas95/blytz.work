@@ -17,7 +17,7 @@ services:
       POSTGRES_APP_USER: ${POSTGRES_APP_USER:-blytzwork_app}
       POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - blytzwork_postgres_data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - blytzwork-internal
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - blytzwork_redis_data:/data
     networks:
       - blytzwork-internal
     healthcheck:
@@ -138,9 +138,9 @@ services:
       - traefik.http.routers.blytzwork-frontend.service=blytzwork-frontend
 
 volumes:
-  postgres_data:
+  blytzwork_postgres_data:
     driver: local
-  redis_data:
+  blytzwork_redis_data:
     driver: local
 
 networks:
