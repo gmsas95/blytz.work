@@ -1,5 +1,5 @@
 // File Service - Business Logic Layer for File Operations
-import { generatePresignedUrl, deleteObject, generatePresignedGetUrl, generateFileKey } from '../utils/s3.js';
+import { generatePresignedUrl, deleteObject, generatePresignedGetUrl } from '../utils/s3.js';
 
 export class FileService {
   async generateUploadUrl(userId: string, data: {
@@ -17,14 +17,18 @@ export class FileService {
     }
 
     // Generate unique file key
-    const fileKey = generateFileKey(userId, data.fileName, data.uploadType, data.fileType);
+    const fileKey = this.generateFileKey(userId, data.fileName, data.uploadType, data.fileType);
 
     // Generate presigned URL for S3 upload
-    const presignedUrl = await generatePresignedUrl(fileKey, data.fileType, data.fileSize);
+    const result = await generatePresignedUrl({
+      key: fileKey,
+      contentType: data.fileType,
+      maxSize: data.fileSize
+    });
 
     return {
-      presignedUrl,
-      fileKey,
+      presignedUrl: result.url,
+      fileKey: result.key,
       fileUrl: `${process.env.AWS_S3_BUCKET_URL || 'https://mock-bucket.s3.amazonaws.com'}/${fileKey}`,
       expiresIn: 3600, // 1 hour
       maxSize: this.getMaxFileSize(data.uploadType)
@@ -54,11 +58,17 @@ export class FileService {
   }
 
   async deleteFile(key: string) {
-    await deleteObject(key);
+    await deleteObject({ key });
     return {
       success: true,
       message: 'File deleted successfully'
     };
+  }
+
+  private generateFileKey(userId: string, fileName: string, uploadType: string, fileType: string): string {
+    const timestamp = Date.now();
+    const extension = fileName.split('.').pop();
+    return `${uploadType}/${userId}/${timestamp}-${fileName}`;
   }
 
   private getAllowedFileTypes(uploadType: string): string[] {

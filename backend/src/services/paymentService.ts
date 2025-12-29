@@ -38,13 +38,16 @@ export class PaymentService {
 
     // Validate contract access
     if (data.contractId) {
-      const contract = await this.contractRepo.findById(data.contractId);
-      if (!contract || contract.company.userId !== user.uid) {
+      const contract = await this.contractRepo.findById(data.contractId, {
+        company: true,
+        vaProfile: true
+      });
+      if (!contract || contract.companyId !== user.uid) {
         throw new Error('Access denied to this contract');
       }
 
       // Validate receiver
-      if (data.receiverId !== contract.vaProfile.userId) {
+      if (data.receiverId !== contract.vaProfileId) {
         throw new Error('Invalid receiver for this contract');
       }
     }
@@ -113,9 +116,9 @@ export class PaymentService {
     // Update payment record
     await this.paymentRepo.updateRefund(paymentId, {
       refundAmount,
-      refundedAt: new Date(),
-      status: 'refunded'
+      refundedAt: new Date()
     });
+    await this.paymentRepo.updateStatus(paymentId, 'refunded');
 
     // Notify both parties
     await this.notificationService.notifyRefund(

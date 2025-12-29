@@ -35,10 +35,10 @@ export class JobService {
       status: 'active',
       title: contract.job?.title || 'Job',
       description: contract.job?.description || '',
-      budget: contract.job?.budget,
-      hourlyRate: contract.job?.hourlyRate,
+      budget: contract.job?.budget ?? undefined,
+      hourlyRate: contract.job?.hourlyRate ?? undefined,
       startDate: contract.startDate,
-      endDate: contract.endDate
+      endDate: contract.endDate ?? undefined
     });
 
     return job;

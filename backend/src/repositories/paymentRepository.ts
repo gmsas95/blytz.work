@@ -59,7 +59,11 @@ export class PaymentRepository {
     platformFee?: number;
   }) {
     return await prisma.payment.create({
-      data,
+      data: {
+        ...data,
+        status: 'pending',
+        method: data.method || 'card'
+      },
       include: {
         job: true,
         contract: true,

@@ -79,7 +79,7 @@ export class ContractService {
       endDate: endDate ? new Date(endDate) : undefined,
       status: 'active',
       terms: contractTerms,
-      deliverables: proposal.jobPosting.requirements,
+      deliverables: (proposal.jobPosting.requirements as any[]) || [],
       milestonesData: []
     });
 
@@ -138,7 +138,12 @@ export class ContractService {
     const proposal = await prisma.proposal.findUnique({
       where: { id: proposalId },
       include: {
-        jobPosting: true
+        jobPosting: true,
+        vaProfile: {
+          include: {
+            user: true
+          }
+        }
       }
     });
 

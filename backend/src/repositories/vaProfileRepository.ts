@@ -56,8 +56,33 @@ export class VAProfileRepository {
     availability?: boolean;
     featured?: boolean;
   }) {
+    const whereClause: any = {};
+
+    if (filters) {
+      if (filters.country) {
+        whereClause.country = filters.country;
+      }
+      if (filters.skills) {
+        whereClause.skills = { hasSome: filters.skills };
+      }
+      if (filters.hourlyRate) {
+        if (filters.hourlyRate.min !== undefined) {
+          whereClause.hourlyRate = { ...whereClause.hourlyRate, gte: filters.hourlyRate.min };
+        }
+        if (filters.hourlyRate.max !== undefined) {
+          whereClause.hourlyRate = { ...whereClause.hourlyRate, lte: filters.hourlyRate.max };
+        }
+      }
+      if (filters.availability !== undefined) {
+        whereClause.availability = filters.availability;
+      }
+      if (filters.featured !== undefined) {
+        whereClause.featured = filters.featured;
+      }
+    }
+
     return await prisma.vAProfile.findMany({
-      where: filters,
+      where: whereClause,
       ...pagination,
       include: {
         user: true,

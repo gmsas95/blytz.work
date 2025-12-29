@@ -1,5 +1,5 @@
 // Minimal Contract Helpers
-import { prisma } from './prisma.js';
+import { prisma } from '../utils/prisma.js';
 
 export async function submitTimesheet(timesheetData: any, user: any) {
   try {

@@ -41,15 +41,18 @@ export default async function paymentRoutes(app: FastifyInstance) {
     try {
       // Validate contract access
       if (data.contractId) {
-        const contract = await contractRepo.findById(data.contractId);
-        if (!contract || contract.company.userId !== user.uid) {
+        const contract = await contractRepo.findById(data.contractId, {
+          company: true,
+          vaProfile: true
+        });
+        if (!contract || contract.companyId !== user.uid) {
           return reply.code(403).send({
             error: "Access denied to this contract",
             code: "CONTRACT_ACCESS_DENIED"
           });
         }
 
-        if (data.receiverId !== contract.vaProfile.userId) {
+        if (data.receiverId !== contract.vaProfileId) {
           return reply.code(400).send({
             error: "Invalid receiver for this contract",
             code: "INVALID_RECEIVER"
@@ -85,28 +88,30 @@ export default async function paymentRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { type = 'sent', page = 1, limit = 20 } = request.query as {
+    const { type = 'sent', page = '1', limit = '20' } = request.query as {
       type: string;
       page: string;
       limit: string;
     };
 
     try {
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 20;
+      const skip = (pageNum - 1) * limitNum;
       let payments;
 
       if (type === 'sent') {
-        payments = await paymentService.getUserPayments(user.uid, parseInt(page), parseInt(limit));
+        payments = await paymentService.getUserPayments(user.uid, pageNum, limitNum);
       } else if (type === 'received') {
-        payments = await paymentService.getReceiverPayments(user.uid, parseInt(page), parseInt(limit));
+        payments = await paymentService.getReceiverPayments(user.uid, pageNum, limitNum);
       }
 
       return {
         success: true,
         data: payments,
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit)
+          page: pageNum,
+          limit: limitNum
         }
       };
     } catch (error: any) {
@@ -232,7 +237,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         // Mark dispute as resolved without refund
         await paymentRepo.update(id, {
           metadata: {
-            ...payment.metadata,
+            ...(payment.metadata as any || {}),
             disputeStatus: 'resolved',
             disputeResolution: data.resolution,
             resolvedAt: new Date().toISOString()
@@ -247,7 +252,7 @@ export default async function paymentRoutes(app: FastifyInstance) {
         // Escalate to admin
         await paymentRepo.update(id, {
           metadata: {
-            ...payment.metadata,
+            ...(payment.metadata as any || {}),
             disputeStatus: 'escalated',
             escalatedAt: new Date().toISOString()
           }

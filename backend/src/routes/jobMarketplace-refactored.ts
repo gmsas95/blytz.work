@@ -148,8 +148,8 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
   // Get Job Postings
   app.get("/jobs/marketplace", async (request, reply) => {
     const {
-      page = 1,
-      limit = 20,
+      page = '1',
+      limit = '20',
       search,
       category,
       skills,
@@ -170,7 +170,9 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
     };
 
     try {
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 20;
+      const skip = (pageNum - 1) * limitNum;
 
       // Build filters
       const whereClause: any = { status: 'open' };
@@ -209,7 +211,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
       }
 
       const [jobPostings, total] = await Promise.all([
-        jobPostingRepo.search(whereClause, { skip, take: parseInt(limit) }),
+        jobPostingRepo.search(whereClause, { skip, take: limitNum }),
         jobPostingRepo.count(whereClause)
       ]);
 
@@ -218,10 +220,10 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         data: {
           jobPostings,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: pageNum,
+            limit: limitNum,
             total,
-            totalPages: Math.ceil(total / parseInt(limit))
+            totalPages: Math.ceil(total / limitNum)
           }
         }
       };
@@ -402,8 +404,7 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         hourlyRate: data.hourlyRate,
         estimatedHours: data.estimatedHours,
         deliveryTime: data.deliveryTime,
-        attachments: data.attachments,
-        status: 'pending'
+        attachments: data.attachments
       });
 
       // Increment proposal count
@@ -479,12 +480,15 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { page = 1, limit = 20 } = request.query as {
+    const { page = '1', limit = '20' } = request.query as {
       page: string;
       limit: string;
     };
 
     try {
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 20;
+
       const vaProfile = await vaProfileRepo.findByUserId(user.uid);
       if (!vaProfile) {
         return reply.code(404).send({
@@ -500,8 +504,8 @@ export default async function jobMarketplaceRoutes(app: FastifyInstance) {
         data: {
           proposals,
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: pageNum,
+            limit: limitNum,
             total: proposals.length
           }
         }

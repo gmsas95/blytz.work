@@ -116,7 +116,7 @@ export default async function contractRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    const { type = 'active', page = 1, limit = 20 } = request.query as {
+    const { type = 'active', page = '1', limit = '20' } = request.query as {
       type: string;
       page: string;
       limit: string;
@@ -126,10 +126,13 @@ export default async function contractRoutes(app: FastifyInstance) {
       let contracts;
       let total;
 
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 20;
+
       if (user.role === 'company') {
         const company = await companyRepo.findByUserId(user.uid);
         if (company) {
-          const skip = (parseInt(page) - 1) * parseInt(limit);
+          const skip = (pageNum - 1) * limitNum;
           const whereClause: any = { companyId: company.id };
 
           if (type === 'active') {
@@ -138,14 +141,14 @@ export default async function contractRoutes(app: FastifyInstance) {
             whereClause.status = 'completed';
           }
 
-          contracts = await contractRepo.findByCompanyId(company.id, { skip, take: parseInt(limit) });
+          contracts = await contractRepo.findByCompanyId(company.id, { skip, take: limitNum });
           total = await contractRepo.count(whereClause);
         }
       } else if (user.role === 'va') {
         const vaProfile = await vaProfileRepo.findByUserId(user.uid);
         if (vaProfile) {
-          const skip = (parseInt(page) - 1) * parseInt(limit);
-          contracts = await contractRepo.findByVAProfileId(vaProfile.id, { skip, take: parseInt(limit) });
+          const skip = (pageNum - 1) * limitNum;
+          contracts = await contractRepo.findByVAProfileId(vaProfile.id, { skip, take: limitNum });
           total = await contractRepo.count({ vaProfileId: vaProfile.id });
         }
       }
@@ -155,10 +158,10 @@ export default async function contractRoutes(app: FastifyInstance) {
         data: {
           contracts: contracts || [],
           pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: pageNum,
+            limit: limitNum,
             total: total || 0,
-            totalPages: Math.ceil((total || 0) / parseInt(limit))
+            totalPages: Math.ceil((total || 0) / limitNum)
           }
         }
       };
