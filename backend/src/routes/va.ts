@@ -404,6 +404,107 @@ export default async function vaRoutes(app: FastifyInstance) {
     }
   });
 
+  // Search VA profiles (public endpoint for employers)
+  app.get("/va/profiles/search", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const { 
+      page = 1, 
+      limit = 20, 
+      search = '', 
+      skills = '', 
+      availability = 'true', 
+      sortBy = 'rating' 
+    } = request.query as any;
+    
+    try {
+      const skip = (Number(page) - 1) * Number(limit);
+      const take = Number(limit);
+      
+      // Build where clause
+      const where: any = {};
+      
+      // Search by name or bio
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { bio: { contains: search, mode: 'insensitive' } }
+        ];
+      }
+      
+      // Filter by skills
+      if (skills) {
+        const skillArray = skills.split(',').filter((s: string) => s.trim());
+        if (skillArray.length > 0) {
+          where.skills = { hasSome: skillArray };
+        }
+      }
+      
+      // Filter by availability
+      if (availability === 'true') {
+        where.availability = true;
+      }
+      
+      // Sort by
+      const orderBy: any = {};
+      switch (sortBy) {
+        case 'rating':
+          orderBy.averageRating = 'desc';
+          break;
+        case 'reviews':
+          orderBy.totalReviews = 'desc';
+          break;
+        case 'views':
+          orderBy.profileViews = 'desc';
+          break;
+        case 'newest':
+          orderBy.createdAt = 'desc';
+          break;
+        case 'price_low':
+          orderBy.hourlyRate = 'asc';
+          break;
+        case 'price_high':
+          orderBy.hourlyRate = 'desc';
+          break;
+        default:
+          orderBy.averageRating = 'desc';
+      }
+      
+      // Fetch profiles
+      const [profiles, total] = await Promise.all([
+        prisma.vAProfile.findMany({
+          where,
+          orderBy,
+          skip,
+          take,
+          include: {
+            user: {
+              select: { email: true, id: true }
+            }
+          }
+        }),
+        prisma.vAProfile.count({ where })
+      ]);
+      
+      return {
+        success: true,
+        data: profiles,
+        pagination: {
+          page: Number(page),
+          limit: take,
+          total,
+          totalPages: Math.ceil(total / take)
+        }
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to search VA profiles",
+        code: "SEARCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
   // VA analytics
   app.get("/va/analytics", {
     preHandler: [verifyAuth]

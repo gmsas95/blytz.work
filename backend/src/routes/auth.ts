@@ -15,6 +15,56 @@ const updateProfileSchema = z.object({
 });
 
 export default async function authRoutes(app: FastifyInstance) {
+  // Create user from Firebase (called after Firebase signup)
+  app.post("/auth/create", async (request, reply) => {
+    try {
+      const { uid, email, displayName } = request.body as any;
+      
+      if (!uid || !email) {
+        return reply.code(400).send({
+          error: "UID and email are required",
+          code: "MISSING_FIELDS"
+        });
+      }
+      
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { id: uid }
+      });
+      
+      if (existingUser) {
+        return reply.code(200).send({
+          success: true,
+          data: existingUser,
+          message: "User already exists"
+        });
+      }
+      
+      // Create new user
+      const user = await prisma.user.create({
+        data: {
+          id: uid,
+          email: email.toLowerCase(),
+          role: 'va', // Default role, updated during onboarding
+          profileComplete: false,
+          emailVerified: false // Will be updated by Firebase
+        }
+      });
+      
+      return reply.code(201).send({
+        success: true,
+        data: user,
+        message: "User created successfully"
+      });
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to create user",
+        code: "USER_CREATION_ERROR",
+        details: error.message
+      });
+    }
+  });
+
   // Get current user profile
   app.get("/auth/profile", {
     preHandler: [verifyAuth]
