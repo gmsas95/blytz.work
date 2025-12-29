@@ -15,14 +15,29 @@ http:
       tls:
         certResolver: letsencrypt
     blytzwork-router-app:
-      rule: Host(`staging.blytz.work`)
+      rule: Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`blytz.app`) || Host(`www.blytz.app`)
       service: blytzwork-service-app
       entryPoints:
         - web
       middlewares:
         - redirect-to-https
     blytzwork-router-app-secure:
-      rule: Host(`staging.blytz.work`)
+      rule: Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`blytz.app`) || Host(`www.blytz.app`)
+      service: blytzwork-service-app
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    blytzcloud-router-app:
+      rule: Host(`blytz.cloud`) || Host(`www.blytz.cloud`)
+      service: blytzwork-service-app
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+    blytzcloud-router-app-secure:
+      rule: Host(`blytz.cloud`) || Host(`www.blytz.cloud`)
       service: blytzwork-service-app
       entryPoints:
         - websecure

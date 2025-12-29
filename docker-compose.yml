@@ -108,7 +108,7 @@ services:
       retries: 3
     labels:
       - traefik.enable=true
-      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
+      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`blytz.app`) || Host(`www.blytz.app`) || Host(`blytz.cloud`) || Host(`www.blytz.cloud`)
       - traefik.http.routers.blytzwork-frontend.entrypoints=websecure
       - traefik.http.routers.blytzwork-frontend.tls.certresolver=letsencrypt
       - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001

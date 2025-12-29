@@ -18,17 +18,17 @@ http:
     
     # Production frontend routing
     blytzwork-router-app:
-      rule: Host(`blytz.work`) || Host(`www.blytz.work`)
+      rule: Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`blytz.app`) || Host(`www.blytz.app`)
       service: blytzwork-service-app
       entryPoints:
         - web
         - websecure
       tls:
         certResolver: letsencrypt
-    
-    # Staging frontend routing
-    blytzwork-staging-router-app:
-      rule: Host(`staging.blytz.work`)
+
+    # Blytz Cloud routing
+    blytzcloud-router-app:
+      rule: Host(`blytz.cloud`) || Host(`www.blytz.cloud`)
       service: blytzwork-service-app
       entryPoints:
         - web
