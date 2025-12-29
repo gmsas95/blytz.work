@@ -252,6 +252,84 @@ export default async function companyRoutes(app: FastifyInstance) {
     }
   });
 
+  // Search company profiles (for VAs to discover employers)
+  app.get("/company/profiles/search", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+
+    try {
+      const page = parseInt((request.query as any).page || '1');
+      const limit = parseInt((request.query as any).limit || '20');
+      const search = (request.query as any).search || '';
+      const sortBy = (request.query as any).sortBy || 'rating';
+      const industry = (request.query as any).industry || '';
+      const companySize = (request.query as any).companySize || '';
+      const verificationLevel = (request.query as any).verificationLevel || '';
+
+      const where: any = {
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+            { mission: { contains: search, mode: 'insensitive' } }
+          ]
+        }),
+        ...(industry && { industry }),
+        ...(companySize && { companySize }),
+        ...(verificationLevel && { verificationLevel })
+      };
+
+      const [profiles, total] = await Promise.all([
+        prisma.company.findMany({
+          where,
+          include: {
+            user: {
+              select: { email: true }
+            },
+            jobPostings: {
+              select: { id: true }
+            }
+          },
+          orderBy: { [sortBy]: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit
+        }),
+        prisma.company.count({ where })
+      ]);
+
+      const companiesWithStats = profiles.map(profile => {
+        const completionPercentage = calculateCompanyCompletion(profile);
+        return {
+          ...profile,
+          completionPercentage,
+          jobPostings: profile.jobPostings || [],
+          reviews: [],
+          featuredCompany: profile.featuredCompany || false
+        };
+      });
+
+      return {
+        success: true,
+        data: {
+          companyProfiles: companiesWithStats,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            total: total,
+            limit
+          }
+        }
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to search company profiles",
+        code: "COMPANY_SEARCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
   // Get company analytics
   app.get("/company/analytics", {
     preHandler: [verifyAuth]
@@ -319,7 +397,7 @@ export default async function companyRoutes(app: FastifyInstance) {
         }
       };
     } catch (error: any) {
-      return reply.code(500).send({
+      return reply.code(500).send({ 
         error: "Failed to fetch analytics",
         code: "ANALYTICS_ERROR",
         details: error.message

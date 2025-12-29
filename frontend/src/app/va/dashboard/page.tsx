@@ -6,31 +6,48 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
+  Search, 
+  Filter, 
   Users, 
+  Briefcase, 
   DollarSign, 
+  Star, 
+  Eye, 
+  Calendar, 
   TrendingUp, 
-  Calendar,
-  Eye,
-  Star,
-  FileText,
-  Briefcase,
-  Award,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  MessageSquare,
-  BarChart3,
-  Settings,
-  Edit,
-  Upload,
-  Video,
-  Linkedin
+  Clock, 
+  MapPin, 
+  Award, 
+  CheckCircle, 
+  AlertCircle, 
+  MessageSquare, 
+  Heart, 
+  ChevronDown, 
+  ChevronUp, 
+  UserPlus
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { apiCall } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+
+interface CompanyProfile {
+  id: string;
+  name: string;
+  country: string;
+  industry: string;
+  companySize: string;
+  description?: string;
+  mission?: string;
+  logoUrl?: string;
+  website?: string;
+  verificationLevel: 'basic' | 'premium';
+  featuredCompany: boolean;
+  jobPostings?: number;
+  completionPercentage?: number;
+}
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -82,6 +99,38 @@ const VADashboard = () => {
     skillsPassed: 0,
     skillsTotal: 0
   });
+  const [viewMode, setViewMode] = useState('vas');
+  const [employerSearchTerm, setEmployerSearchTerm] = useState('');
+  const [employerIndustryFilter, setEmployerIndustryFilter] = useState('');
+  const [employerProfiles, setEmployerProfiles] = useState<any[]>([]);
+  // START EMPLOYER PROFILES FETCH
+  const fetchEmployerProfiles = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: '1',
+        limit: '20',
+        search: employerSearchTerm,
+        ...(employerIndustryFilter && { industry: employerIndustryFilter })
+      });
+
+      const response = await fetch(`/api/company/profiles/search?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmployerProfiles(data.data.companyProfiles);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch employer profiles');
+      }
+    } catch (error) {
+      console.error('Employer profiles fetch error:', error);
+      toast.error('Failed to load employer profiles');
+    }
+  };
 
   useEffect(() => {
     // Only fetch data if user is authenticated
@@ -89,6 +138,13 @@ const VADashboard = () => {
       fetchDashboardData();
     }
   }, [user]);
+
+  // Fetch employer profiles when viewMode changes to 'employers'
+  useEffect(() => {
+    if (viewMode === 'employers' && employerProfiles.length === 0) {
+      fetchEmployerProfiles();
+    }
+  }, [viewMode, employerSearchTerm, employerIndustryFilter]);
 
   const fetchDashboardData = async () => {
     try {
@@ -299,19 +355,33 @@ const VADashboard = () => {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="text-2xl font-bold">{analytics.averageRating}</div>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(analytics.averageRating)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold text-slate-900">
+                    {profile?.name?.charAt(0) || 'V'}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewMode('vas')}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Find VAs
+                      </Button>
+                    </div>
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewMode('employers')}
+                      >
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        Browse Companies
+                      </Button>
+                    </div>
+                  </div>
+                  {getVerificationBadge(profile?.verificationLevel ?? 'basic')}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -415,24 +485,124 @@ const VADashboard = () => {
                 Quick Actions
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline" onClick={handleEditProfile}>
-                <Edit className="h-4 w-4 mr-2" />
-                Update Profile Information
-              </Button>
-              <Button className="w-full justify-start" variant="outline" onClick={handleViewApplications}>
-                <FileText className="h-4 w-4 mr-2" />
-                View Job Applications
-              </Button>
-              <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Detailed Analytics
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Video className="h-4 w-4 mr-2" />
-                Add Video Introduction
-              </Button>
-            </CardContent>
+               <CardContent className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleEditProfile}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    Update Profile Information
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewApplications}>
+                    <FileText className="h-4 w-4 mr-1" />
+                    Applications
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Analytics
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleUpgradeVerification}>
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Upgrade Verification
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Discover Employers - VAs can browse companies */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Discover Employers</CardTitle>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewMode('employers')}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Browse Companies
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+              {viewMode === 'employers' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search employers by name or industry..."
+                      value={employerSearchTerm}
+                      onChange={(e) => setEmployerSearchTerm(e.target.value)}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <Select value={employerIndustryFilter} onValueChange={setEmployerIndustryFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All Industries" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Industries</SelectItem>
+                            <SelectItem value="Technology">Technology</SelectItem>
+                            <SelectItem value="E-commerce">E-commerce</SelectItem>
+                            <SelectItem value="Finance">Finance</SelectItem>
+                            <SelectItem value="Healthcare">Healthcare</SelectItem>
+                            <SelectItem value="Education">Education</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {employerProfiles.length === 0 ? (
+                  <div className="text-center py-8 text-slate-600">
+                    <Users className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                    <p>No employers found yet</p>
+                    <p className="text-sm">More companies are joining BlytzWork daily!</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {employerProfiles.map((company) => (
+                      <Card key={company.id} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="space-y-3">
+                          <div className="flex items-start space-x-3">
+                            <img
+                              src={company.logoUrl || '/placeholder-logo.png'}
+                              alt={company.name}
+                              className="w-16 h-16 rounded-full object-cover border border-slate-200"
+                              onError={(e) => e.currentTarget.src = '/placeholder-logo.png'}
+                              />
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold text-slate-900">{company.name}</h3>
+                              {company.verificationLevel && (
+                                <Badge className="ml-2">
+                                  {company.verificationLevel === 'premium' && 'Verified Employer'}
+                                  {company.verificationLevel === 'Company profile && 'Verified Company'}
+                                )}
+                                )}
+                              {company.industry && (
+                                <Badge variant="outline" className="ml-2">{company.industry}</Badge>
+                              )}
+                              <div className="text-sm text-slate-600">
+                                {company.companySize && <Badge variant="outline" className="ml-2">{company.companySize}</Badge>}
+                              </div>
+                              <div className="flex gap-2 text-sm text-slate-600 mt-1">
+                                {company.jobPostings && (
+                                  <span className="flex items-center gap-1">
+                                    <Briefcase className="h-3 w-3" />
+                                    {company.jobPostings}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+                </div>
+              </Card>
+            </div>
+                  </CardContent>
+                </Card>
           </Card>
 
           <Card>

@@ -9,10 +9,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blytzwork_secure_password_2024}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - blytzwork_persistent_postgres_data:/var/lib/postgresql/data
       - ./backend/prisma:/docker-entrypoint-initdb.d
     networks:
-      - blytz-network
+      - blytzwork-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
       interval: 10s
@@ -25,9 +25,9 @@ services:
     container_name: blytz-redis
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - blytzwork_persistent_redis_data:/data
     networks:
-      - blytz-network
+      - blytzwork-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -44,7 +44,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-blytzwork_secure_password_2024}@postgres:5432/${POSTGRES_DB:-blytzwork}?schema=blytz_hire
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
@@ -60,7 +60,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - blytz-network
+      - blytzwork-network
     labels:
       - traefik.enable=true
       - traefik.http.routers.blytzwork-backend-router.rule=Host(`api.blytz.work`)
@@ -100,7 +100,7 @@ services:
     depends_on:
       - backend
     networks:
-      - blytz-network
+      - blytzwork-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
       interval: 30s
@@ -114,11 +114,13 @@ services:
       - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001
 
 volumes:
-  postgres_data:
+  blytzwork_persistent_postgres_data:
+    name: blytzwork_persistent_postgres_data
     driver: local
-  redis_data:
+  blytzwork_persistent_redis_data:
+    name: blytzwork_persistent_redis_data
     driver: local
 
 networks:
-  blytz-network:
+  blytzwork-network:
     driver: bridge
