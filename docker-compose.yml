@@ -59,9 +59,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-       redis:
+      redis:
         condition: service_healthy
-      networks:
+    networks:
       - blytzwork-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
