@@ -59,10 +59,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+       redis:
         condition: service_healthy
-    networks:
+      networks:
       - blytzwork-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     labels:
       - traefik.enable=true
       - traefik.http.routers.blytzwork-backend-router.rule=Host(`api.blytz.work`)
@@ -111,10 +117,11 @@ services:
     networks:
       - blytzwork-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     labels:
       - traefik.enable=true
       - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`blytz.app`) || Host(`www.blytz.app`) || Host(`blytz.cloud`) || Host(`www.blytz.cloud`)
