@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { apiCall } from '@/lib/api';
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -110,13 +111,11 @@ const EmployerDashboard = () => {
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''))
       });
 
-      const response = await fetch(`/api/va/profiles/search?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await apiCall(`/va/profiles/search?${params}`, {
+        method: 'GET'
       });
 
-      if (response.ok) {
+      if (response.status === 200) {
         const data = await response.json();
         setVaProfiles(data.data.vaProfiles);
         setFilteredProfiles(data.data.vaProfiles);

@@ -118,13 +118,11 @@ const VADashboard = () => {
         ...(employerIndustryFilter && { industry: employerIndustryFilter })
       });
 
-      const response = await fetch(`/api/company/profiles/search?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+      const response = await apiCall(`/company/profiles/search?${params}`, {
+        method: 'GET'
       });
 
-      if (response.ok) {
+      if (response.status === 200) {
         const data = await response.json();
         setEmployerProfiles(data.data.companyProfiles);
       } else {
