@@ -138,21 +138,12 @@ const VADashboard = () => {
   };
 
   useEffect(() => {
-    // Only fetch data if user is authenticated
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  // Fetch employer profiles when viewMode changes to 'employers'
-  useEffect(() => {
-    if (viewMode === 'employers' && employerProfiles.length === 0) {
+    if (viewMode === 'employers') {
       fetchEmployerProfiles();
     }
   }, [viewMode, employerSearchTerm, employerIndustryFilter]);
-
-  const fetchDashboardData = async () => {
-    try {
+  
+  useEffect(() => {
       // Fetch VA profile using centralized API call function
       const profileResponse = await apiCall('/va/profile', {
         method: 'GET'
@@ -455,7 +446,22 @@ const VADashboard = () => {
 
         {/* Quick Actions & Upgrades */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {viewMode === 'employers' ? (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Discover Employers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode('employers')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Browse Companies
+              </Button>
+            </CardContent>
+          </Card>
+          {viewMode === 'employers' && (
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Browse Companies</CardTitle>
@@ -499,13 +505,36 @@ const VADashboard = () => {
                               alt={company.name}
                               className="w-16 h-16 rounded-full object-cover border border-slate-200"
                               onError={(e) => e.currentTarget.src = '/placeholder-logo.png'}
-                            />
+                              />
                             <div className="flex-1">
                               <h3 className="text-lg font-bold text-slate-900">{company.name}</h3>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {company.verificationLevel === 'premium' && (
                                   <Badge className="ml-0">Verified Employer</Badge>
                                 )}
+                                {company.verificationLevel === 'basic' && (
+                                  <Badge variant="outline">Company</Badge>
+                                )}
+                                {company.industry && (
+                                  <Badge variant="outline">{company.industry}</Badge>
+                                )}
+                                <div className="text-sm text-slate-600">
+                                  {company.companySize && <Badge variant="outline" className="ml-2">{company.companySize}</Badge>}
+                                  <div className="flex items-center gap-2 text-sm text-slate-600 mt-1">
+                                    <Briefcase className="h-3 w-3" />
+                                    {company.jobPostings} job posting{company.jobPostings !== 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
                                 {company.verificationLevel === 'basic' && (
                                   <Badge variant="outline">Company</Badge>
                                 )}
