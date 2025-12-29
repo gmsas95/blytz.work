@@ -503,12 +503,9 @@ const VADashboard = () => {
                       <Card key={company.id} className="hover:shadow-lg transition-shadow">
                         <CardContent className="space-y-3">
                           <div className="flex items-start space-x-3">
-                            <img
-                              src={company.logoUrl || '/placeholder-logo.png'}
-                              alt={company.name}
-                              className="w-16 h-16 rounded-full object-cover border border-slate-200"
-                              onError={(e) => e.currentTarget.src = '/placeholder-logo.png'}
-                              />
+                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white text-xl font-bold border-2 border-white shadow-md">
+                               {company.name?.charAt(0) || 'C'}
+                             </div>
                             <div className="flex-1">
                               <h3 className="text-lg font-bold text-slate-900">{company.name}</h3>
                               <div className="flex flex-wrap gap-2 mt-2">
