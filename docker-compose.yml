@@ -55,7 +55,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://api.blytz.work,https://blytz.cloud}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://api.blytz.work}
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,6 +73,7 @@ services:
       - traefik.enable=true
       - traefik.http.routers.blytzwork-backend-router.rule=Host(`api.blytz.work`)
       - traefik.http.routers.blytzwork-backend-router.entrypoints=websecure
+      - traefik.http.routers.blytzwork-backend-router.tls=true
       - traefik.http.routers.blytzwork-backend-router.tls.certresolver=letsencrypt
       - traefik.http.services.blytzwork-backend-service.loadbalancer.server.port=3000
 
@@ -120,8 +121,9 @@ services:
       start_period: 60s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`blytz.cloud`)
+      - traefik.http.routers.blytzwork-frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`)
       - traefik.http.routers.blytzwork-frontend.entrypoints=websecure
+      - traefik.http.routers.blytzwork-frontend.tls=true
       - traefik.http.routers.blytzwork-frontend.tls.certresolver=letsencrypt
       - traefik.http.services.blytzwork-frontend.loadbalancer.server.port=3001
 
