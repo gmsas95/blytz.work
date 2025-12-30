@@ -54,7 +54,7 @@ http:
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-backend-final:3002
+          - url: http://blytzwork-backend-final:3000
         passHostHeader: true
 
   middlewares:
