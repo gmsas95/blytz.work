@@ -114,7 +114,7 @@ services:
     networks:
       - blytzwork-network
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/"]
       interval: 10s
       timeout: 5s
       retries: 5
