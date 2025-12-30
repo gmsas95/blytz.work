@@ -47,14 +47,14 @@ http:
     blytzwork-frontend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-frontend-final:3001
+          - url: http://blytzwork-frontend-final:3000
         passHostHeader: true
     
     # Backend service - match actual container name from docker-compose.dokploy-ready.yml
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://blytzwork-backend-final:3000
+          - url: http://blytzwork-backend-final:3001
         passHostHeader: true
 
   middlewares:
