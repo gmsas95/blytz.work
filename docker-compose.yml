@@ -1,5 +1,5 @@
 services:
-    # PostgreSQL Database
+   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
 
-    # Redis Cache
+   # Redis Cache
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -29,17 +29,17 @@ services:
       timeout: 5s
       retries: 5
 
-    # Backend API (uses backend/Dockerfile - service name backend-final)
+   # Backend API (uses backend/Dockerfile - service name backend-final)
   backend-final:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     expose:
-      - "3000"
+      - "3001"
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: 3001
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-blytzwork}?schema=blytz_hire
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
@@ -50,36 +50,36 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       API_URL: ${API_URL:-http://localhost:3000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://api.blytz.work,https://blytz.cloud}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://api.blytz.work}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
-    # Frontend (uses frontend/Dockerfile - service name frontend-final)
+   # Frontend (uses frontend/Dockerfile - service name frontend-final)
   frontend-final:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
     expose:
-      - "3001"
+      - "3000"
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3000
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
       - backend-final
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3

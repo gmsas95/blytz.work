@@ -22,7 +22,7 @@ RUN npx prisma generate
 # Build application
 RUN npm run build
 
-# Production image, copy all the files and run the app
+# Production image, copy all files and run as app
 FROM base AS runner
 WORKDIR /app
 
@@ -41,9 +41,9 @@ COPY --from=builder /app/prisma ./prisma
 # Set permissions
 USER backend
 
-EXPOSE 3000
+EXPOSE 3001
 
-ENV PORT 3000
+ENV PORT 3001
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["npm", "start"]

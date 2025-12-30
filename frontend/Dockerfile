@@ -9,11 +9,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
-# Rebuild the source code only when needed
+# Rebuild source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY .
 
 # Pass Firebase config as build arguments
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
@@ -36,10 +36,10 @@ ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Build the application
+# Build application
 RUN npm run build
 
-# Production image, copy all the files and run the app
+# Production image, copy all files and run as app
 FROM base AS runner
 WORKDIR /app
 
@@ -59,9 +59,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Set permissions
 USER nextjs
 
-EXPOSE 3001
+EXPOSE 3000
 
-ENV PORT 3001
+ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]
