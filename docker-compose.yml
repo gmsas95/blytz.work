@@ -92,3 +92,4 @@ volumes:
     driver: local
 # Updated Tue Dec 30 23:38:00 UTC 2025
 # Docker compose fix comment
+# Force rebuild comment
