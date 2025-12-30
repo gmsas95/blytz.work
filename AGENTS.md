@@ -1,42 +1,123 @@
-# Hyred Platform - AI Agent Development Guide
+# BlytzWork Platform - AI Agent Development Guide
 
 ## 🎯 Project Overview
 
-BlytzWork is a comprehensive hiring platform that connects companies with virtual assistants. Built with modern web technologies, it features secure authentication, real-time messaging, integrated payment processing, and a sophisticated matching system. The platform is deployed at `blytz.work` with supporting services at `api.blytz.work` and `sudo.blytz.work`.
+BlytzWork is a comprehensive hiring platform connecting overwhelmed professionals with qualified virtual assistants. Built with modern web technologies, it features secure authentication, real-time messaging, integrated payment processing, and a sophisticated matching system.
 
-**Current Status**: ✅ Production-ready with enhanced security fixes, comprehensive VA profiles, and real-time chat system
+**Platform URL**: [blytz.work](https://blytz.work)  
+**API URL**: [api.blytz.work](https://api.blytz.work)  
+**Status**: ✅ **Production-Ready (88% Complete)**
+
+**Mission**: "Help overwhelmed professionals hire qualified virtual assistants in 7 days or less, with guaranteed quality and transparent pricing. We give people permission to not be superhuman."
+
+---
+
+## 📊 Current Production Status
+
+### Running Services
+| Component | Status | Container | Health |
+|-----------|--------|-----------|--------|
+| Backend API | ✅ Running | blytzwork-backend | Healthy |
+| Frontend | 🟡 Unhealthy | blytz-frontend | Needs Fix |
+| Production Backend | ✅ Running | blytzwork-production-backend | Healthy |
+| Database | ✅ Healthy | blytz-postgres | Healthy |
+| Redis | ✅ Healthy | blytz-redis | Healthy |
+
+### Active Endpoints
+| Endpoint | Status | Description |
+|-----------|---------|-------------|
+| `/api/auth` | ✅ LIVE | Complete authentication |
+| `/api/company-profiles` | ✅ LIVE | Company management |
+| `/api/va` | ✅ LIVE | VA operations |
+| `/api/contracts` | ✅ LIVE | Contract management |
+| `/api/upload` | ✅ LIVE | File uploads |
+| `/api/chat/*` | ✅ LIVE | Real-time chat (Socket.IO) |
+| `/api/health` | ✅ LIVE | Health monitoring |
+| `/api/job-marketplace` | 🔄 READY | 95% complete |
+| `/api/matching` | 🔄 READY | 95% complete |
+| `/api/payments` | 🔄 READY | 95% complete |
+
+---
 
 ## 🏗️ Architecture Overview
 
 ### Technology Stack
 
 **Frontend (Next.js)**
-- Framework: Next.js 16.0.7 with React 19.2.0 (latest versions)
-- Styling: Tailwind CSS with comprehensive Radix UI component library
-- Authentication: Firebase Auth with enhanced runtime configuration handling
-- State Management: React Hook Form + TanStack Query + Context API
-- Payments: Stripe.js integration with secure token handling
-- Build: Webpack with standalone output and optimized Docker builds
-- Status: ✅ Production-ready with robust Firebase authentication and error handling
+- Framework: Next.js 16.0.7 with React 19.2.0
+- Styling: Tailwind CSS 3.4.0 with Radix UI component library
+- Authentication: Firebase Auth 10.13.1 with runtime configuration
+- State Management: React Hook Form 7.53.0 + TanStack Query 5.56.2
+- Real-time: Socket.IO Client 4.8.1 for WebSocket messaging
+- Payments: Stripe.js 4.1.0 with secure token handling
+- TypeScript: 5.9.3 in strict mode
 
 **Backend (Fastify)**
-- Runtime: Node.js 20 with TypeScript 5.9.3
+- Runtime: Node.js 20.x
 - Framework: Fastify 5.6.0 (high-performance HTTP framework)
-- Database: PostgreSQL 15 with comprehensive Prisma ORM schema
-- Authentication: Firebase Admin SDK with production-ready verification
-- Validation: Comprehensive Zod schemas for all API inputs
+- Database: PostgreSQL 15 with Prisma 6.19.0 ORM
+- Authentication: Firebase Admin SDK 12.5.0 with production verification
+- Validation: Zod 3.23.8 schemas for all API inputs
 - Security: JWT tokens, rate limiting (100 req/15min), CORS protection
-- Real-time: Socket.IO WebSocket server for chat functionality
-- Status: ✅ Production-ready with enhanced security fixes and TypeScript compilation resolved
+- Real-time: Socket.IO 4.8.1 WebSocket server
+- Payments: Stripe 17.3.0 with webhooks and dispute resolution
+- Testing: Jest 29.7.0 + Supertest
 
 **Infrastructure**
-- Containerization: Multi-stage Docker builds with health checks
+- Containerization: Docker with multi-stage builds and health checks
 - Reverse Proxy: Traefik 2.x with automatic Let's Encrypt SSL
 - Orchestration: Modular Docker Compose with Dokploy deployment
 - Caching: Redis 7-alpine for session management
-- Database: PostgreSQL 15 with comprehensive schema (17 models)
+- Database: PostgreSQL 15 with 17 comprehensive models
 - Deployment: VPS on Linux with automated deployment scripts
-- Status: ✅ Full production deployment with monitoring and health checks
+
+### 3-Layer Separation of Concerns Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              HTTP Request                              │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│         Routes Layer (HTTP)                             │
+│  • Parse request body/params/query                     │
+│  • Validate input (Zod schemas)                        │
+│  • Check auth/authorization                            │
+│  • Call service methods                                 │
+│  • Format response                                     │
+│  • Handle errors                                       │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│       Services Layer (Business Logic)                     │
+│  • Validate business rules                               │
+│  • Enforce constraints                                  │
+│  • Call repositories                                   │
+│  • Call external services (Stripe, Email, Firebase)      │
+│  • Transform data                                      │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│      Repositories Layer (Data Access)                     │
+│  • Execute Prisma queries                               │
+│  • Return raw data                                      │
+│  • No business logic                                    │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│         PostgreSQL Database (17 Models)                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Refactoring Results
+- **52% code reduction** in route files (~4,352 → ~2,070 lines)
+- **100% elimination** of direct Prisma calls in routes
+- **9 repositories** created for data access abstraction
+- **9 services** created for business logic encapsulation
+- **7 routes** refactored as examples
+- **Zero TypeScript errors** across entire codebase
+
+---
 
 ## 📁 Project Structure
 
@@ -44,84 +125,74 @@ BlytzWork is a comprehensive hiring platform that connects companies with virtua
 /home/sas/blytz.work/
 ├── backend/                    # Fastify API server
 │   ├── src/
-│   │   ├── routes/            # API route handlers (9 modules)
-│   │   │   ├── chat-final-fix.ts    # Production-ready chat system with Socket.IO
-│   │   │   ├── auth.ts        # Authentication endpoints with Firebase sync
-│   │   │   ├── payments.ts    # Comprehensive Stripe payment processing
-│   │   │   ├── va.ts          # VA profile management (34+ fields)
-│   │   │   ├── company.ts     # Company profile management
-│   │   │   ├── contracts.ts   # Contract management with milestones
-│   │   │   ├── jobMarketplace.ts # Job posting and applications
-│   │   │   ├── upload.ts      # File upload handling
-│   │   │   └── health.ts      # Health check endpoints
-│   │   ├── plugins/           # Fastify plugins (auth, etc.)
-│   │   │   ├── firebaseAuthDebug.ts    # Enhanced Firebase auth with logging
-│   │   │   └── firebaseAuth.ts         # Production-ready Firebase auth
-│   │   ├── utils/             # Utilities (prisma, validation, errors)
-│   │   │   ├── prisma.ts      # Database connection with security fixes
-│   │   │   ├── validation.ts  # Zod schema validation
-│   │   │   ├── errors.ts      # Error handling utilities
-│   │   │   ├── response.ts    # Standardized API responses
-│   │   │   ├── stripe.ts      # Stripe integration utilities
-│   │   │   └── envValidator.ts # Environment variable validation
-│   │   ├── services/          # Business logic services
-│   │   │   └── websocketServer.ts      # Real-time chat with Socket.IO
-│   │   ├── types/             # TypeScript type definitions
-│   │   │   └── fastify.d.ts   # Fastify request type extensions
-│   │   ├── config/            # Configuration files
-│   │   │   └── firebaseConfig.ts # Firebase configuration
-│   │   ├── server.ts          # Main server entry point with all routes
-│   │   └── server-enhanced.ts # Enhanced server with WebSocket support
+│   │   ├── routes/            # API endpoint handlers
+│   │   │   ├── chat-final-fix.ts    # Production-ready chat
+│   │   │   ├── auth.ts              # Firebase authentication
+│   │   │   ├── company.ts           # Company operations
+│   │   │   ├── contracts.ts         # Contract management
+│   │   │   ├── va.ts                # VA profiles
+│   │   │   ├── upload.ts            # File uploads
+│   │   │   └── health.ts            # Health checks
+│   │   ├── repositories/       # Data access layer (9 files)
+│   │   │   ├── userRepository.ts
+│   │   │   ├── companyRepository.ts
+│   │   │   ├── vaProfileRepository.ts
+│   │   │   ├── contractRepository.ts
+│   │   │   ├── paymentRepository.ts
+│   │   │   └── [..other repos]
+│   │   ├── services/          # Business logic (9 services)
+│   │   │   ├── authService.ts
+│   │   │   ├── paymentService.ts
+│   │   │   ├── contractService.ts
+│   │   │   ├── profileService.ts
+│   │   │   └── [..other services]
+│   │   ├── plugins/           # Fastify plugins
+│   │   │   ├── firebaseAuth.ts         # Production auth
+│   │   │   └── firebaseAuthDebug.ts    # Debug auth
+│   │   ├── utils/             # Utilities
+│   │   │   ├── prisma.ts              # DB connection
+│   │   │   ├── validation.ts         # Zod schemas
+│   │   │   ├── errors.ts             # Error handling
+│   │   │   ├── response.ts           # API responses
+│   │   │   ├── stripe.ts             # Stripe utils
+│   │   │   └── envValidator.ts       # Env validation
+│   │   ├── config/            # Configuration
+│   │   │   └── firebaseConfig.ts     # Firebase config
+│   │   └── server.ts          # Main entry point
 │   ├── prisma/
-│   │   ├── schema.prisma      # Comprehensive database schema (17 models)
-│   │   ├── chat-models-addition.prisma # Chat schema extensions
-│   │   └── chat-schema-addition.sql # Chat SQL migrations
-│   ├── tests/                 # Test suite with Jest
-│   │   ├── api.test.ts        # API endpoint tests
-│   │   ├── payments.test.ts    # Payment processing tests
-│   │   ├── stripe.test.ts     # Stripe integration tests
-│   │   └── setup.ts           # Test configuration
-│   └── dist/                  # Compiled TypeScript output
+│   │   └── schema.prisma      # 17 model database schema
+│   ├── tests/                 # Jest test suite
+│   └── package.json
 ├── frontend/                   # Next.js React application
 │   ├── src/
-│   │   ├── app/               # Next.js App Router pages (15+ routes)
-│   │   │   ├── auth/          # Authentication pages
-│   │   │   ├── employer/      # Company dashboard and onboarding
-│   │   │   ├── va/            # VA dashboard and profile management
-│   │   │   ├── chat/          # Real-time chat interface
-│   │   │   ├── contract/      # Contract management pages
-│   │   │   ├── api/           # API routes for frontend
-│   │   │   └── [..other pages] # FAQ, pricing, terms, etc.
-│   │   ├── components/        # React components (30+ components)
-│   │   │   ├── auth/          # Authentication components
-│   │   │   │   ├── EnhancedAuthForm.tsx  # Production-ready auth with debug
-│   │   │   │   └── SimpleAuthForm.tsx    # Basic auth form
-│   │   │   └── ui/            # Comprehensive Radix UI components (40+)
-│   │   ├── contexts/          # React contexts for state management
-│   │   │   └── AuthContext.tsx           # Firebase auth context
-│   │   ├── hooks/             # Custom React hooks
-│   │   │   └── useAuth.ts     # Authentication hook
-│   │   ├── lib/               # Utilities and API clients (10+ files)
-│   │   │   ├── firebase-runtime-final.ts # Production Firebase config
-│   │   │   ├── firebase-safe.ts        # Safe Firebase initialization
-│   │   │   ├── auth.ts                 # Authentication utilities
-│   │   │   ├── auth-utils.ts           # Token management
-│   │   │   ├── api.ts                  # API client utilities
-│   │   │   └── [..other utilities]     # Various utility functions
-│   │   ├── styles/            # Global CSS styles and Tailwind
-│   │   └── middleware.ts      # Next.js middleware for auth
-│   └── public/                # Static assets
-├── nginx/                      # Nginx reverse proxy configuration
-├── docs/                       # Comprehensive documentation (15+ files)
-├── docker-compose.*.yml        # Modular Docker configurations (6 files)
-├── dokploy.yml                # Traefik routing configuration
-├── scripts/                   # Utility scripts
-│   └── debug-auth.sh          # Authentication debugging tool
-├── SECURITY_FIXES_AND_GUIDE.md # Security implementation guide
-├── CLEANUP_SUMMARY.md         # Code cleanup documentation
-├── .env.example               # Environment variable template
-└── deploy scripts             # Automated deployment scripts
+│   │   ├── app/               # App Router pages (15+ routes)
+│   │   │   ├── auth/          # Authentication
+│   │   │   ├── employer/      # Company dashboard
+│   │   │   ├── va/            # VA dashboard
+│   │   │   ├── chat/          # Real-time chat
+│   │   │   ├── contract/      # Contract management
+│   │   │   └── [..other pages]
+│   │   ├── components/        # React components (40+ UI)
+│   │   │   ├── auth/          # Auth forms
+│   │   │   └── ui/            # Radix UI components
+│   │   ├── contexts/          # React contexts
+│   │   │   └── AuthContext.tsx
+│   │   ├── hooks/            # Custom hooks
+│   │   │   └── useAuth.ts
+│   │   ├── lib/              # Utilities and API clients
+│   │   │   ├── firebase-runtime-final.ts
+│   │   │   ├── api.ts
+│   │   │   └── [..other utilities]
+│   │   ├── middleware.ts      # Next.js middleware
+│   │   └── globals.css        # Tailwind styles
+│   └── package.json
+├── docs/                       # Comprehensive documentation
+├── docker-compose.*.yml        # Modular Docker configurations
+├── dokploy.yml                # Traefik routing
+└── scripts/                   # Utility scripts
 ```
+
+---
 
 ## 🚀 Build and Deployment Commands
 
@@ -129,15 +200,17 @@ BlytzWork is a comprehensive hiring platform that connects companies with virtua
 ```bash
 # Install dependencies
 npm install
+cd backend && npm install
+cd ../frontend && npm install
 
-# Start database services
+# Start infrastructure
 docker-compose -f docker-compose.1-infrastructure.yml up -d
 docker-compose -f docker-compose.2-database.yml up -d
 
-# Run backend development server
+# Run backend dev server
 cd backend && npm run dev
 
-# Run frontend development server
+# Run frontend dev server
 cd frontend && npm run dev
 ```
 
@@ -148,151 +221,157 @@ cd frontend && npm run dev
 
 # Test deployment with health checks
 ./test-platform.sh
-
-# Test specific components
-./test-week1-auth.sh      # Authentication tests
-./test-week2-profiles.sh  # Profile functionality tests
-./test-soc.sh             # Security tests
 ```
 
 ### Database Operations
 ```bash
+cd backend
+
 # Generate Prisma client
-cd backend && npx prisma generate
+npx prisma generate
 
 # Run database migrations
-cd backend && npx prisma migrate deploy
+npx prisma migrate deploy
 
 # Reset database (development only)
-cd backend && npx prisma migrate reset
+npx prisma migrate reset
 
-# Database schema updates
-cd backend && npx prisma migrate dev
+# View database in Prisma Studio
+npx prisma studio
 ```
+
+---
 
 ## 🔐 Security Implementation
 
 ### Authentication Flow
 1. Users authenticate via Firebase (Google OAuth or Email/Password)
-2. Firebase returns JWT token to frontend with runtime configuration validation
+2. Firebase returns JWT token to frontend
 3. Frontend includes token in API requests via `Authorization: Bearer` header
-4. Backend validates token using Firebase Admin SDK with production-ready verification
+4. Backend validates token using Firebase Admin SDK
 5. User session maintained with secure token refresh and database synchronization
 
-### Security Measures (Enhanced)
+### Security Measures Applied
 - **Authentication Bypass Fixed**: Removed mock development authentication
-- **Database Security**: Eliminated hardcoded credentials, enforced environment variables
+- **Database Security**: Environment variables only, no hardcoded credentials
 - **HTTPS Enforcement**: Automatic SSL via Traefik + Let's Encrypt
-- **Input Validation**: Comprehensive Zod schemas validate all API inputs
+- **Input Validation**: Comprehensive Zod schemas on all endpoints
 - **Rate Limiting**: 100 requests per 15-minute window per IP
-- **CORS Protection**: Restricted to specific origins with proper headers
+- **CORS Protection**: Restricted origins with proper headers
 - **SQL Injection Prevention**: Prisma ORM with parameterized queries
-- **XSS Protection**: React's built-in escaping + Content Security Policy
-- **Environment Security**: Secure handling of Dokploy template syntax
-- **TypeScript Compilation**: Fixed all TS2339, TS2322, TS2307 errors
+- **XSS Protection**: React escaping + Content Security Policy
+- **Container Security**: No-new-privileges, resource limits
+- **Redis Security**: Password protected, dangerous commands disabled
 
-### Payment Security
-- **PCI Compliance**: Stripe handles all payment processing with proper error handling
-- **Webhook Security**: Stripe webhook signatures verified
-- **Platform Fees**: Automatically calculated and processed (10% default)
-- **Refund System**: Complete refund and dispute resolution workflow
+### Security Status
+| Vulnerability | Status | Fix |
+|---------------|---------|------|
+| Authentication bypass | ✅ FIXED | Removed mock auth |
+| Database exposure | ✅ FIXED | Ports closed, internal only |
+| Weak auth | ✅ FIXED | SCRAM-SHA-256, strong passwords |
+| TypeScript errors | ✅ FIXED | Zero compilation errors |
+
+---
 
 ## 💬 Real-Time Chat System
 
-### Chat Implementation (Enhanced)
+### Implementation
 - **Technology**: Socket.IO WebSocket server with Firebase authentication
-- **Storage**: Uses existing Notification model with message-specific data structure
+- **Storage**: Uses existing Notification model with message-specific structure
 - **Features**: Real-time messaging, message status, unread counts, online presence
 - **Security**: Firebase authentication required for all chat operations
-- **Routes**: `/api/chat/*` endpoints with comprehensive auth guards
-- **WebSocket Events**: join-chat, send-message, mark-as-read, get-unread-count
 
 ### Chat Features
-- Send/receive messages in real-time with Socket.IO
+- Send/receive messages in real-time
 - Message status tracking (sent/delivered/read)
 - Unread message counts with real-time updates
 - Chat history with pagination and filtering
 - Role-based access (VA ↔ Company communication)
 - Online user presence tracking
 - Message persistence in database
-- Authentication middleware for all socket connections
+
+---
+
+## 📊 Database Schema (17 Models)
+
+### Core Models
+- **User** - Authentication and profile linkage
+- **VAProfile** - 34+ fields (skills, portfolio, analytics)
+- **Company** - Business profiles with verification
+- **JobPosting** - Detailed job listings
+- **Job** - Active job instances
+- **Proposal** - VA proposals with bids
+- **Contract** - Employment agreements
+- **Payment** - Financial transactions with Stripe
+- **Milestone** - Contract phases
+- **Timesheet** - Time tracking
+- **Invoice** - Billing system
+- **Review** - Rating and feedback
+- **Notification** - System alerts and chat messages
+- **PortfolioItem** - VA work samples
+- **SkillsAssessment** - Technical validation
+- **Badge** - Achievement system
+- **Match** - Matching system (ready for activation)
+
+---
+
+## 💰 Revenue Model
+
+### Payment Flow
+1. Company discovers VAs through marketplace
+2. Mutual interest creates match opportunity
+3. Company pays $29.99 to unlock contact information
+4. Stripe processes payment, platform takes 10% ($3.00)
+5. Contact information exchanged between parties
+6. Net revenue: $26.99 per successful match
+
+### Revenue Streams
+| Stream | Price | Status |
+|--------|--------|--------|
+| Contact Unlock | $29.99/match | 🔄 Ready |
+| Platform Fee | 10% of transactions | ✅ Active |
+| Premium Profiles | $20/month | 📝 Planned |
+| Job Posting Fees | $10-50/listing | 📝 Planned |
+
+---
 
 ## 🧪 Testing Strategy
 
-### Backend Testing
+### Backend Tests
 ```bash
-# Run all backend tests
-cd backend && npm test
+cd backend
 
-# Run specific test suites
-cd backend && npm test -- --testNamePattern="auth"
-cd backend && npm test -- --testNamePattern="profiles"
+# Run all tests
+npm test
+
+# Run specific suites
+npm test -- --testNamePattern="auth"
+npm test -- --testNamePattern="profiles"
+npm test -- --testNamePattern="payments"
 ```
 
-### Integration Testing
+### Integration Tests
 ```bash
 # Platform-wide health checks
 ./test-platform.sh
 
-# Authentication flow testing
+# Authentication flow
 ./test-week1-auth.sh
 
-# Profile functionality testing
+# Profile functionality
 ./test-week2-profiles.sh
-
-# Security vulnerability testing
-./test-soc.sh
 ```
 
-### Manual Testing Checklist
-- [ ] User registration (Google + Email)
-- [ ] Profile creation (VA + Company)
-- [ ] Job posting and application
-- [ ] Real-time messaging
-- [ ] Payment processing
-- [ ] Contract management
-- [ ] Review and rating system
+---
 
-## 📊 Database Schema (Comprehensive)
-
-### Core Entities (17 Models)
-- **User**: Central authentication entity with role-based access
-- **VAProfile**: Comprehensive VA profiles (34+ fields) with skills, experience, analytics
-- **Company**: Company profiles with verification status and spending tracking
-- **JobPosting**: Detailed job postings with requirements, benefits, and application tracking
-- **Job**: Active job instances linking companies with VAs
-- **Proposal**: VA proposals for job applications with bid details
-- **Contract**: Employment agreements with milestones, terms, and payment schedules
-- **Payment**: Financial transactions with Stripe integration and fee tracking
-- **Milestone**: Contract milestones with approval workflows
-- **Timesheet**: Time tracking for hourly contracts
-- **Invoice**: Billing system with tax calculations
-- **Review**: Comprehensive rating and feedback system
-- **Notification**: Multi-purpose notification system (including chat messages)
-- **PortfolioItem**: VA work samples and project showcases
-- **SkillsAssessment**: Technical skill validation and scoring
-- **Badge**: Achievement and recognition system
-- **Match**: Matching system (currently disabled for professional approach)
-
-### Key Relationships
-- Users can have one VAProfile OR one Company profile (exclusive)
-- Companies can post multiple JobPostings and create multiple Jobs
-- VAs can create multiple Proposals and work on multiple Contracts
-- Contracts contain multiple Milestones and associated Payments
-- Payments can be linked to Jobs, Contracts, or Milestones
-- Reviews can be given by Companies to VAs and vice versa
-- Notifications serve both system alerts and chat messages
-- PortfolioItems and SkillsAssessments belong to VAProfiles
-
-## 🔄 Development Workflow
+## 🎯 Development Workflow
 
 ### Code Style Guidelines
 - **TypeScript**: Strict mode enabled, explicit return types
-- **React**: Functional components with hooks, no class components
-- **API Routes**: RESTful design with proper HTTP status codes
-- **Error Handling**: Consistent error responses with proper status codes
+- **React**: Functional components with hooks
+- **API Routes**: RESTful design, proper HTTP status codes
+- **Error Handling**: Consistent error responses
 - **Naming**: camelCase for variables/functions, PascalCase for components
-- **Imports**: Grouped by external libraries, internal modules, relative imports
 
 ### Git Workflow
 1. Create feature branch from main
@@ -302,69 +381,7 @@ cd backend && npm test -- --testNamePattern="profiles"
 5. Code review required before merge
 6. Deploy to production via automated scripts
 
-### Environment Variables
-Key environment variables required (see `.env.example`):
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
-- `FIREBASE_PROJECT_ID`: Firebase project identifier
-- `FIREBASE_CLIENT_EMAIL`: Firebase service account email
-- `FIREBASE_PRIVATE_KEY`: Firebase service account private key
-- `STRIPE_SECRET_KEY`: Stripe API secret key
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`: Stripe public key
-- `NEXT_PUBLIC_FIREBASE_API_KEY`: Firebase API key for frontend
-- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`: Firebase auth domain
-- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Firebase project ID
-
-## 🚨 Security Considerations
-
-### Critical Security Fixes Applied
-The project includes comprehensive security fixes documented in `SECURITY_FIXES_AND_GUIDE.md`:
-- ✅ **Authentication Bypass Fixed**: Removed mock development authentication
-- ✅ **Database Credentials Secured**: Eliminated hardcoded credentials
-- ✅ **Input Validation Strengthened**: Comprehensive Zod schema validation
-- ✅ **Rate Limiting Implemented**: 100 requests per 15-minute window
-- ✅ **CORS Properly Configured**: Restricted origins with proper headers
-- ✅ **HTTPS Enforcement Added**: Automatic SSL via Traefik
-- ✅ **TypeScript Compilation Fixed**: Resolved all TS errors
-- ✅ **Firebase Integration Enhanced**: Production-ready configuration handling
-
-### Recent Security Improvements
-- **Authentication**: Production Firebase Admin SDK with proper token verification
-- **Environment Security**: Secure handling of Dokploy template syntax
-- **Error Handling**: Consistent error responses without data exposure
-- **Database Security**: Environment variable enforcement for connection strings
-- **Chat System**: Consolidated to single secure implementation with Socket.IO
-- **WebSocket Server**: Authentication middleware for all socket connections
-- **Payment Security**: Enhanced Stripe integration with proper validation
-
-### Ongoing Security Practices
-- Regular dependency updates and vulnerability scanning
-- Security audit of npm packages with automated alerts
-- Input validation on all API endpoints with Zod schemas
-- Principle of least privilege for database access
-- Secure secret management with environment variables
-- Regular security testing and penetration testing
-- SSL certificate monitoring and automatic renewal
-
-## 📈 Monitoring and Logging
-
-### Application Logging
-- **Backend**: Pino logger with structured JSON output
-- **Frontend**: Browser console with error boundaries
-- **Database**: Prisma query logging (development only)
-
-### Health Monitoring
-- Service health checks via `/health` endpoints
-- Database connectivity monitoring
-- Payment system status monitoring
-- Real-time error alerting
-
-### Performance Metrics
-- API response time tracking
-- Database query performance
-- Frontend bundle size monitoring
-- User experience metrics
+---
 
 ## 🆘 Common Issues and Solutions
 
@@ -373,83 +390,65 @@ The project includes comprehensive security fixes documented in `SECURITY_FIXES_
 # Check PostgreSQL status
 docker-compose -f docker-compose.2-database.yml ps
 
-# Restart database services
+# Restart database
 docker-compose -f docker-compose.2-database.yml restart
 
-# Check connection string (must be set via environment)
+# Check connection string
 printenv DATABASE_URL
-
-# Generate Prisma client if needed
-cd backend && npx prisma generate
-
-# Run database migrations
-cd backend && npx prisma migrate deploy
 ```
 
 ### Firebase Authentication Issues
 - Verify Firebase project configuration in console
-- Check service account credentials and permissions
-- Ensure proper environment variables are set (no template syntax)
+- Check service account credentials
+- Ensure environment variables are set
 - Use debug script: `./scripts/debug-auth.sh`
-- Check frontend Firebase runtime configuration in `firebase-runtime-final.ts`
 
 ### TypeScript Compilation Errors
-- All TS2339, TS2322, TS2307 errors have been resolved
-- Verify all imports use correct file extensions (.js for compiled files)
-- Ensure Firebase types are properly installed
-- Check for duplicate route files or conflicting definitions
+- All TS2339, TS2322, TS2307 errors resolved
+- Verify imports use correct file extensions
+- Check for duplicate definitions
 
-### Build Process Issues
-- Frontend: Ensure `NEXT_PUBLIC_FIREBASE_*` variables are properly set
-- Backend: Verify all Firebase credentials are configured in production
-- Check for conflicting TypeScript definitions
-- Use proper error handling for unknown error types
-- Ensure Docker builds complete successfully with health checks
+---
 
-### Deployment Issues
-- Check Docker container logs: `docker logs <container_name>`
-- Verify Traefik routing configuration in `dokploy.yml`
-- Ensure SSL certificates are properly configured via Let's Encrypt
-- Check for build cache issues: `docker system prune`
-- Verify environment variables are properly injected by Dokploy
-- Check health check endpoints: `/health` on backend, `/` on frontend
+## 📱 Mobile App (Planned)
 
-## 🗑️ Codebase Cleanup Notes
+Status: **Documentation Complete** - Ready for implementation
 
-### Recent Cleanup Actions
-- ✅ Removed temporary debug files and backup files
-- ✅ Cleaned up console.log statements in production code
-- ✅ Consolidated duplicate chat route implementations to `chat-final-fix.ts`
-- ✅ Updated Firebase initialization for production readiness with `firebase-runtime-final.ts`
-- ✅ Fixed all TypeScript compilation errors (TS2339, TS2322, TS2307)
-- ✅ Enhanced security by removing authentication bypass vulnerabilities
-- ✅ Eliminated hardcoded database credentials
-- ✅ Standardized error handling across all API endpoints
-- ✅ Implemented comprehensive input validation with Zod schemas
+See `docs/MOBILE_IMPLEMENTATION_GUIDE.md` for:
+- React Native architecture
+- Biometric authentication
+- Offline-first data layer
+- Swipe-based UI components
+- Push notification integration
 
-### Files to Keep for Reference
-- `docker-compose.env-fix.yml` - Alternative environment configuration
-- `nginx/nginx.conf.fixed` - Alternative nginx configuration
-- `scripts/debug-auth.sh` - Authentication debugging tool
-- `SECURITY_FIXES_AND_GUIDE.md` - Comprehensive security implementation guide
-- `CLEANUP_SUMMARY.md` - Detailed cleanup documentation
+---
 
-## 📚 Additional Resources
+## 📚 Documentation Reference
 
-- **Documentation**: See `/docs` directory for detailed guides
-- **API Reference**: Backend routes documented in code comments
-- **Component Library**: Frontend components in `/frontend/src/components`
-- **Database Schema**: Prisma schema in `/backend/prisma/schema.prisma`
-- **Security Guide**: `SECURITY_FIXES_AND_GUIDE.md` for security implementation
+### Core Guides
+- **[../README.md](../README.md)** - Main platform documentation
+- **[CORE_IMPLEMENTATION_GUIDE.md](CORE_IMPLEMENTATION_GUIDE.md)** - Core features
+- **[SECURITY_HARDENING_GUIDE.md](SECURITY_HARDENING_GUIDE.md)** - Security fixes
+- **[MOBILE_IMPLEMENTATION_GUIDE.md](MOBILE_IMPLEMENTATION_GUIDE.md)** - Mobile specs
+- **[UNIFIED_DATABASE_IMPLEMENTATION.md](UNIFIED_DATABASE_IMPLEMENTATION.md)** - DB strategy
+
+### Deployment & Operations
+- **[PRODUCTION_DEPLOYMENT_SUCCESS.md](PRODUCTION_DEPLOYMENT_SUCCESS.md)** - Deployment records
+- **[MVP_LAUNCH_CHECKLIST.md](MVP_LAUNCH_CHECKLIST.md)** - Launch readiness
+- **[PLATFORM_COMPLETE_HISTORY.md](PLATFORM_COMPLETE_HISTORY.md)** - Development milestones
+
+### Architecture
+- **[../backend/SEPARATION_OF_CONCERNS.md](../backend/SEPARATION_OF_CONCERNS.md)** - SoC architecture
+- **[../REFACTORING_COMPLETE.md](../REFACTORING_COMPLETE.md)** - Refactoring summary
 
 ---
 
 ## 🎯 CORE NARRATIVE: SERVING THE UNDERSERVED
 
-BlytzWork is not just a hiring platform - we are building a **lifeline for overwhelmed professionals** who are drowning in their own success. Our mission is to serve the underserved market that giant platforms ignore because they're "uneconomical" to serve at scale.
+BlytzWork is not just a hiring platform - we are building a **lifeline for overwhelmed professionals** who are drowning in their own success.
 
 ### The Real Vision
-We serve **overwhelmed professionals** (35-44 year old managers making $75-150K) who:
+We serve **overwhelmed professionals** (35-44 year olds making $75-150K) who:
 - Work 50+ hours/week and can't keep up
 - Are paralyzed by decision fatigue from too many options
 - Are intimidated by complex BPO/agency processes
@@ -457,9 +456,9 @@ We serve **overwhelmed professionals** (35-44 year old managers making $75-150K)
 - Feel shame about not being able to "handle it all"
 
 ### What "Underserved" Means to Us
-**Upwork ignores them** because they need hand-holding that kills self-service margins
-**BPOs reject them** because they're too small for enterprise minimums
-**Enterprise solutions** overwhelm them with complexity they don't need
+- **Upwork ignores them** because they need hand-holding that kills self-service margins
+- **BPOs reject them** because they're too small for enterprise minimums
+- **Enterprise solutions** overwhelm them with complexity they don't need
 
 ### Our Competitive Moat: Empathy at Scale
 We don't optimize for **transactions** like Upwork or **contracts** like BPOs. We optimize for **transformation** - helping people go from "drowning" to "in control" in 7 days or less.
@@ -480,42 +479,99 @@ We don't optimize for **transactions** like Upwork or **contracts** like BPOs. W
 ### Our Promise
 We help overwhelmed professionals hire qualified virtual assistants in 7 days or less, with guaranteed quality and transparent pricing. We give people **permission to not be superhuman** and charge premium for that transformation.
 
-*This narrative should guide every decision, message, and interaction at Blytz.work. When you serve the underserved with empathy and excellence, you don't just build a business - you build a movement.*
+---
+
+## 📈 Progress Summary
+
+### Backend (95% Complete)
+- ✅ Server infrastructure
+- ✅ Authentication system
+- ✅ Profile management
+- ✅ Contract management
+- ✅ Real-time chat
+- ✅ File upload system
+- ✅ Health monitoring
+- ✅ Separation of Concerns
+- ✅ Security hardening
+- 🔄 Payment routes (ready for activation)
+- 🔄 Job marketplace (ready for activation)
+
+### Frontend (85% Complete)
+- ✅ Authentication pages
+- ✅ Employer dashboard
+- ✅ VA dashboard
+- ✅ Role selection
+- ✅ Navigation system
+- ✅ UI component library
+- ✅ Responsive design
+- ✅ Firebase integration
+- 🔄 Chat interface
+- 🔄 Profile creation forms
+
+### Infrastructure (90% Complete)
+- ✅ Docker containerization
+- ✅ Docker Compose orchestration
+- ✅ Traefik reverse proxy
+- ✅ SSL/HTTPS certificates
+- ✅ Dokploy deployment
+- ✅ Health checks
+- 🟡 Frontend unhealthy (needs fix)
+- 🔄 Monitoring dashboard
 
 ---
 
-*This guide is intended for AI coding agents working on the BlytzWork platform. For questions or clarifications, refer to the codebase comments and documentation before making assumptions about the project structure or implementation details.*
+## 🎯 Next Steps
 
-**Last Updated**: December 2024 - Production deployment successful with enhanced security fixes, comprehensive VA profiles (34+ fields), real-time chat system, and complete TypeScript compilation resolution.
+### Immediate (1-2 weeks)
+1. Fix frontend container health check
+2. Activate payment routes (remove .disabled)
+3. Activate job marketplace routes
+4. Complete end-to-end testing
 
-## 🎯 Current Production Status
+### Short Term (1-3 months)
+1. Begin React Native mobile app
+2. Implement advanced matching algorithms
+3. Set up comprehensive monitoring
+4. Deploy to app stores
 
-### ✅ Fully Operational
-- **Authentication**: Production Firebase with secure token verification
-- **Database**: PostgreSQL 15 with comprehensive schema (17 models)
-- **API**: Fastify backend with 9 route modules and full validation
-- **Frontend**: Next.js 16.0.7 with React 19.2.0 and Radix UI
-- **Chat**: Real-time messaging with Socket.IO and WebSocket support
-- **Payments**: Stripe integration with refunds and dispute resolution
-- **Security**: All critical vulnerabilities fixed and monitored
-- **Deployment**: Automated Docker deployment with health checks
+### Long Term (3-6 months)
+1. Scale for enterprise clients
+2. Add advanced analytics
+3. Implement API marketplace
+4. International expansion
 
-### 🚀 Key Features Available
-- VA profile management with 34+ fields including skills, portfolio, analytics
-- Company profiles with verification and spending tracking
-- Job posting and application system with detailed requirements
-- Contract management with milestones and payment schedules
-- Real-time chat with message status and unread counts
-- Comprehensive payment processing with platform fees
-- File upload system with validation and security
-- Advanced search and filtering capabilities
-- Rating and review system
-- Notification system for all platform events
+---
 
-### 📊 Business Ready
-- Platform fee system (10% default, configurable)
-- Multiple revenue streams (job postings, premium profiles, transaction fees)
-- User analytics and financial tracking
-- Professional marketplace experience
-- Mobile-responsive design
-- SEO-optimized structure
+## 📧 Environment Variables
+
+Key environment variables (see `.env.example`):
+
+### Backend
+```
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://...
+FIREBASE_PROJECT_ID=...
+FIREBASE_CLIENT_EMAIL=...
+FIREBASE_PRIVATE_KEY=...
+STRIPE_SECRET_KEY=...
+STRIPE_WEBHOOK_SECRET=...
+```
+
+### Frontend
+```
+NEXT_PUBLIC_API_URL=...
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
+```
+
+---
+
+**Last Updated**: December 30, 2025  
+**Platform Status**: 🚀 Production-Ready (88% Complete)  
+**Version**: 1.0.0  
+
+---
+
+*This guide is intended for AI coding agents working on the BlytzWork platform. For questions or clarifications, refer to codebase comments and documentation before making assumptions about project structure or implementation details.*
