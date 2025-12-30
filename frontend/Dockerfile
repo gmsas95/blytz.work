@@ -13,7 +13,7 @@ RUN npm install --legacy-peer-deps
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY .
+COPY . .
 
 # Pass Firebase config as build arguments
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
