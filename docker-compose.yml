@@ -1,6 +1,6 @@
 services:
-    # PostgreSQL Database
   postgres:
+    container_name: uvey24-blytzwork-postgres
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -8,30 +8,29 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
     volumes:
-      - blytzwork_persistent_postgres_data:/var/lib/postgresql/data
+      - uvey24-blytzwork-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-   # Redis Cache
   redis:
+    container_name: uvey24-blytzwork-redis
     image: redis:7-alpine
     restart: unless-stopped
     command: redis-server --appendonly yes
     volumes:
-      - blytzwork_persistent_redis_data:/data
+      - uvey24-blytzwork-redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-   # Backend API (uses backend/Dockerfile - service name backend-final)
-  backend-final:
-    container_name: blytzwork-backend-final
-    image: blytzwork-webapp-uvey24-backend-final:latest
+  backend:
+    container_name: uvey24-blytzwork-backend
+    image: uvey24-blytzwork-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -64,10 +63,9 @@ services:
       retries: 5
       start_period: 60s
 
-    # Frontend (uses frontend/Dockerfile - service name frontend-final)
-  frontend-final:
-    container_name: blytzwork-frontend-final
-    image: blytswork-webapp-uvey24-frontend-final:latest
+  frontend:
+    container_name: uvey24-blytzwork-frontend
+    image: uvey24-blytzwork-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -91,7 +89,7 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
-      - backend-final
+      - backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s
@@ -100,7 +98,7 @@ services:
       start_period: 60s
 
 volumes:
-  blytzwork_persistent_postgres_data:
+  uvey24-blytzwork-postgres-data:
     driver: local
-  blytzwork_persistent_redis_data:
+  uvey24-blytzwork-redis-data:
     driver: local
