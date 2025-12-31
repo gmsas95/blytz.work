@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Upload, X, Plus, Check, AlertCircle } from 'lucide-react';
+import { apiCall } from '@/lib/api';
 
 // Form field types
 interface VAProfileFormData {
@@ -364,23 +365,11 @@ const VAProfileCreation = () => {
 
   const onSubmit = async (data: VAProfileFormData) => {
     setIsLoading(true);
-    
-    try {
-      // Get auth token
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        toast.error('Please login first to create your profile');
-        router.push('/auth');
-        return;
-      }
 
+    try {
       // Create VA profile via API
-      const response = await fetch('/api/va/profile', {
+      const response = await apiCall('/va/profile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(data)
       });
 
@@ -390,16 +379,14 @@ const VAProfileCreation = () => {
       }
 
       const result = await response.json();
-      
+
       toast.success('🎉 VA Profile created successfully!');
-      
+
       // Update user profile completion status
-      const userResponse = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const userResponse = await apiCall('/auth/me', {
+        method: 'GET'
       });
-      
+
       if (userResponse.ok) {
         const userData = await userResponse.json();
         if (userData.profileComplete) {
@@ -408,7 +395,7 @@ const VAProfileCreation = () => {
           router.push('/va/profile/complete');
         }
       }
-      
+
     } catch (error: any) {
       console.error('Profile creation error:', error);
       toast.error(error.message || 'Failed to create profile. Please try again.');

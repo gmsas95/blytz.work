@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { apiCall } from '@/lib/api';
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -66,6 +67,7 @@ interface VAProfile {
 const VADashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<VAProfile | null>(null);
   const [analytics, setAnalytics] = useState({
     views: 0,
@@ -85,48 +87,86 @@ const VADashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
+    setError(null);
+    
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
+        setError('No authentication token found');
         router.push('/auth');
         return;
       }
 
-      // Fetch VA profile
-      const profileResponse = await fetch('/api/va/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fetch VA profile from backend
+      const profileResponse = await apiCall('/va/profile');
 
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfile(profileData.data);
       } else {
         // Profile doesn't exist, redirect to creation
-        router.push('/va/profile/create');
-        return;
+        if (profileResponse.status === 404) {
+          router.push('/va/profile/create');
+          return;
+        }
+        throw new Error(`Profile fetch failed: ${profileResponse.status}`);
       }
 
-      // Fetch dashboard analytics (mock for now, will be real API)
-      const analyticsData = {
-        views: Math.floor(Math.random() * 1000) + 100,
-        contactRequests: Math.floor(Math.random() * 50) + 5,
-        responseRate: Math.floor(Math.random() * 30) + 70,
-        averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
-        totalReviews: Math.floor(Math.random() * 100) + 10,
-        completedJobs: Math.floor(Math.random() * 50) + 5,
-        earnedAmount: Math.floor(Math.random() * 10000) + 1000,
-        profileViews: Math.floor(Math.random() * 2000) + 200,
-        skillsPassed: Math.floor(Math.random() * 10) + 5,
-        skillsTotal: Math.floor(Math.random() * 5) + 10
-      };
-      
-      setAnalytics(analyticsData);
+      // Try to fetch analytics from backend
+      try {
+        const analyticsResponse = await apiCall('/va/analytics');
+        
+        if (analyticsResponse.ok) {
+          const analyticsData = await analyticsResponse.json();
+          
+          // Map backend analytics to frontend format
+          setAnalytics({
+            views: analyticsData.data.profile?.profileViews || 0,
+            contactRequests: 0, // Not available in backend yet
+            responseRate: analyticsData.data.profile?.responseRate || 0,
+            averageRating: analyticsData.data.profile?.averageRating || 0,
+            totalReviews: typeof analyticsData.data.profile?.totalReviews === 'number' 
+              ? analyticsData.data.profile.totalReviews 
+              : 0,
+            completedJobs: 0, // Not available in backend yet
+            earnedAmount: 0, // Not available in backend yet
+            profileViews: analyticsData.data.profile?.profileViews || 0,
+            skillsPassed: 0, // Not available in backend yet
+            skillsTotal: 0 // Not available in backend yet
+          });
+        } else {
+          throw new Error(`Analytics API returned error: ${analyticsResponse.status}`);
+        }
+      } catch (analyticsError) {
+        console.warn('Analytics fetch failed, using placeholder data:', analyticsError);
+        // Use placeholder data if analytics endpoint fails
+        const placeholderAnalytics = {
+          views: 0,
+          contactRequests: 0,
+          responseRate: profile?.responseRate || 0,
+          averageRating: profile?.averageRating || 0,
+          totalReviews: typeof profile?.totalReviews === 'number' ? profile.totalReviews : 0,
+          completedJobs: profile?.completedJobs || 0,
+          earnedAmount: profile?.earnedAmount || 0,
+          profileViews: profile?.profileViews || 0,
+          skillsPassed: 0,
+          skillsTotal: 0
+        };
+        
+        setAnalytics(placeholderAnalytics);
+        toast.info('Some analytics data is not available yet');
+      }
 
     } catch (error) {
       console.error('Dashboard data fetch error:', error);
-      toast.error('Failed to load dashboard data');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      toast.error(`Failed to load dashboard data: ${errorMessage}`);
+      
+      // Redirect if authentication error
+      if (errorMessage.includes('Authentication') || errorMessage.includes('401') || errorMessage.includes('expired')) {
+        router.push('/auth?session_expired=true');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -179,6 +219,19 @@ const VADashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !profile) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <Button onClick={fetchDashboardData}>Try Again</Button>
         </div>
       </div>
     );

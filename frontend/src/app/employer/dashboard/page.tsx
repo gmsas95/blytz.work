@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { apiCall } from '@/lib/api';
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -69,7 +70,6 @@ const EmployerDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [vaProfiles, setVaProfiles] = useState<VAProfile[]>([]);
-  const [filteredProfiles, setFilteredProfiles] = useState<VAProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filters, setFilters] = useState({
     skills: [] as string[],
@@ -92,10 +92,23 @@ const EmployerDashboard = () => {
   }, []);
 
   useEffect(() => {
-    filterAndSearchProfiles();
-  }, [vaProfiles, searchTerm, filters]);
+    fetchVAProfiles();
+  }, [currentPage, filters]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (currentPage === 1) {
+        fetchVAProfiles();
+      } else {
+        setCurrentPage(1);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const fetchVAProfiles = async () => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -106,30 +119,50 @@ const EmployerDashboard = () => {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20',
-        search: searchTerm,
-        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''))
+        sortBy: filters.sortBy
       });
 
-      const response = await fetch(`/api/va/profiles/search?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      if (filters.skills.length > 0) {
+        params.append('skills', filters.skills.join(','));
+      }
+      if (filters.hourlyRateMin) {
+        params.append('minRate', filters.hourlyRateMin);
+      }
+      if (filters.hourlyRateMax) {
+        params.append('maxRate', filters.hourlyRateMax);
+      }
+      if (filters.country) {
+        params.append('country', filters.country);
+      }
+      if (filters.availability !== undefined) {
+        params.append('availability', filters.availability.toString());
+      }
+      if (filters.verificationLevel) {
+        params.append('verificationLevel', filters.verificationLevel);
+      }
+
+      const response = await apiCall(`/va/profiles/list?${params}`);
 
       if (response.ok) {
         const data = await response.json();
-        setVaProfiles(data.data.vaProfiles);
-        setFilteredProfiles(data.data.vaProfiles);
-        setTotalPages(data.data.pagination.totalPages);
-        setTotalResults(data.data.pagination.total);
+        if (data.success) {
+          setVaProfiles(data.data.vaProfiles);
+          setTotalPages(data.data.pagination.totalPages);
+          setTotalResults(data.data.pagination.total);
+        } else {
+          throw new Error(data.error || 'Failed to fetch VA profiles');
+        }
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to fetch VA profiles');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('VA profiles fetch error:', error);
-      toast.error('Failed to load VA profiles');
+      toast.error(error.message || 'Failed to load VA profiles');
     } finally {
       setIsLoading(false);
     }
@@ -137,62 +170,18 @@ const EmployerDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      // Mock stats for now - will be real API
+      // TODO: Implement dashboard stats API endpoint
+      // For now, we use mock data
       const stats = {
         activeJobs: 5,
         totalApplications: 23,
         hiredVAs: 3,
         totalSpent: 4580
       };
-      // Set dashboard stats state
+      // Set dashboard stats state when API is implemented
     } catch (error) {
       console.error('Dashboard stats error:', error);
     }
-  };
-
-  const filterAndSearchProfiles = () => {
-    let filtered = vaProfiles;
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(profile => 
-        profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        profile.bio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        profile.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Skills filter
-    if (filters.skills.length > 0) {
-      filtered = filtered.filter(profile =>
-        filters.skills.some(skill => profile.skills.includes(skill))
-      );
-    }
-
-    // Rate filter
-    if (filters.hourlyRateMin) {
-      filtered = filtered.filter(profile => profile.hourlyRate >= parseInt(filters.hourlyRateMin));
-    }
-    if (filters.hourlyRateMax) {
-      filtered = filtered.filter(profile => profile.hourlyRate <= parseInt(filters.hourlyRateMax));
-    }
-
-    // Country filter
-    if (filters.country) {
-      filtered = filtered.filter(profile => profile.country === filters.country);
-    }
-
-    // Availability filter
-    if (filters.availability) {
-      filtered = filtered.filter(profile => profile.availability);
-    }
-
-    // Verification level filter
-    if (filters.verificationLevel) {
-      filtered = filtered.filter(profile => profile.verificationLevel === filters.verificationLevel);
-    }
-
-    setFilteredProfiles(filtered);
   };
 
   const handleSaveProfile = async (profileId: string) => {
@@ -314,9 +303,14 @@ const EmployerDashboard = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
               <Input
-                placeholder="Search by name, skills, or bio..."
+                placeholder="Search by name, skills, or bio... (Press Enter to search)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setCurrentPage(1);
+                  }
+                }}
                 className="pl-10 h-12 text-lg"
               />
             </div>
@@ -461,9 +455,9 @@ const EmployerDashboard = () => {
         </div>
 
         {/* VA Profiles Grid */}
-        {filteredProfiles.length > 0 ? (
+        {vaProfiles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProfiles.map((profile) => (
+            {vaProfiles.map((profile) => (
               <Card key={profile.id} className="relative hover:shadow-lg transition-shadow">
                 {/* Save Button */}
                 <Button

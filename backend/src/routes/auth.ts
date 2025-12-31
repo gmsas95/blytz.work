@@ -54,6 +54,46 @@ export default async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // Get current user (me endpoint)
+  app.get("/auth/me", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+
+    try {
+      const userProfile = await prisma.user.findUnique({
+        where: { id: user.uid }
+      });
+
+      if (!userProfile) {
+        return reply.code(404).send({
+          error: "User profile not found",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      return {
+        success: true,
+        data: {
+          id: userProfile.id,
+          uid: userProfile.firebaseUid,
+          email: userProfile.email,
+          name: userProfile.name,
+          username: userProfile.username,
+          role: userProfile.role,
+          profileComplete: userProfile.profileComplete,
+          createdAt: userProfile.createdAt
+        }
+      };
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to fetch user profile",
+        code: "PROFILE_FETCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
   // Update user profile
   app.put("/auth/profile", {
     preHandler: [verifyAuth]

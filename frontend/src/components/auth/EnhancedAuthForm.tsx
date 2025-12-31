@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithP
 import { useAuth } from '@/contexts/AuthContext';
 import { getToken } from '@/lib/auth-utils';
 import { getFirebase } from '@/lib/firebase-simplified';
+import { apiCall } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -149,13 +150,9 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
     try {
       console.log('🔄 Starting backend sync...');
       console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
-      
-      const response = await fetch('/api/auth/sync', {
+
+      const response = await apiCall('/auth/sync', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${firebaseToken}`
-        },
         body: JSON.stringify({
           uid: getFirebase().auth?.currentUser?.uid,
           email: getFirebase().auth?.currentUser?.email
@@ -163,7 +160,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       });
 
       console.log('📡 Backend response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Backend sync successful:', data);
@@ -245,13 +242,9 @@ async function syncWithBackend(firebaseToken: string) {
   try {
     console.log('🔄 Starting backend sync...');
     console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
-    
-    const response = await fetch('/api/auth/sync', {
+
+    const response = await apiCall('/auth/sync', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${firebaseToken}`
-      },
       body: JSON.stringify({
         uid: getFirebase().auth?.currentUser?.uid,
         email: getFirebase().auth?.currentUser?.email
@@ -259,7 +252,7 @@ async function syncWithBackend(firebaseToken: string) {
     });
 
     console.log('📡 Backend response status:', response.status);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Backend sync successful:', data);
