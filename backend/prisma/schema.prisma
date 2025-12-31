@@ -64,8 +64,7 @@ model VAProfile {
   earnedAmount          Float?      @default(0)
   completedJobs         Int         @default(0)
   avatarUrl             String?
-  
-  userId                String
+
   user                  User         @relation(fields: [userId], references: [id])
   jobs                  Job[]
   proposals             Proposal[]
