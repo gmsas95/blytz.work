@@ -72,17 +72,59 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       }
 
+      // Get profile-specific data
+      let profileData: any = {};
+      if (userProfile.role === 'va' && userProfile.vaProfileId) {
+        const vaProfile = await prisma.vAProfile.findUnique({
+          where: { id: userProfile.vaProfileId }
+        });
+        if (vaProfile) {
+          profileData = {
+            firstName: vaProfile.firstName,
+            lastName: vaProfile.lastName,
+            bio: vaProfile.bio,
+            hourlyRate: vaProfile.hourlyRate,
+            country: vaProfile.country,
+            availability: vaProfile.availability,
+            skills: vaProfile.skills,
+            vertical: vaProfile.vertical,
+            subcategories: vaProfile.subcategories
+            averageRating: vaProfile.averageRating,
+            totalReviews: vaProfile.totalReviews,
+            completedJobs: vaProfile.completedJobs,
+            earnedAmount: vaProfile.earnedAmount
+          };
+        }
+      }
+      } else if (userProfile.role === 'company' && userProfile.companyId) {
+        const company = await prisma.company.findUnique({
+          where: { id: userProfile.companyId }
+        });
+        if (company) {
+          profileData = {
+            name: company.name,
+            description: company.description,
+            industry: company.industry,
+            companySize: company.companySize,
+            foundedYear: company.foundedYear,
+            website: company.website,
+            logoUrl: company.logoUrl,
+            verificationLevel: company.verificationLevel,
+            totalSpent: company.totalSpent
+          };
+        }
+      }
+
       return {
         success: true,
         data: {
           id: userProfile.id,
-          uid: userProfile.firebaseUid,
+          uid: userProfile.id,
           email: userProfile.email,
-          name: userProfile.name,
-          username: userProfile.username,
           role: userProfile.role,
           profileComplete: userProfile.profileComplete,
-          createdAt: userProfile.createdAt
+          createdAt: userProfile.createdAt,
+          ...profileData
         }
       };
     } catch (error: any) {
