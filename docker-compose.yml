@@ -29,7 +29,7 @@ services:
       timeout: 5s
       retries: 5
 
-    # Backend API (uses backend/Dockerfile - service name backend-final)
+   # Backend API (uses backend/Dockerfile - service name backend-final)
   backend-final:
     image: blytzwork-webapp-uvey24-backend-final:latest
     build:
@@ -49,8 +49,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-http://localhost:3000}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      API_URL: ${API_URL:-http://localhost:3001}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://api.blytz.work}
     depends_on:
       postgres:
@@ -64,7 +64,7 @@ services:
       retries: 3
       start_period: 60s
 
-    # Frontend (uses frontend/Dockerfile - service name frontend-final)
+   # Frontend (uses frontend/Dockerfile - service name frontend-final)
   frontend-final:
     image: blytzwork-webapp-uvey24-frontend-final:latest
     build:
@@ -102,6 +102,3 @@ volumes:
     driver: local
   blytzwork_persistent_redis_data:
     driver: local
-# Updated Tue Dec 30 23:38:00 UTC 2025
-# Docker compose fix comment
-# Dokploy network fix
