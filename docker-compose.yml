@@ -9,9 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
     volumes:
       - blytzwork_persistent_postgres_data:/var/lib/postgresql/data
-      - ./backend/prisma:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 5
