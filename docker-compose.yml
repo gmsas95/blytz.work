@@ -29,8 +29,9 @@ services:
       timeout: 5s
       retries: 5
 
-   # Backend API (uses backend/Dockerfile - service name backend-final)
+    # Backend API (uses backend/Dockerfile - service name backend-final)
   backend-final:
+    image: blytzwork-webapp-uvey24-backend-final:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -63,8 +64,9 @@ services:
       retries: 3
       start_period: 60s
 
-   # Frontend (uses frontend/Dockerfile - service name frontend-final)
+    # Frontend (uses frontend/Dockerfile - service name frontend-final)
   frontend-final:
+    image: blytzwork-webapp-uvey24-frontend-final:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
