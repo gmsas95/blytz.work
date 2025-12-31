@@ -15,9 +15,12 @@ import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import contractsRoutes from "./routes/contracts.js";
 import chatRoutes from "./routes/chat-final-fix.js";
+import vaBrowseRoutes from "./routes/vaBrowse.js";
+import companiesBrowseRoutes from "./routes/companiesBrowse.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";
+import { logFirebaseDebug } from "./utils/firebase-debug.js";
 
 // Environment schema
 const envSchema = {
@@ -65,16 +68,18 @@ app.register(env, {
   schema: envSchema,
 });
 
-// Register routes
-app.register(healthRoutes);
-app.register(authRoutes, { prefix: "/api" });
-app.register(uploadRoutes, { prefix: "/api" });
-app.register(jobMarketplaceRoutes, { prefix: "/api" });
-app.register(paymentRoutes, { prefix: "/api" });
-app.register(vaRoutes, { prefix: "/api" });
-app.register(companyRoutes, { prefix: "/api" });
-app.register(contractsRoutes, { prefix: "/api" });
-app.register(chatRoutes, { prefix: "/api" });
+  // Register routes
+  app.register(healthRoutes);
+  app.register(authRoutes, { prefix: "/api" });
+  app.register(uploadRoutes, { prefix: "/api" });
+  app.register(jobMarketplaceRoutes, { prefix: "/api" });
+  app.register(paymentRoutes, { prefix: "/api" });
+  app.register(vaRoutes, { prefix: "/api" });
+  app.register(companyRoutes, { prefix: "/api" });
+  app.register(contractsRoutes, { prefix: "/api" });
+  app.register(chatRoutes, { prefix: "/api" });
+  app.register(vaBrowseRoutes, { prefix: "/api" });
+  app.register(companiesBrowseRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {
@@ -108,14 +113,20 @@ app.setErrorHandler((error, _request, reply) => {
 // Start server
 const start = async () => {
   try {
-    // Initialize Firebase Admin (non-blocking)
+// Initialize Firebase Admin (non-blocking)
     console.log('🔄 Initializing Firebase Admin...');
     try {
       initializeFirebaseAdmin();
       console.log('✅ Firebase Admin initialized successfully');
+      
+      // Log Firebase configuration for debugging
+      logFirebaseDebug();
     } catch (firebaseError: any) {
-      console.warn('⚠️ Firebase initialization failed, continuing in development mode:', firebaseError.message);
+      console.warn('⚠️  Firebase initialization failed, continuing in development mode:', firebaseError.message);
       console.warn('💡 To fix: Update FIREBASE_* environment variables with actual Firebase credentials');
+      
+      // Log Firebase configuration for debugging even on error
+      logFirebaseDebug();
     }
 
     // Initialize database connection (with fallback)
