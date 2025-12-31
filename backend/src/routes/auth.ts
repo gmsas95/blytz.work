@@ -88,13 +88,32 @@ export default async function authRoutes(app: FastifyInstance) {
             availability: vaProfile.availability,
             skills: vaProfile.skills,
             vertical: vaProfile.vertical,
-            subcategories: vaProfile.subcategories
+            subcategories: vaProfile.subcategories,
             averageRating: vaProfile.averageRating,
             totalReviews: vaProfile.totalReviews,
             completedJobs: vaProfile.completedJobs,
             earnedAmount: vaProfile.earnedAmount
           };
         }
+      }
+      if (userProfile.role === 'company' && userProfile.companyId) {
+        const company = await prisma.company.findUnique({
+          where: { id: userProfile.companyId }
+        });
+        if (company) {
+          profileData = {
+            name: company.name,
+            description: company.description,
+            industry: company.industry,
+            companySize: company.companySize,
+            foundedYear: company.foundedYear,
+            website: company.website,
+            logoUrl: company.logoUrl,
+            verificationLevel: company.verificationLevel,
+            totalSpent: company.totalSpent
+          };
+        }
+      }
       }
       } else if (userProfile.role === 'company' && userProfile.companyId) {
         const company = await prisma.company.findUnique({
