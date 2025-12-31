@@ -1,5 +1,5 @@
 // Debug logging for Firebase configuration
-import { validateFirebaseConfig } from './firebaseConfig-simplified.js';
+import { validateFirebaseConfig } from '../config/firebaseConfig-simplified.js';
 
 console.log('=== Firebase Configuration Debug ===');
 console.log('Environment variables loaded:');

@@ -33,10 +33,10 @@ const browseVASchema = z.object({
   subcategories: z.string().optional(),
   search: z.string().optional(),
   skills: z.string().optional(),
-  minRate: z.number().optional(),
-  maxRate: z.number().optional(),
+  minRate: z.string().optional(),
+  maxRate: z.string().optional(),
   country: z.string().optional(),
-  availability: z.boolean().optional(),
+  availability: z.string().optional(),
   verificationLevel: z.enum(['basic', 'professional', 'premium']).optional(),
   page: z.string().default('1'),
   limit: z.string().default('20'),
@@ -123,7 +123,7 @@ export default async function vaBrowseRoutes(app: FastifyInstance) {
       
       // Availability filter
       if (params.availability !== undefined) {
-        whereClause.availability = params.availability;
+        whereClause.availability = params.availability === 'true';
       }
       
       // Verification level filter
