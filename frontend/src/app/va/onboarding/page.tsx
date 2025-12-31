@@ -25,27 +25,104 @@ export default function VAOnboardingPage() {
 
   const handleSubmit = async () => {
     try {
-      // Create VA profile
+      if (!formData.name || !formData.name.trim()) {
+        toast.error("Name is required", {
+          description: "Please enter your full name",
+        });
+        return;
+      }
+
+      if (!formData.country || !formData.country.trim()) {
+        toast.error("Country is required", {
+          description: "Please enter your country",
+        });
+        return;
+      }
+
+      if (!formData.bio || !formData.bio.trim()) {
+        toast.error("Bio is required", {
+          description: "Please provide a professional bio",
+        });
+        return;
+      }
+
+      if (!formData.skills || !formData.skills.trim()) {
+        toast.error("Skills are required", {
+          description: "Please list at least one skill",
+        });
+        return;
+      }
+
+      if (!formData.hourlyRate || isNaN(parseInt(formData.hourlyRate))) {
+        toast.error("Hourly rate is required", {
+          description: "Please enter a valid hourly rate",
+        });
+        return;
+      }
+
+      const hourlyRate = parseInt(formData.hourlyRate);
+      if (hourlyRate <= 0) {
+        toast.error("Invalid hourly rate", {
+          description: "Hourly rate must be greater than 0",
+        });
+        return;
+      }
+
+      const skillsArray = formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+      if (skillsArray.length === 0) {
+        toast.error("Invalid skills", {
+          description: "Please enter valid skills separated by commas",
+        });
+        return;
+      }
+
       await apiCall('/va/profile', {
         method: 'POST',
         body: JSON.stringify({
-          name: formData.name,
-          country: formData.country,
-          bio: formData.bio,
-          skills: formData.skills.split(',').map(skill => skill.trim()),
-          hourlyRate: parseInt(formData.hourlyRate),
+          name: formData.name.trim(),
+          country: formData.country.trim(),
+          bio: formData.bio.trim(),
+          skills: skillsArray,
+          hourlyRate,
           availability: formData.availability,
         })
       });
+
+      try {
+        await apiCall('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            role: 'va',
+            profileComplete: true,
+          })
+        });
+      } catch (roleError) {
+        console.error("Failed to update user role:", roleError);
+      }
 
       toast.success("Profile created successfully!", {
         description: "Welcome to BlytzWork as a Virtual Assistant",
       });
 
       router.push("/va/dashboard");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Profile creation error:", error);
+      
+      const errorMessage = error?.message || "Unknown error occurred";
+      const errorCode = error?.code || "UNKNOWN_ERROR";
+      
+      let errorDescription = "Please check your input and try again";
+      
+      if (errorCode === "VALIDATION_ERROR") {
+        errorDescription = "Please review your form for errors";
+      } else if (errorCode === "NETWORK_ERROR") {
+        errorDescription = "Please check your internet connection";
+      } else if (errorCode === "AUTH_ERROR") {
+        errorDescription = "Please sign in again";
+      }
+      
       toast.error("Failed to create profile", {
-        description: "Please try again",
+        description: errorDescription,
       });
     }
   };

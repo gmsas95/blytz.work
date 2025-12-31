@@ -23,18 +23,118 @@ export default function AuthPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const checkUserProfileWithRetry = async (retries = 2): Promise<{ role: string | null; needsOnboarding: boolean }> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`Checking user profile (attempt ${attempt + 1}/${retries + 1})...`);
+        
+        const profileResponse = await Promise.race([
+          apiCall('/auth/profile'),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('API call timeout')), 10000)
+          )
+        ]) as Response;
+        
+        console.log('Profile response status:', profileResponse.status);
+        
+        if (profileResponse.status === 200) {
+          const userData = await profileResponse.json();
+          const role = userData.data.role;
+          console.log('User role from backend:', role);
+          
+          if (role === 'company') {
+            localStorage.setItem("userRole", "employer");
+            try {
+              const companyResponse = await Promise.race([
+                apiCall('/company/profile'),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('API call timeout')), 5000)
+                )
+              ]) as Response;
+              
+              return { role, needsOnboarding: !companyResponse.ok };
+            } catch {
+              return { role, needsOnboarding: true };
+            }
+          } else if (role === 'va') {
+            localStorage.setItem("userRole", "va");
+            try {
+              const vaResponse = await Promise.race([
+                apiCall('/va/profile'),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('API call timeout')), 5000)
+                )
+              ]) as Response;
+              
+              return { role, needsOnboarding: !vaResponse.ok };
+            } catch {
+              return { role, needsOnboarding: true };
+            }
+          } else {
+            return { role: null, needsOnboarding: false };
+          }
+        } else if (profileResponse.status === 404) {
+          console.log('User not found in backend (404)');
+          return { role: null, needsOnboarding: true };
+        } else {
+          const errorText = await profileResponse.text().catch(() => 'Unknown error');
+          throw new Error(`Backend returned ${profileResponse.status}: ${errorText}`);
+        }
+      } catch (error: any) {
+        if (attempt < retries) {
+          console.log(`Retrying profile check after error: ${error.message}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw error;
+        }
+      }
+    }
+    throw new Error('Failed to check user profile after all retries');
+  };
+
+  const createUserInBackend = async (authUser: any): Promise<void> => {
+    const createUserWithRetry = async (retries = 2): Promise<void> => {
+      try {
+        const response = await apiCall('/auth/create', {
+          method: 'POST',
+          body: JSON.stringify({
+            uid: authUser.uid,
+            email: formData.email,
+            name: authUser.displayName || formData.email.split('@')[0],
+            username: authUser.displayName || formData.email.split('@')[0],
+            role: null
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(errorData.message || `Backend returned ${response.status}`);
+        }
+      } catch (apiError: any) {
+        if (retries > 0) {
+          console.log(`Retrying user creation, attempts left: ${retries}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return createUserWithRetry(retries - 1);
+        }
+        throw apiError;
+      }
+    };
+
+    await createUserWithRetry();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    setRetryCount(0);
 
     try {
       if (isLogin) {
-        // Sign in with Firebase
         const authUser = await signInUser(formData.email, formData.password);
         
-        // Get Firebase ID token and store it for API calls
         const token = await getToken();
         if (!token) {
           throw new Error('Failed to get authentication token');
@@ -44,124 +144,66 @@ export default function AuthPage() {
           description: "Successfully signed in to your account",
         });
         
-        // Check user role from backend with timeout
         try {
-          console.log('Checking user profile...');
+          const { role, needsOnboarding } = await checkUserProfileWithRetry(2);
           
-          // Add timeout to prevent infinite loading  
-          const profileResponse = await Promise.race([
-            apiCall('/auth/profile'),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('API call timeout')), 3000)
-            )
-          ]) as Response;
-          
-          console.log('Profile response status:', profileResponse.status);
-          
-          if (profileResponse.status === 200) {
-            const userData = await profileResponse.json();
-            const role = userData.data.role;
-            console.log('User role from backend:', role);
-            
-            if (role === 'company') {
-              localStorage.setItem("userRole", "employer");
-              // Check if company has profile with timeout
-              try {
-                const companyResponse = await Promise.race([
-                  apiCall('/company/profile'),
-                  new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
-                
-                if (!companyResponse.ok) {
-                  router.push("/employer/onboarding");
-                  return;
-                }
-                router.push("/employer/dashboard");
-              } catch {
-                router.push("/employer/onboarding");
-                return;
-              }
-            } else if (role === 'va') {
-              localStorage.setItem("userRole", "va");
-              // Check if VA has profile with timeout
-              try {
-                const vaResponse = await Promise.race([
-                  apiCall('/va/profile'),
-                  new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
-                
-                if (!vaResponse.ok) {
-                  router.push("/va/onboarding");
-                  return;
-                }
-                router.push("/va/dashboard");
-              } catch {
-                router.push("/va/onboarding");
-                return;
-              }
-            } else {
-              // User exists but no role - send to role selection
-              console.log('User has no role, going to role selection');
-              router.push("/select-role");
-            }
-          } else if (profileResponse.status === 404) {
-            // User doesn't exist in backend - create fallback user
-            console.log('User not found in backend, using fallback...');
-            const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-            localStorage.setItem('userRole', emailRole);
-            router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+          if (role === 'company') {
+            router.push(needsOnboarding ? "/employer/onboarding" : "/employer/dashboard");
+          } else if (role === 'va') {
+            router.push(needsOnboarding ? "/va/onboarding" : "/va/dashboard");
           } else {
-            // Other HTTP error - use fallback
-            throw new Error(`Backend returned ${profileResponse.status}`);
+            router.push("/select-role");
           }
-        } catch (error) {
-          console.error('Error checking user role:', error);
-          console.log('Backend is unavailable, using fallback...');
+        } catch (profileError: any) {
+          console.error('Error checking user profile:', profileError);
           
-          // Backend is down - determine role from email and redirect to onboarding
-          const emailRole = formData.email.includes('company') || formData.email.includes('employer') ? 'employer' : 'va';
-          console.log('Determining role from email:', emailRole);
-          localStorage.setItem('userRole', emailRole);
-          router.push(emailRole === 'employer' ? "/employer/onboarding" : "/va/onboarding");
+          if (profileError.message.includes('timeout')) {
+            setError('Connection is slow. Please try again.');
+            toast.error('Connection slow', {
+              description: 'Please check your internet connection and try again',
+            });
+          } else {
+            setError(`Failed to load your profile: ${profileError.message}`);
+            toast.error('Profile check failed', {
+              description: profileError.message,
+            });
+          }
         }
       } else {
-        // Register with Firebase
         const authUser = await registerUser(formData.email, formData.password, formData.name);
         
-        // Get Firebase ID token and store it for API calls
         const token = await getToken();
         if (!token) {
           throw new Error('Failed to get authentication token');
         }
         
-        // Get Firebase user UID and create basic profile in backend
         if (authUser.uid) {
           try {
-            await apiCall('/auth/create', {
-              method: 'POST',
-              body: JSON.stringify({
-                uid: authUser.uid,
-                email: formData.email,
-                name: formData.name,
-                username: formData.username,
-                role: null // Will be set after role selection
-              })
+            await createUserInBackend(authUser);
+            
+            toast.success(`Account created!`, {
+              description: "Welcome to BlytzWork",
             });
-          } catch (apiError) {
-            console.log('Backend user creation failed (expected for mock users):', apiError);
+            
+            router.push("/select-role");
+          } catch (apiError: any) {
+            const errorMessage = apiError.message || 'Failed to create your account. Please try again.';
+            
+            try {
+              const { signOut } = await import('firebase/auth');
+              const { auth } = await import('@/lib/firebase-safe');
+              await signOut(auth());
+            } catch (signOutError) {
+              console.error('Failed to sign out:', signOutError);
+            }
+            
+            setError(errorMessage);
+            toast.error("Account creation failed", {
+              description: errorMessage,
+            });
+            return;
           }
         }
-        
-        toast.success(`Account created!`, {
-          description: "Welcome to BlytzWork",
-        });
-        
-        // Redirect to role selection after registration
-        router.push("/select-role");
       }
     } catch (err: any) {
       const errorMessage = getAuthErrorMessage(err);
@@ -202,8 +244,19 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md space-y-2">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setRetryCount(prev => prev + 1);
+                  }}
+                  className="text-sm font-medium underline hover:no-underline"
+                  disabled={isLoading}
+                >
+                  Try again
+                </button>
               </div>
             )}
 

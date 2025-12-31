@@ -22,10 +22,40 @@ export default function EmployerOnboardingPage() {
     website: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    
+    if (!formData.name.trim()) {
+      errors.push("Company name is required");
+    }
+    if (!formData.country.trim()) {
+      errors.push("Country is required");
+    }
+    if (!formData.industry) {
+      errors.push("Industry is required");
+    }
+    if (!formData.description.trim()) {
+      errors.push("Company description is required");
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async () => {
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      toast.error("Please fix the following errors", {
+        description: validationErrors.join(", "),
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      // Update company profile
-      await apiCall('/company/profile', {
+      const companyResponse = await apiCall('/company/profile', {
         method: 'POST',
         body: JSON.stringify({
           name: formData.name,
@@ -36,15 +66,55 @@ export default function EmployerOnboardingPage() {
         })
       });
 
+      if (!companyResponse.success) {
+        throw new Error(companyResponse.error || "Failed to create company profile");
+      }
+
+      try {
+        await apiCall('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            role: 'company',
+            profileComplete: true,
+          })
+        });
+      } catch (roleError) {
+        console.error("Failed to update user role:", roleError);
+        toast.warning("Company profile created, but role update failed", {
+          description: "You may need to contact support to fix your account role",
+        });
+      }
+
       toast.success("Company profile created!", {
         description: "Welcome to BlytzWork as an Employer",
       });
 
       router.push("/employer/dashboard");
-    } catch (error) {
-      toast.error("Failed to create company profile", {
-        description: "Please try again",
-      });
+    } catch (error: any) {
+      console.error("Company creation error:", error);
+      
+      const errorMessage = error?.details || error?.message || "Failed to create company profile";
+      const errorCode = error?.code;
+      
+      if (errorCode === "VALIDATION_ERROR") {
+        toast.error("Validation error", {
+          description: "Please check all required fields and try again",
+        });
+      } else if (errorCode === "COMPANY_EXISTS") {
+        toast.error("Company already exists", {
+          description: "You already have a company profile",
+        });
+      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        toast.error("Network error", {
+          description: "Please check your connection and try again",
+        });
+      } else {
+        toast.error("Failed to create company profile", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -242,8 +312,12 @@ export default function EmployerOnboardingPage() {
                       Continue
                     </Button>
                   ) : (
-                    <Button onClick={handleSubmit} className="bg-black text-[#FFD600] hover:bg-gray-900">
-                      Complete Setup
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={isSubmitting}
+                      className="bg-black text-[#FFD600] hover:bg-gray-900"
+                    >
+                      {isSubmitting ? "Creating Profile..." : "Complete Setup"}
                     </Button>
                   )}
                 </div>
