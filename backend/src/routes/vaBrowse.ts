@@ -51,7 +51,7 @@ export default async function vaBrowseRoutes(app: FastifyInstance) {
     const { vertical } = request.query as { vertical?: string };
     
     try {
-      const subcategories = vertical ? SUBCATEGORIES[vertical as keyof typeof SUBCATEGORIES] || [];
+      const subcategories = vertical ? SUBCATEGORIES[vertical as keyof typeof SUBCATEGORIES] : [];
       
       return {
         success: true,
