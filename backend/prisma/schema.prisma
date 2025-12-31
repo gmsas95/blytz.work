@@ -37,6 +37,8 @@ model VAProfile {
   country               String
   hourlyRate             Int
   skills                 String[]
+  vertical               String    @default("technical") // Main category: technical, operations, creatives
+  subcategories          String[]  @default([]) // Detailed subcategories
   availability           Boolean  @default(true)
   email                  String?
   phone                  String?
@@ -49,7 +51,7 @@ model VAProfile {
   totalReviews           Int        @default(0)
   featuredProfile        Boolean    @default(false)
   profileViews           Int        @default(0)
-  resumeUrl              String?
+  resumeUrl             String?
   videoIntroUrl          String?
   skillsScore            Int?
   verificationLevel      String     @default("basic")
@@ -69,9 +71,11 @@ model VAProfile {
   contracts             Contract[]
   timesheets            Timesheet[]
   matches               Match[]       // Add matches relation
-
+  
   @@map("va_profiles")
   @@schema("blytz_hire")
+  @@index([vertical, availability]) // NEW: Index for filtering
+  @@index([vertical, subcategories]) // NEW: Index for subcategory filtering
 }
 
 model Company {
