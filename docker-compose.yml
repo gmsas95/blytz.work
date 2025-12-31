@@ -31,6 +31,7 @@ services:
 
    # Backend API (uses backend/Dockerfile - service name backend-final)
   backend-final:
+    container_name: blytzwork-backend-final
     image: blytzwork-webapp-uvey24-backend-final:latest
     build:
       context: ./backend
@@ -61,11 +62,12 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 60s
 
    # Frontend (uses frontend/Dockerfile - service name frontend-final)
   frontend-final:
+    container_name: blytzwork-frontend-final
     image: blytzwork-webapp-uvey24-frontend-final:latest
     build:
       context: ./frontend
@@ -91,11 +93,11 @@ services:
     depends_on:
       - backend-final
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
 volumes:
   blytzwork_persistent_postgres_data:
