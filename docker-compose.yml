@@ -1,6 +1,6 @@
 services:
-  postgres:
-    container_name: uvey24-blytzwork-postgres
+  postgres-final:
+    container_name: uvey24-blytzwork-postgres-final
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -8,28 +8,28 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
     volumes:
-      - uvey24-blytzwork-postgres-data:/var/lib/postgresql/data
+      - uvey24-blytzwork-postgres-final-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  redis:
-    container_name: uvey24-blytzwork-redis
+  redis-final:
+    container_name: uvey24-blytzwork-redis-final
     image: redis:7-alpine
     restart: unless-stopped
     command: redis-server --appendonly yes
     volumes:
-      - uvey24-blytzwork-redis-data:/data
+      - uvey24-blytzwork-redis-final-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  backend:
-    container_name: uvey24-blytzwork-backend
+  backend-final:
+    container_name: uvey24-blytzwork-backend-final
     image: uvey24-blytzwork-backend:latest
     build:
       context: ./backend
@@ -40,8 +40,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-blytz_user}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-blytz_work}?schema=blytz_hire
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blytz_user}:${POSTGRES_PASSWORD:-postgres}@postgres-final:5432/${POSTGRES_DB:-blytz_work}?schema=blytz_hire
+      REDIS_URL: ${REDIS_URL:-redis://redis-final:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
@@ -52,9 +52,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://api.blytz.work}
     depends_on:
-      postgres:
+      postgres-final:
         condition: service_healthy
-      redis:
+      redis-final:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
@@ -63,8 +63,8 @@ services:
       retries: 5
       start_period: 60s
 
-  frontend:
-    container_name: uvey24-blytzwork-frontend
+  frontend-final:
+    container_name: uvey24-blytzwork-frontend-final
     image: uvey24-blytzwork-frontend:latest
     build:
       context: ./frontend
@@ -89,7 +89,7 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.blytz.work}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://blytz.work}
     depends_on:
-      - backend
+      - backend-final
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s
@@ -98,7 +98,7 @@ services:
       start_period: 60s
 
 volumes:
-  uvey24-blytzwork-postgres-data:
+  uvey24-blytzwork-postgres-final-data:
     driver: local
-  uvey24-blytzwork-redis-data:
+  uvey24-blytzwork-redis-final-data:
     driver: local
