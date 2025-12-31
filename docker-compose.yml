@@ -1,8 +1,10 @@
 services:
-   # PostgreSQL Database
+    # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    networks:
+      - dokploy-network
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -19,6 +21,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    networks:
+      - dokploy-network
     command: redis-server --appendonly yes
     volumes:
       - blytzwork_persistent_redis_data:/data
@@ -32,6 +36,8 @@ services:
   backend-final:
     container_name: blytzwork-backend-final
     image: blytzwork-webapp-uvey24-backend-final:latest
+    networks:
+      - dokploy-network
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -67,7 +73,9 @@ services:
     # Frontend (uses frontend/Dockerfile - service name frontend-final)
   frontend-final:
     container_name: blytzwork-frontend-final
-    image: blytzwork-webapp-uvey24-frontend-final:latest
+    image: blytswork-webapp-uvey24-frontend-final:latest
+    networks:
+      - dokploy-network
     build:
       context: ./frontend
       dockerfile: Dockerfile
