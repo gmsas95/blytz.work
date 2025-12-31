@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npm run build && node dist/server.js",
     "dev:debug": "npm run build:debug && node dist/server-enhanced-debug.js",
-    "build": "tsc",
+    "build": "npx tsc",
     "build:debug": "tsc src/server-enhanced-debug.ts --outDir dist --target es2020 --module commonjs --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck",
     "start": "node dist/server.js",
     "start:debug": "node dist/server-enhanced-debug.js",
