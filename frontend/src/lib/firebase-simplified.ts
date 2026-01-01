@@ -177,12 +177,12 @@ export function initializeFirebase() {
       console.log(`  ⚠️  ${varName}: EMPTY`);
     } else if (value.includes('${{') || value.includes('${environment') || value.includes('REPLACE_WITH_')) {
       console.log(`  ❌ ${varName}: CONTAINS TEMPLATE SYNTAX`);
-      console.log(`     Value preview: ${value.substring(0, 50)}...`);
+      console.log(`     Value preview: ${value?.substring(0, 50)}...`);
     } else {
       // Mask sensitive values
       const masked = varName.includes('API_KEY') || varName.includes('PRIVATE_KEY')
-        ? `${value.substring(0, 8)}...${value.substring(value.length - 4)}`
-        : value;
+        ? `${value?.substring(0, 8)}...${value?.substring(value.length - 4)}`
+          : value;
       console.log(`  ✅ ${varName}: ${masked}`);
     }
   });
@@ -211,7 +211,7 @@ export function initializeFirebase() {
       validation.invalidVars.forEach(varName => {
         const value = process.env[varName];
         console.error(`  - ${varName}`);
-        console.error(`     Preview: ${value?.substring(0, 100)}...`);
+        console.error(`     Preview: ${value ? value.substring(0, 100) : 'undefined'}...`);
       });
     }
     
@@ -233,9 +233,9 @@ export function initializeFirebase() {
   }
 
   console.log('✅ Firebase configuration is valid');
-  console.log('🔗 Project ID:', validation.config!.projectId);
-  console.log('🔗 Auth Domain:', validation.config!.authDomain);
-  console.log('🔗 API Key:', `${validation.config!.apiKey.substring(0, 8)}...`);
+  console.log('🔗 Project ID:', validation.config?.projectId);
+  console.log('🔗 Auth Domain:', validation.config?.authDomain);
+  console.log('🔗 API Key:', validation.config?.apiKey ? `${validation.config.apiKey.substring(0, 8)}...` : 'undefined');
   
   try {
     firebaseApp = initializeApp(validation.config!);
@@ -316,7 +316,7 @@ export function debugFirebaseConfig() {
     console.log('\nInvalid Variables:');
     validation.invalidVars.forEach(v => {
       console.log(`  - ${v}`);
-      console.log(`    Value: ${process.env[v]?.substring(0, 100)}...`);
+      console.log(`    Value: ${process.env[v] ? process.env[v].substring(0, 100) : 'undefined'}...`);
     });
   }
   
@@ -324,7 +324,7 @@ export function debugFirebaseConfig() {
     console.log('\nFirebase Config:');
     console.log(`  Project ID: ${validation.config.projectId}`);
     console.log(`  Auth Domain: ${validation.config.authDomain}`);
-    console.log(`  API Key: ${validation.config.apiKey.substring(0, 8)}...`);
+    console.log(`  API Key: ${validation.config.apiKey ? validation.config.apiKey.substring(0, 8) : 'undefined'}...`);
     if (validation.config.storageBucket) {
       console.log(`  Storage Bucket: ${validation.config.storageBucket}`);
     }
