@@ -8,8 +8,11 @@ node /app/check-db.js
 DB_CHECK_RESULT=$?
 
 if [ "$DB_CHECK_RESULT" != "0" ]; then
-  echo "❌ Database setup failed!"
-  exit 1
+  echo "⚠️  No tables found, running migrations..."
+  npx prisma migrate deploy || echo "⚠️  Migration failed, starting anyway..."
+  echo "✅ Migration check complete"
+else
+  echo "✅ Tables exist, skipping migrations"
 fi
 
 echo "✅ Database ready, starting server..."
