@@ -45,9 +45,25 @@ function validateFirebaseConfig(): ValidationResult {
   const emptyVars: string[] = [];
   const config: any = {};
 
-  // Check required variables
+  // Check required variables - use direct access for Next.js build-time replacement
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  };
+
+  // Validate required variables
   for (const varName of requiredVars) {
-    const value = process.env[varName];
+    const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
+      .toLowerCase()
+      .split('_')
+      .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+      .join('') as keyof typeof firebaseConfig;
+    
+    const value = firebaseConfig[configKey];
     if (value === undefined) {
       missingVars.push(varName);
     } else if (value === '') {
@@ -55,26 +71,20 @@ function validateFirebaseConfig(): ValidationResult {
     } else if (value.includes('${{') || value.includes('${environment') || value.includes('REPLACE_WITH_')) {
       invalidVars.push(varName);
     } else {
-      // Convert env var name to config key (camelCase)
-      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
-        .toLowerCase()
-        .split('_')
-        .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
       config[configKey] = value;
     }
   }
 
   // Check optional variables
   for (const varName of optionalVars) {
-    const value = process.env[varName];
+    const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
+      .toLowerCase()
+      .split('_')
+      .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+      .join('') as keyof typeof firebaseConfig;
+    
+    const value = firebaseConfig[configKey];
     if (value && !value.includes('${{') && !value.includes('${environment') && !value.includes('REPLACE_WITH_')) {
-      // Convert env var name to config key (camelCase)
-      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
-        .toLowerCase()
-        .split('_')
-        .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
       config[configKey] = value;
     }
   }
@@ -168,18 +178,26 @@ export function initializeFirebase() {
   console.log('🌍 Running in:', process.env.NODE_ENV || 'development');
   
   // Debug: Show environment variable status
-  const envVars = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID'
-  ];
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  };
 
   console.log('📋 Environment variable status:');
-  envVars.forEach(varName => {
-    const value = process.env[varName];
+  const varMapping = {
+    'NEXT_PUBLIC_FIREBASE_API_KEY': firebaseConfig.apiKey,
+    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN': firebaseConfig.authDomain,
+    'NEXT_PUBLIC_FIREBASE_PROJECT_ID': firebaseConfig.projectId,
+    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET': firebaseConfig.storageBucket,
+    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID': firebaseConfig.messagingSenderId,
+    'NEXT_PUBLIC_FIREBASE_APP_ID': firebaseConfig.appId
+  };
+
+  Object.entries(varMapping).forEach(([varName, value]) => {
     if (value === undefined) {
       console.log(`  ❌ ${varName}: NOT SET`);
     } else if (value === '') {
@@ -325,7 +343,13 @@ export function debugFirebaseConfig() {
     console.log('\nInvalid Variables:');
     validation.invalidVars.forEach(v => {
       console.log(`  - ${v}`);
-      console.log(`    Value: ${process.env[v] ? process.env[v].substring(0, 100) : 'undefined'}...`);
+      const value = v.includes('API_KEY') ? process.env.NEXT_PUBLIC_FIREBASE_API_KEY :
+                   v.includes('AUTH_DOMAIN') ? process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN :
+                   v.includes('PROJECT_ID') ? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID :
+                   v.includes('STORAGE_BUCKET') ? process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET :
+                   v.includes('MESSAGING_SENDER_ID') ? process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID :
+                   v.includes('APP_ID') ? process.env.NEXT_PUBLIC_FIREBASE_APP_ID : undefined;
+      console.log(`    Value: ${value ? value.substring(0, 100) : 'undefined'}...`);
     });
   }
   
