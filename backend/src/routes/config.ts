@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 
-export async function configRoutes(fastify: FastifyInstance) {
+export function configRoutes(fastify: FastifyInstance) {
   fastify.get('/api/config/firebase', async (request, reply) => {
     return {
       firebase: {

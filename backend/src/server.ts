@@ -7,7 +7,7 @@ import { initializeFirebaseAdmin } from "./config/firebaseConfig-simplified.js";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
-import configRoutes from "./routes/config.js";
+import { configRoutes } from "./routes/config.js";
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
