@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed camelCase conversion bug in backend (creating `projectid` instead of `project_id`)
   - Next.js build-time replacement mechanism now properly injects env vars into browser bundle
   - Both frontend and backend Firebase now fully operational in production
+- **Critical**: User database synchronization after Firebase authentication
+  - Added `syncUserToDatabase()` function to create PostgreSQL user records after Firebase sign-in
+  - Frontend automatically calls `/api/auth/sync` endpoint after user is authenticated
+  - Backend `/api/auth/sync` endpoint creates/retrieves PostgreSQL user records
+  - Fixes 401 Unauthorized errors for newly authenticated users
+  - Complete authentication flow working end-to-end (Firebase → PostgreSQL → API)
 - Dashboard data loading issues (wrong API endpoints)
 - Frontend-backend API mismatches causing 404 errors
 - Silent failures in user creation and role selection

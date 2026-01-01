@@ -328,6 +328,65 @@ Codebase used dynamic `process.env[varName]` access which bypasses Next.js build
 ```
 8877966d - fix: replace dynamic process.env access with direct access for Next.js build-time replacement
 59803778 - fix: backend firebase admin config - use direct env access instead of dynamic
+144e9d59 - fix: sync user to database after Firebase authentication
+```
+
+---
+
+### **Fix #2: User Database Synchronization After Firebase Authentication**
+**Date**: January 1, 2026  
+**Severity**: 🔴 **CRITICAL** - 401 Unauthorized on all API calls
+
+#### **Root Cause**
+- Firebase authentication works correctly (user signs in, token generated)
+- Backend's `/api/auth/profile` endpoint looks up users by **email** from Firebase token
+- **Users don't exist in PostgreSQL database** (only Firebase users exist)
+- Frontend never calls `/api/auth/sync` to create database records
+- **Result**: All API calls return 401 Unauthorized because user not found in database
+
+#### **Solution Implemented**
+**Files Modified**:
+1. `frontend/src/hooks/useAuth.ts`
+   - Added `syncUserToDatabase()` function
+   - Automatically syncs user to PostgreSQL after Firebase authentication
+   - Calls `/api/auth/sync` endpoint with uid, email, role data
+
+**Backend Integration**:
+- `/api/auth/sync` endpoint (existing, line 235-268 in auth.ts):
+  ```typescript
+  let userProfile = await prisma.user.findUnique({ where: { id: uid } });
+  if (!userProfile) {
+    userProfile = await prisma.user.create({
+      data: { id: uid, email: email, role: 'va' }
+    });
+  }
+  ```
+
+#### **Authentication Flow Now**
+1. ✅ User signs in via Firebase → `onAuthStateChanged` triggers
+2. ✅ Frontend gets Firebase token → stores in state
+3. ✅ `syncUserToDatabase()` called → POST to `/api/auth/sync`
+4. ✅ Backend creates/retrieves PostgreSQL user record
+5. ✅ All subsequent API calls work (user exists in database)
+
+#### **Verification**
+```
+✅ Firebase auth: User authenticated successfully
+✅ Database sync: User record created/retrieved in PostgreSQL
+✅ API access: /api/auth/profile returns 200 with user data
+```
+
+#### **Impact**
+- ✅ Firebase authentication works
+- ✅ PostgreSQL database populated with user records
+- ✅ All API endpoints now functional
+- ✅ Complete authentication flow working end-to-end
+
+#### **Commits**
+```
+8877966d - fix: replace dynamic process.env access with direct access for Next.js build-time replacement
+59803778 - fix: backend firebase admin config - use direct env access instead of dynamic
+144e9d59 - fix: sync user to database after Firebase authentication
 ```
 
 ---
@@ -335,4 +394,4 @@ Codebase used dynamic `process.env[varName]` access which bypasses Next.js build
 *Last Updated: January 1, 2026*  
 *Environment: Production*  
 *Status: ✅ LIVE AND ACTIVE*  
-*Last Critical Fix: Firebase env var loading resolved*
+*Last Fixes: Firebase env vars + User DB sync resolved*
