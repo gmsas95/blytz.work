@@ -94,13 +94,27 @@ export function initializeFirebaseAdmin(): admin.app.App {
   console.log('✅ Firebase Admin configuration is valid');
   console.log('🔗 Project ID:', validation.config!.projectId);
   
+  console.log('🔧 Service account object being created...');
+  console.log('  projectId:', validation.config!.projectId);
+  console.log('  clientEmail:', validation.config!.clientEmail);
+  console.log('  has privateKey:', !!validation.config!.privateKey);
+
   try {
+    // Firebase Admin SDK requires snake_case keys for service account credential
+    const serviceAccount: any = {
+      project_id: validation.config!.projectId,
+      client_email: validation.config!.clientEmail,
+      private_key: validation.config!.privateKey,
+    };
+
+    console.log('✅ Service account object created:', JSON.stringify({
+      project_id: '***', // masked for logs
+      client_email: validation.config!.clientEmail,
+      private_key: validation.config!.privateKey ? '***PRESENT***' : 'undefined',
+    }));
+
     firebaseAdmin = admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: validation.config!.projectId,
-        clientEmail: validation.config!.clientEmail,
-        privateKey: validation.config!.privateKey,
-      }),
+      credential: admin.credential.cert(serviceAccount),
     });
     
     console.log('✅ Firebase Admin initialized successfully');
