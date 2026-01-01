@@ -65,10 +65,13 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js automatically loads build-time ENV vars
+# Next.js automatically loads build-time ENV vars 
 
-# Build application
-RUN npm run build
+# Cache busting
+ARG CACHEBUST=1
+
+# Clear Next.js cache and build
+RUN rm -rf .next && npm run build
 
 # Production image, copy all files and run as app
 FROM base AS runner
