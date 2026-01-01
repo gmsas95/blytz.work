@@ -66,8 +66,10 @@ export default function EmployerOnboardingPage() {
         })
       });
 
-      if (!companyResponse.success) {
-        throw new Error(companyResponse.error || "Failed to create company profile");
+      const companyData = await companyResponse.json();
+
+      if (!companyData.success) {
+        throw new Error(companyData.error || "Failed to create company profile");
       }
 
       try {
