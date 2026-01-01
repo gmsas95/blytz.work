@@ -20,28 +20,30 @@ interface ValidationResult {
 
 // Validate Firebase Admin configuration
 function validateFirebaseConfig(): ValidationResult {
-  const requiredVars = [
-    'FIREBASE_PROJECT_ID',
-    'FIREBASE_CLIENT_EMAIL',
-    'FIREBASE_PRIVATE_KEY'
-  ];
-
   const missingVars: string[] = [];
   const invalidVars: string[] = [];
-  const config: any = {};
+  
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   // Check required variables
-  for (const varName of requiredVars) {
-    const value = process.env[varName];
-    if (!value) {
-      missingVars.push(varName);
-    } else if (value.includes('${{') || value.includes('${environment') || value.includes('REPLACE_WITH_')) {
-      invalidVars.push(varName);
-    } else {
-      // Convert env var name to config key
-      const configKey = varName.replace('FIREBASE_', '').toLowerCase();
-      config[configKey] = varName === 'FIREBASE_PRIVATE_KEY' ? value.replace(/\\n/g, '\n') : value;
-    }
+  if (!projectId) {
+    missingVars.push('FIREBASE_PROJECT_ID');
+  } else if (projectId.includes('${{') || projectId.includes('${environment') || projectId.includes('REPLACE_WITH_')) {
+    invalidVars.push('FIREBASE_PROJECT_ID');
+  }
+
+  if (!clientEmail) {
+    missingVars.push('FIREBASE_CLIENT_EMAIL');
+  } else if (clientEmail.includes('${{') || clientEmail.includes('${environment') || clientEmail.includes('REPLACE_WITH_')) {
+    invalidVars.push('FIREBASE_CLIENT_EMAIL');
+  }
+
+  if (!privateKey) {
+    missingVars.push('FIREBASE_PRIVATE_KEY');
+  } else if (privateKey.includes('${{') || privateKey.includes('${environment') || privateKey.includes('REPLACE_WITH_')) {
+    invalidVars.push('FIREBASE_PRIVATE_KEY');
   }
 
   const isValid = missingVars.length === 0 && invalidVars.length === 0;
@@ -50,7 +52,11 @@ function validateFirebaseConfig(): ValidationResult {
     isValid,
     missingVars,
     invalidVars,
-    config: isValid ? config as FirebaseAdminConfig : null
+    config: isValid ? {
+      projectId: projectId!,
+      clientEmail: clientEmail!,
+      privateKey: privateKey!.replace(/\\n/g, '\n')
+    } : null
   };
 }
 
