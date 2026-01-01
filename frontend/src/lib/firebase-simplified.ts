@@ -55,8 +55,12 @@ function validateFirebaseConfig(): ValidationResult {
     } else if (value.includes('${{') || value.includes('${environment') || value.includes('REPLACE_WITH_')) {
       invalidVars.push(varName);
     } else {
-      // Convert env var name to config key
-      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '').toLowerCase();
+      // Convert env var name to config key (camelCase)
+      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
+        .toLowerCase()
+        .split('_')
+        .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+        .join('');
       config[configKey] = value;
     }
   }
@@ -65,7 +69,12 @@ function validateFirebaseConfig(): ValidationResult {
   for (const varName of optionalVars) {
     const value = process.env[varName];
     if (value && !value.includes('${{') && !value.includes('${environment') && !value.includes('REPLACE_WITH_')) {
-      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '').toLowerCase();
+      // Convert env var name to config key (camelCase)
+      const configKey = varName.replace('NEXT_PUBLIC_FIREBASE_', '')
+        .toLowerCase()
+        .split('_')
+        .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+        .join('');
       config[configKey] = value;
     }
   }
