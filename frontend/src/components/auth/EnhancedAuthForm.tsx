@@ -80,7 +80,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       // Get Firebase token
       console.log('🔑 Getting Firebase token...');
       const token = await userCredential.user.getIdToken();
-      console.log('✅ Token obtained:', token.substring(0, 20) + '...');
+      console.log('✅ Token obtained:', token ? token.substring(0, 20) + '...' : 'null');
 
       // Sync with backend
       console.log('🔄 Syncing with backend...');
@@ -149,7 +149,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
   const syncWithBackend = async (firebaseToken: string) => {
     try {
       console.log('🔄 Starting backend sync...');
-      console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
+      console.log('🔑 Using token:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
 
       const response = await apiCall('/auth/sync', {
         method: 'POST',
@@ -241,7 +241,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
 async function syncWithBackend(firebaseToken: string) {
   try {
     console.log('🔄 Starting backend sync...');
-    console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
+    console.log('🔑 Using token:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
 
     const response = await apiCall('/auth/sync', {
       method: 'POST',
