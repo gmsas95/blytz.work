@@ -5,7 +5,7 @@ All notable changes to the BlytzWork platform will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - December 2024
+## [Unreleased] - January 2026
 
 ### Added
 - Cloudflare R2 integration for file uploads (replacing S3)
@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VA and Employer onboarding flows with better error handling
 
 ### Fixed
+- **Critical**: Firebase environment variable loading in production
+  - Replaced dynamic `process.env[varName]` access with direct `process.env.NEXT_PUBLIC_*` access
+  - Fixed camelCase conversion bug in backend (creating `projectid` instead of `project_id`)
+  - Next.js build-time replacement mechanism now properly injects env vars into browser bundle
+  - Both frontend and backend Firebase now fully operational in production
 - Dashboard data loading issues (wrong API endpoints)
 - Frontend-backend API mismatches causing 404 errors
 - Silent failures in user creation and role selection
