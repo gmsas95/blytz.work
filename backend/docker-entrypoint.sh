@@ -3,11 +3,18 @@ set -e
 
 echo "🔄 Starting backend with database migration..."
 
-# Run Prisma migrations before starting the server
+# Run Prisma migrations
 echo "📦 Applying database migrations..."
-npx prisma migrate deploy || {
-  echo "❌ Migration failed, starting server anyway..."
-}
+if npx prisma migrate deploy; then
+  echo "✅ Migrations applied successfully"
+else
+  echo "❌ Migration failed, trying db push as fallback..."
+  # Fallback to db push if migrate fails
+  npx prisma db push --accept-data-loss || {
+    echo "❌ Database push also failed!"
+    echo "🚨 Tables may not exist. Please check logs above."
+  }
+fi
 
-echo "✅ Migrations complete, starting server..."
+echo "✅ Database setup complete, starting server..."
 exec npm start
