@@ -32,6 +32,9 @@ export function useAuth() {
         try {
           const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
+          
+          // Sync user to database after Firebase sign-in
+          syncUserToDatabase(firebaseUser);
         } catch (error) {
           console.error('Error getting ID token:', error);
           setToken(null);
@@ -47,4 +50,29 @@ export function useAuth() {
   }, []);
 
   return { user, token, loading };
+}
+
+// Sync Firebase user to PostgreSQL database
+async function syncUserToDatabase(firebaseUser: User) {
+  try {
+    const response = await fetch('/api/auth/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await firebaseUser.getIdToken()}`
+      },
+      body: JSON.stringify({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email
+      })
+    });
+
+    if (response.ok) {
+      console.log('✅ User synced to database:', firebaseUser.email);
+    } else {
+      console.error('❌ Failed to sync user to database:', response.status);
+    }
+  } catch (error) {
+    console.error('❌ Error syncing user to database:', error);
+  }
 }
