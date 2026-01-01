@@ -7,6 +7,7 @@ import { initializeFirebaseAdmin } from "./config/firebaseConfig-simplified.js";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
+import configRoutes from "./routes/config.js";
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
@@ -70,6 +71,7 @@ app.register(env, {
 
   // Register routes
   app.register(healthRoutes);
+  app.register(configRoutes, { prefix: "/api" });
   app.register(authRoutes, { prefix: "/api" });
   app.register(uploadRoutes, { prefix: "/api" });
   app.register(jobMarketplaceRoutes, { prefix: "/api" });
