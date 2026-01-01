@@ -62,7 +62,11 @@ export default async function authRoutes(app: FastifyInstance) {
 
     try {
       const userProfile = await prisma.user.findUnique({
-        where: { id: user.uid }
+        where: { id: user.uid },
+        include: {
+          vaProfile: true,
+          company: true
+        }
       });
 
       if (!userProfile) {
@@ -74,44 +78,32 @@ export default async function authRoutes(app: FastifyInstance) {
 
       // Get profile-specific data
       let profileData: any = {};
-      if (userProfile.role === 'va' && userProfile.vaProfileId) {
-        const vaProfile = await prisma.vAProfile.findUnique({
-          where: { id: userProfile.vaProfileId }
-        });
-        if (vaProfile) {
-          profileData = {
-            firstName: vaProfile.firstName,
-            lastName: vaProfile.lastName,
-            bio: vaProfile.bio,
-            hourlyRate: vaProfile.hourlyRate,
-            country: vaProfile.country,
-            availability: vaProfile.availability,
-            skills: vaProfile.skills,
-            vertical: vaProfile.vertical,
-            subcategories: vaProfile.subcategories,
-            averageRating: vaProfile.averageRating,
-            totalReviews: vaProfile.totalReviews,
-            completedJobs: vaProfile.completedJobs,
-            earnedAmount: vaProfile.earnedAmount
-          };
-      }
-      } else if (userProfile.role === 'company' && userProfile.companyId) {
-        const company = await prisma.company.findUnique({
-          where: { id: userProfile.companyId }
-        });
-        if (company) {
-          profileData = {
-            name: company.name,
-            description: company.description,
-            industry: company.industry,
-            companySize: company.companySize,
-            foundedYear: company.foundedYear,
-            website: company.website,
-            logoUrl: company.logoUrl,
-            verificationLevel: company.verificationLevel,
-            totalSpent: company.totalSpent
-          };
-        }
+      if (userProfile.role === 'va' && userProfile.vaProfile) {
+        profileData = {
+          name: userProfile.vaProfile.name,
+          bio: userProfile.vaProfile.bio,
+          hourlyRate: userProfile.vaProfile.hourlyRate,
+          country: userProfile.vaProfile.country,
+          availability: userProfile.vaProfile.availability,
+          skills: userProfile.vaProfile.skills,
+          averageRating: userProfile.vaProfile.averageRating,
+          totalReviews: userProfile.vaProfile.totalReviews,
+          completedJobs: userProfile.vaProfile.completedJobs,
+          earnedAmount: userProfile.vaProfile.earnedAmount,
+          avatarUrl: userProfile.vaProfile.avatarUrl
+        };
+      } else if (userProfile.role === 'company' && userProfile.company) {
+        profileData = {
+          name: userProfile.company.name,
+          description: userProfile.company.description,
+          industry: userProfile.company.industry,
+          companySize: userProfile.company.companySize,
+          foundedYear: userProfile.company.foundedYear,
+          website: userProfile.company.website,
+          logoUrl: userProfile.company.logoUrl,
+          verificationLevel: userProfile.company.verificationLevel,
+          totalSpent: userProfile.company.totalSpent
+        };
       }
 
       return {
