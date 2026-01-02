@@ -5,21 +5,44 @@ All notable changes to the BlytzWork platform will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - January 2026
+## [Unreleased]
+
+### Added
+- (No changes yet)
+
+### Changed
+- (No changes yet)
+
+### Fixed
+- (No changes yet)
+
+---
+
+## [1.0.0] - January 3, 2026
 
 ### Added
 - Cloudflare R2 integration for file uploads (replacing S3)
 - Enhanced error handling for authentication flows
 - User role validation and profile completion tracking
 - Missing `/api/auth/me` endpoint for frontend profile checks
+- Cookie-based auth middleware for dashboard access
 
 ### Changed
 - Firebase authentication configuration for production environment
 - Dashboard API calls to use correct backend endpoints
 - File upload endpoints to support Cloudflare R2 S3-compatible API
 - VA and Employer onboarding flows with better error handling
+- Merged staging to main (production-ready onboarding implementation)
 
 ### Fixed
+- **Critical**: Company onboarding database persistence
+  - Fixed missing `bio` and `companySize` fields in company profile creation
+  - Removed URL validation from website field to allow empty strings
+  - Company profiles now properly save to database on onboarding completion
+- **Critical**: Authentication flow persistence
+  - Logout and relogin no longer triggers onboarding (profile data persists)
+  - Cookie-based auth middleware properly handles dashboard access
+  - User sessions now correctly maintain state across authentication cycles
 - **Critical**: Firebase environment variable loading in production
   - Replaced dynamic `process.env[varName]` access with direct `process.env.NEXT_PUBLIC_*` access
   - Fixed camelCase conversion bug in backend (creating `projectid` instead of `project_id`)
@@ -46,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Prisma client generation
 - Improved logging throughout authentication flows
 - Added comprehensive environment variable validation
+- Phase 1 (Auth & Onboarding) completed successfully
 
 ---
 
