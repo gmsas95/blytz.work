@@ -63,27 +63,15 @@ export async function verifyAuth(request: FastifyRequest, reply: FastifyReply): 
       });
     }
 
-    // Verify Firebase token
+    // Verify Firebase token only (don't check database here)
     const decodedToken = await firebaseAuth.verifyIdToken(token);
     
-    // Get user from database to get role and profile status
-    const user = await prisma.user.findUnique({
-      where: { email: decodedToken.email },
-      select: { id: true, role: true, profileComplete: true, email: true }
-    });
-
-    if (!user) {
-      return reply.code(401).send({ 
-        error: "User not found in database",
-        code: "USER_NOT_FOUND"
-      });
-    }
-
+    // Attach Firebase user info to request
     request.user = {
-      uid: user.id,
-      email: user.email,
-      role: user.role as 'company' | 'va' | 'admin',
-      profileComplete: user.profileComplete
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      role: 'va' as 'company' | 'va' | 'admin',
+      profileComplete: false
     };
     
     return;

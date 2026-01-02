@@ -35,9 +35,11 @@ export default async function authRoutes(app: FastifyInstance) {
       });
 
       if (!userProfile) {
-        return reply.code(404).send({
-          error: "User profile not found",
-          code: "USER_NOT_FOUND"
+        return reply.code(200).send({
+          success: true,
+          data: null,
+          exists: false,
+          message: "User not found in database - please complete profile setup"
         });
       }
 
