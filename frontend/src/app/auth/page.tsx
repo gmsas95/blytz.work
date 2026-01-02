@@ -41,6 +41,12 @@ export default function AuthPage() {
         
         if (profileResponse.status === 200) {
           const userData = await profileResponse.json();
+          
+          if (!userData.data || userData.data.exists === false) {
+            console.log('User not found in backend, needs profile setup');
+            return { role: null, needsOnboarding: true };
+          }
+          
           const role = userData.data.role;
           console.log('User role from backend:', role);
           
@@ -146,6 +152,19 @@ export default function AuthPage() {
         
         try {
           const { role, needsOnboarding } = await checkUserProfileWithRetry(2);
+          
+          // If user doesn't exist in database, create them
+          if (role === null && needsOnboarding) {
+            console.log('Creating user in backend...');
+            await createUserInBackend(authUser);
+            
+            toast.success(`Account created!`, {
+              description: "Welcome to BlytzWork",
+            });
+            
+            router.push("/select-role");
+            return;
+          }
           
           if (role === 'company') {
             router.push(needsOnboarding ? "/employer/onboarding" : "/employer/dashboard");
