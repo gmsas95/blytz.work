@@ -270,12 +270,35 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   // Create new user from Firebase
-  app.post("/auth/create", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const { uid, email, role } = request.body as any;
+  app.post("/auth/create", async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    
+    if (!authHeader) {
+      return reply.code(401).send({ 
+        error: "Missing authorization header",
+        code: "MISSING_AUTH_HEADER"
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    
+    if (!token) {
+      return reply.code(401).send({ 
+        error: "Missing token",
+        code: "MISSING_TOKEN"
+      });
+    }
 
     try {
+      // Get Firebase auth instance
+      const { getAuth } = await import("../config/firebaseConfig-simplified.js");
+      const firebaseAuth = getAuth();
+      
+      // Verify Firebase token only
+      const decodedToken = await firebaseAuth.verifyIdToken(token);
+      
+      const { uid, email } = request.body as any;
+
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
         where: { id: uid }
@@ -288,12 +311,12 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       }
 
-      // Create new user
+      // Create new user with default role
       const newUser = await prisma.user.create({
         data: {
           id: uid,
           email: email,
-          role: role
+          role: 'va' // Default role for new users
         }
       });
 
