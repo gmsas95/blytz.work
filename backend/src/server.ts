@@ -18,6 +18,7 @@ import contractsRoutes from "./routes/contracts.js";
 import chatRoutes from "./routes/chat-final-fix.js";
 import vaBrowseRoutes from "./routes/vaBrowse.js";
 import companiesBrowseRoutes from "./routes/companiesBrowse.js";
+import employerRoutes from "./routes/employer.js";
 
 // Import utilities
 import { prisma } from "./utils/prisma.js";
@@ -82,6 +83,7 @@ app.register(env, {
   app.register(chatRoutes, { prefix: "/api" });
   app.register(vaBrowseRoutes, { prefix: "/api" });
   app.register(companiesBrowseRoutes, { prefix: "/api" });
+  app.register(employerRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {

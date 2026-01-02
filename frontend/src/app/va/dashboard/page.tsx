@@ -30,6 +30,7 @@ import {
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { apiCall } from '@/lib/api';
+import { DashboardNav } from '@/components/DashboardNav';
 
 // Type definitions for VA profile
 interface VAProfile {
@@ -215,10 +216,13 @@ const VADashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading your dashboard...</p>
+      <div className="min-h-screen bg-slate-50">
+        <DashboardNav userRole="va" />
+        <div className="container mx-auto px-4 max-w-7xl py-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading your dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -226,20 +230,24 @@ const VADashboard = () => {
 
   if (error && !profile) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Error Loading Dashboard</h2>
-          <p className="text-slate-600 mb-4">{error}</p>
-          <Button onClick={fetchDashboardData}>Try Again</Button>
+      <div className="min-h-screen bg-slate-50">
+        <DashboardNav userRole="va" />
+        <div className="container mx-auto px-4 max-w-7xl py-8 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Error Loading Dashboard</h2>
+            <p className="text-slate-600 mb-4">{error}</p>
+            <Button onClick={fetchDashboardData}>Try Again</Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50">
+      <DashboardNav userRole="va" />
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
         {/* Header with Profile Info */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-start justify-between">

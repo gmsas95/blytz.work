@@ -3,111 +3,92 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Search, 
-  Filter, 
-  Users, 
   Briefcase, 
-  DollarSign,
-  Star,
-  Eye,
-  Calendar,
+  Users, 
+  DollarSign, 
   TrendingUp,
+  FileText,
   Clock,
-  MapPin,
-  Award,
-  CheckCircle,
-  AlertCircle,
+  Calendar,
+  ArrowRight,
+  Plus,
+  Search,
+  Bell,
+  Star,
   MessageSquare,
-  Heart,
-  ChevronDown,
-  ChevronUp,
-  UserPlus
+  CheckCircle2,
+  AlertCircle,
+  MoreVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { apiCall } from '@/lib/api';
+import { DashboardNav } from '@/components/DashboardNav';
 
-// Type definitions for VA profile
-interface VAProfile {
+interface DashboardStats {
+  activeJobs: number;
+  totalApplications: number;
+  hiredVAs: number;
+  totalSpent: number;
+  pendingReviews: number;
+  unreadMessages: number;
+  savedVAs: number;
+}
+
+interface Job {
   id: string;
-  name: string;
-  bio: string;
-  country: string;
-  timezone: string;
-  hourlyRate: number;
+  title: string;
+  description: string;
+  hourlyRate: { min: number; max: number };
   skills: string[];
-  availability: boolean;
-  email?: string;
-  phone?: string;
-  languages?: Array<{ language: string; proficiency: string }>;
-  workExperience?: Array<{ company: string; position: string; startDate: string; endDate?: string; current: boolean; description: string }>;
-  education?: Array<{ institution: string; degree: string; field: string; startDate: string; endDate?: string; current: boolean }>;
-  avatarUrl?: string;
-  resumeUrl?: string;
-  videoIntroUrl?: string;
-  verificationLevel: 'basic' | 'professional' | 'premium';
-  backgroundCheckPassed: boolean;
-  featuredProfile: boolean;
-  responseRate?: number;
-  averageRating?: number;
-  totalReviews?: number;
-  completedJobs?: number;
-  earnedAmount?: number;
-  profileViews?: number;
-  profileCompleted?: boolean;
-  userId: string;
   createdAt: string;
-  updatedAt: string;
+  status: 'active' | 'closed' | 'filled';
+  applicationsCount: number;
+}
+
+interface Application {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  vaName: string;
+  vaAvatar?: string;
+  hourlyRate: number;
+  status: 'pending' | 'viewed' | 'interviewed' | 'hired' | 'rejected';
+  appliedAt: string;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'application' | 'message' | 'hired' | 'review';
+  message: string;
+  time: string;
 }
 
 const EmployerDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [vaProfiles, setVaProfiles] = useState<VAProfile[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filters, setFilters] = useState({
-    skills: [] as string[],
-    hourlyRateMin: '',
-    hourlyRateMax: '',
-    country: '',
-    availability: true,
-    verificationLevel: '',
-    sortBy: 'rating'
+  const [stats, setStats] = useState<DashboardStats>({
+    activeJobs: 0,
+    totalApplications: 0,
+    hiredVAs: 0,
+    totalSpent: 0,
+    pendingReviews: 0,
+    unreadMessages: 0,
+    savedVAs: 0
   });
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalResults, setTotalResults] = useState(0);
-  const [savedProfiles, setSavedProfiles] = useState(new Set<string>());
+  const [recentJobs, setRecentJobs] = useState<Job[]>([]);
+  const [recentApplications, setRecentApplications] = useState<Application[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   useEffect(() => {
-    fetchVAProfiles();
-    fetchDashboardStats();
+    fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    fetchVAProfiles();
-  }, [currentPage, filters]);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (currentPage === 1) {
-        fetchVAProfiles();
-      } else {
-        setCurrentPage(1);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  const fetchVAProfiles = async () => {
+  const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('authToken');
@@ -116,534 +97,363 @@ const EmployerDashboard = () => {
         return;
       }
 
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20',
-        sortBy: filters.sortBy
-      });
-
-      if (searchTerm) {
-        params.append('search', searchTerm);
-      }
-      if (filters.skills.length > 0) {
-        params.append('skills', filters.skills.join(','));
-      }
-      if (filters.hourlyRateMin) {
-        params.append('minRate', filters.hourlyRateMin);
-      }
-      if (filters.hourlyRateMax) {
-        params.append('maxRate', filters.hourlyRateMax);
-      }
-      if (filters.country) {
-        params.append('country', filters.country);
-      }
-      if (filters.availability !== undefined) {
-        params.append('availability', filters.availability.toString());
-      }
-      if (filters.verificationLevel) {
-        params.append('verificationLevel', filters.verificationLevel);
+      // Fetch dashboard stats
+      const statsResponse = await apiCall('/employer/dashboard/stats');
+      if (statsResponse.ok) {
+        const data = await statsResponse.json();
+        setStats(data.data || stats);
       }
 
-      const response = await apiCall(`/va/profiles/list?${params}`);
+      // Fetch recent jobs
+      const jobsResponse = await apiCall('/employer/jobs?limit=5');
+      if (jobsResponse.ok) {
+        const data = await jobsResponse.json();
+        setRecentJobs(data.data?.jobs || []);
+      }
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setVaProfiles(data.data.vaProfiles);
-          setTotalPages(data.data.pagination.totalPages);
-          setTotalResults(data.data.pagination.total);
-        } else {
-          throw new Error(data.error || 'Failed to fetch VA profiles');
-        }
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch VA profiles');
+      // Fetch recent applications
+      const appsResponse = await apiCall('/employer/applications?limit=5');
+      if (appsResponse.ok) {
+        const data = await appsResponse.json();
+        setRecentApplications(data.data?.applications || []);
       }
 
     } catch (error: any) {
-      console.error('VA profiles fetch error:', error);
-      toast.error(error.message || 'Failed to load VA profiles');
+      console.error('Dashboard data fetch error:', error);
+      toast.error(error.message || 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchDashboardStats = async () => {
-    try {
-      // TODO: Implement dashboard stats API endpoint
-      // For now, we use mock data
-      const stats = {
-        activeJobs: 5,
-        totalApplications: 23,
-        hiredVAs: 3,
-        totalSpent: 4580
-      };
-      // Set dashboard stats state when API is implemented
-    } catch (error) {
-      console.error('Dashboard stats error:', error);
-    }
-  };
-
-  const handleSaveProfile = async (profileId: string) => {
-    const newSaved = new Set(savedProfiles);
-    if (newSaved.has(profileId)) {
-      newSaved.delete(profileId);
-      toast.info('Profile removed from saved');
-    } else {
-      newSaved.add(profileId);
-      toast.success('Profile saved for later');
-    }
-    setSavedProfiles(newSaved);
-  };
-
-  const handleContactVA = (profileId: string) => {
-    router.push(`/messages/new?va=${profileId}`);
-  };
-
-  const handleViewProfile = (profileId: string) => {
-    router.push(`/va/profiles/${profileId}`);
-  };
-
   const handlePostJob = () => {
-    router.push('/jobs/post');
+    router.push('/employer/jobs/post');
   };
 
-  const commonSkills = [
-    'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 'Python',
-    'Virtual Assistance', 'Customer Service', 'Project Management',
-    'Content Writing', 'Social Media Marketing', 'Email Marketing',
-    'Data Entry', 'Bookkeeping', 'Administrative Support'
-  ];
-
-  const countries = [
-    { value: 'us', label: 'United States' },
-    { value: 'uk', label: 'United Kingdom' },
-    { value: 'ph', label: 'Philippines' },
-    { value: 'in', label: 'India' },
-    { value: 'ca', label: 'Canada' },
-    { value: 'au', label: 'Australia' },
-    { value: 'de', label: 'Germany' },
-    { value: 'fr', label: 'France' }
-  ];
-
-  const verificationLevels = [
-    { value: 'all', label: 'All Levels' },
-    { value: 'premium', label: 'Premium Only' },
-    { value: 'professional', label: 'Professional Only' },
-    { value: 'basic', label: 'Basic Only' }
-  ];
-
-  const sortOptions = [
-    { value: 'rating', label: 'Highest Rated' },
-    { value: 'rate_low', label: 'Lowest Rate' },
-    { value: 'rate_high', label: 'Highest Rate' },
-    { value: 'experience', label: 'Most Experience' },
-    { value: 'recent', label: 'Recently Active' }
-  ];
-
-  const getVerificationBadge = (level: 'basic' | 'professional' | 'premium') => {
-    switch (level) {
-      case 'premium':
-        return <Badge className="bg-yellow-500 text-white">Premium</Badge>;
-      case 'professional':
-        return <Badge className="bg-blue-500 text-white">Professional</Badge>;
-      default:
-        return <Badge variant="secondary">Basic</Badge>;
-    }
+  const handleViewAllJobs = () => {
+    router.push('/employer/jobs');
   };
 
-  const getAvailabilityBadge = (available: boolean) => {
-    return available ? (
-      <Badge className="bg-green-500 text-white flex items-center gap-1">
-        <CheckCircle className="h-3 w-3" />
-        Available
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="flex items-center gap-1">
-        <Clock className="h-3 w-3" />
-        Busy
-      </Badge>
-    );
+  const handleViewAllApplications = () => {
+    router.push('/employer/applications');
+  };
+
+  const handleViewApplication = (applicationId: string) => {
+    router.push(`/employer/applications/${applicationId}`);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+      active: { label: 'Active', variant: 'default' },
+      closed: { label: 'Closed', variant: 'secondary' },
+      filled: { label: 'Filled', variant: 'default' },
+      pending: { label: 'Pending', variant: 'secondary' },
+      viewed: { label: 'Viewed', variant: 'outline' },
+      interviewed: { label: 'Interviewed', variant: 'default' },
+      hired: { label: 'Hired', variant: 'default' },
+      rejected: { label: 'Rejected', variant: 'destructive' }
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading VA profiles...</p>
+      <div className="min-h-screen bg-slate-50">
+        <DashboardNav userRole="employer" />
+        <div className="container mx-auto px-4 max-w-7xl py-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Discover Virtual Assistants</h1>
-              <p className="text-slate-600 mt-1">
-                Find the perfect VA for your business from {totalResults.toLocaleString()} talented professionals
+    <div className="min-h-screen bg-slate-50">
+      <DashboardNav userRole="employer" />
+      
+      <div className="container mx-auto px-4 max-w-7xl py-8">
+        {/* Welcome Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Welcome back! 👋
+          </h1>
+          <p className="text-slate-600">
+            Here's what's happening with your hiring activity
+          </p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handlePostJob}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Post New Job</CardTitle>
+              <Plus className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">Create Job</div>
+              <p className="text-xs text-muted-foreground">
+                Start hiring VAs now
               </p>
-            </div>
-            <Button onClick={handlePostJob}>
-              <Briefcase className="h-4 w-4 mr-2" />
-              Post Job
-            </Button>
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/employer/saved')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Saved VAs</CardTitle>
+              <Users className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{stats.savedVAs}</div>
+              <p className="text-xs text-muted-foreground">
+                Saved for later
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/employer/messages')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Messages</CardTitle>
+              <MessageSquare className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{stats.unreadMessages}</div>
+              <p className="text-xs text-muted-foreground">
+                Unread messages
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/employer/reviews')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Reviews</CardTitle>
+              <Star className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">{stats.pendingReviews}</div>
+              <p className="text-xs text-muted-foreground">
+                Pending reviews
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <Input
-                placeholder="Search by name, skills, or bio... (Press Enter to search)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    setCurrentPage(1);
-                  }
-                }}
-                className="pl-10 h-12 text-lg"
-              />
-            </div>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeJobs}</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-green-600">+2</span> from last month
+              </p>
+            </CardContent>
+          </Card>
 
-            {/* Advanced Filters Toggle */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                {showFilters ? 'Hide Filters' : 'Advanced Filters'}
-                {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-              
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <span>{totalResults} VAs found</span>
-                <Separator orientation="vertical" className="h-4" />
-                <span>Page {currentPage} of {totalPages}</span>
-              </div>
-            </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalApplications}</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-green-600">+12</span> from last week
+              </p>
+            </CardContent>
+          </Card>
 
-            {/* Advanced Filters */}
-            {showFilters && (
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Skills Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Skills</label>
-                    <div className="space-y-2">
-                      {commonSkills.slice(0, 6).map(skill => (
-                        <div key={skill} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={skill}
-                            checked={filters.skills.includes(skill)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFilters(prev => ({ ...prev, skills: [...prev.skills, skill] }));
-                              } else {
-                                setFilters(prev => ({ ...prev, skills: prev.skills.filter(s => s !== skill) }));
-                              }
-                            }}
-                            className="rounded border-slate-300 mr-2"
-                          />
-                          <label htmlFor={skill} className="text-sm text-slate-600">{skill}</label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">VAs Hired</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.hiredVAs}</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-green-600">+1</span> this month
+              </p>
+            </CardContent>
+          </Card>
 
-                  {/* Rate Range */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Hourly Rate (USD)</label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        placeholder="Min"
-                        value={filters.hourlyRateMin}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hourlyRateMin: e.target.value }))}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Max"
-                        value={filters.hourlyRateMax}
-                        onChange={(e) => setFilters(prev => ({ ...prev, hourlyRateMax: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalSpent.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                All time spending
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-                  {/* Country Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
-                    <Select value={filters.country} onValueChange={(value) => setFilters(prev => ({ ...prev, country: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Any country</SelectItem>
-                        {countries.map(country => (
-                          <SelectItem key={country.value} value={country.value}>
-                            {country.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Verification Level */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Verification Level</label>
-                    <Select value={filters.verificationLevel} onValueChange={(value) => setFilters(prev => ({ ...prev, verificationLevel: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Any level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {verificationLevels.map(level => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Availability */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Availability</label>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="availability"
-                        checked={filters.availability}
-                        onChange={(e) => setFilters(prev => ({ ...prev, availability: e.target.checked }))}
-                        className="rounded border-slate-300 mr-2"
-                      />
-                      <label htmlFor="availability" className="text-sm text-slate-600">Available now</label>
-                    </div>
-                  </div>
-
-                  {/* Sort By */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Sort By</label>
-                    <Select value={filters.sortBy} onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sortOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Recent Jobs */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Jobs</CardTitle>
+                  <CardDescription>Your latest job postings</CardDescription>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* VA Profiles Grid */}
-        {vaProfiles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vaProfiles.map((profile) => (
-              <Card key={profile.id} className="relative hover:shadow-lg transition-shadow">
-                {/* Save Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 z-10"
-                  onClick={() => handleSaveProfile(profile.id)}
-                >
-                  <Heart className={`h-4 w-4 ${savedProfiles.has(profile.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                <Button variant="ghost" size="sm" onClick={handleViewAllJobs}>
+                  View All
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
-
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      {profile.avatarUrl ? (
-                        <img
-                          src={profile.avatarUrl}
-                          alt={profile.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-bold">
-                          {profile.name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <CardTitle className="text-lg">{profile.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          {getVerificationBadge(profile.verificationLevel)}
-                          {getAvailabilityBadge(profile.availability)}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {recentJobs.length > 0 ? (
+                <div className="space-y-4">
+                  {recentJobs.map((job) => (
+                    <div key={job.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm mb-1">{job.title}</h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                          <DollarSign className="h-3 w-3" />
+                          <span>${job.hourlyRate.min} - ${job.hourlyRate.max}/hr</span>
+                          <Separator orientation="vertical" className="h-3" />
+                          <FileText className="h-3 w-3" />
+                          <span>{job.applicationsCount} applications</span>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-slate-500" />
-                      <span className="font-semibold">${profile.hourlyRate}/hr</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4 text-slate-500" />
-                      <span>{profile.country}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      <span>{profile.averageRating?.toFixed(1) || 'N/A'}</span>
-                      <span className="text-slate-500">({profile.totalReviews || 0})</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Briefcase className="h-4 w-4 text-slate-500" />
-                      <span>{profile.completedJobs || 0} jobs</span>
-                    </div>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-sm text-slate-600 line-clamp-3">{profile.bio}</p>
-
-                  {/* Skills */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm font-medium">Skills</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {profile.skills.slice(0, 6).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {profile.skills.length > 6 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{profile.skills.length - 6}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Response Rate */}
-                  {profile.responseRate && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Response Rate</span>
                       <div className="flex items-center gap-2">
-                        <Progress value={profile.responseRate} className="w-20 h-2" />
-                        <span className="font-medium">{profile.responseRate}%</span>
+                        {getStatusBadge(job.status)}
+                        <span className="text-xs text-slate-500">{getRelativeTime(job.createdAt)}</span>
                       </div>
                     </div>
-                  )}
-
-                  {/* View Count */}
-                  {profile.profileViews && (
-                    <div className="flex items-center gap-1 text-sm text-slate-600">
-                      <Eye className="h-4 w-4" />
-                      <span>{profile.profileViews.toLocaleString()} views</span>
-                    </div>
-                  )}
-                </CardContent>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 p-4 pt-0">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleViewProfile(profile.id)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View Profile
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleContactVA(profile.id)}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    Contact
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+                  <p className="text-sm text-slate-600 mb-4">No jobs posted yet</p>
+                  <Button size="sm" onClick={handlePostJob}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Post Your First Job
                   </Button>
                 </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <Users className="h-16 w-16 mx-auto text-slate-400 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">No VAs found</h3>
-            <p className="text-slate-600 mb-6">
-              Try adjusting your search terms or filters to find more virtual assistants.
-            </p>
-            <Button onClick={() => {
-              setSearchTerm('');
-              setFilters({
-                skills: [],
-                hourlyRateMin: '',
-                hourlyRateMax: '',
-                country: '',
-                availability: true,
-                verificationLevel: '',
-                sortBy: 'rating'
-              });
-            }}>
-              Clear Filters
-            </Button>
-          </div>
-        )}
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                const pageNum = index + 1;
-                const isActive = pageNum === currentPage;
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={isActive ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
+          {/* Recent Applications */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Applications</CardTitle>
+                  <CardDescription>Latest VA applications</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleViewAllApplications}>
+                  View All
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {recentApplications.length > 0 ? (
+                <div className="space-y-3">
+                  {recentApplications.map((app) => (
+                    <div 
+                      key={app.id} 
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                      onClick={() => handleViewApplication(app.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        {app.vaAvatar ? (
+                          <img
+                            src={app.vaAvatar}
+                            alt={app.vaName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                            {app.vaName.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <h4 className="font-medium text-sm">{app.vaName}</h4>
+                          <p className="text-xs text-slate-600">{app.jobTitle}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium">${app.hourlyRate}/hr</span>
+                        {getStatusBadge(app.status)}
+                        <span className="text-xs text-slate-500">{getRelativeTime(app.appliedAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+                  <p className="text-sm text-slate-600 mb-4">No applications yet</p>
+                  <Button size="sm" onClick={handlePostJob}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Post a Job to Get Applications
                   </Button>
-                );
-              })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Hiring Tips Card */}
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Hiring Tips
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h4 className="font-medium text-sm mb-2">Write Clear Job Descriptions</h4>
+                <p className="text-xs text-slate-600">
+                  Be specific about requirements, responsibilities, and what you're looking for.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm mb-2">Review Applications Quickly</h4>
+                <p className="text-xs text-slate-600">
+                  Top VAs receive multiple offers. Respond within 24-48 hours.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm mb-2">Start with a Trial</h4>
+                <p className="text-xs text-slate-600">
+                  Consider a 1-week trial period to ensure the VA is a good fit.
+                </p>
+              </div>
             </div>
-            
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
