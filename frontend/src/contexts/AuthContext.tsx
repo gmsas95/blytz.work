@@ -5,6 +5,12 @@ import { User } from 'firebase/auth';
 import { onAuthStateChange, signOutUser } from '@/lib/auth';
 import { setupTokenRefresh } from '@/lib/auth-utils';
 
+// Clear auth cookies
+const clearAuthCookies = () => {
+  document.cookie = 'authToken=; path=/; max-age=0';
+  document.cookie = 'user=; path=/; max-age=0';
+};
+
 interface AuthUser {
   uid: string;
   email: string;
@@ -54,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
+    // Clear cookies
+    clearAuthCookies();
   };
 
   return (

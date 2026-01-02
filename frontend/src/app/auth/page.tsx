@@ -11,6 +11,27 @@ import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
 import { getToken, setupTokenRefresh } from "@/lib/auth-utils";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
+import { useEffect } from "react";
+
+// Set auth cookies for middleware (server-side authentication check)
+const setAuthCookies = (token: string, userData: any) => {
+  // Set cookies with 7-day expiration
+  const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
+  
+  document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; secure; samesite=strict`;
+  document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=${maxAge}; secure; samesite=strict`;
+};
+
+// Clear auth cookies on logout
+const clearAuthCookies = () => {
+  document.cookie = 'authToken=; path=/; max-age=0';
+  document.cookie = 'user=; path=/; max-age=0';
+};
+
+// Check if auth cookies exist (for debugging)
+const hasAuthCookies = () => {
+  return document.cookie.includes('authToken') && document.cookie.includes('user');
+};
 
 export default function AuthPage() {
   const router = useRouter();
@@ -140,12 +161,19 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         const authUser = await signInUser(formData.email, formData.password);
-        
+
         const token = await getToken();
         if (!token) {
           throw new Error('Failed to get authentication token');
         }
-        
+
+        // Set auth cookies for middleware
+        setAuthCookies(token, {
+          uid: authUser.uid,
+          email: authUser.email,
+          displayName: authUser.displayName || undefined,
+        });
+
         toast.success(`Welcome back!`, {
           description: "Successfully signed in to your account",
         });
@@ -190,12 +218,19 @@ export default function AuthPage() {
         }
       } else {
         const authUser = await registerUser(formData.email, formData.password, formData.name);
-        
+
         const token = await getToken();
         if (!token) {
           throw new Error('Failed to get authentication token');
         }
-        
+
+        // Set auth cookies for middleware
+        setAuthCookies(token, {
+          uid: authUser.uid,
+          email: authUser.email,
+          displayName: authUser.displayName || undefined,
+        });
+
         if (authUser.uid) {
           try {
             await createUserInBackend(authUser);

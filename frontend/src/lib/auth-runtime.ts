@@ -91,11 +91,14 @@ export const setupTokenRefresh = (): (() => void) => {
         localStorage.removeItem('userRole');
       }
     } else {
-      // User signed out, clear tokens
+      // User signed out, clear tokens and cookies
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('userRole');
-      console.log('👋 User signed out, tokens cleared');
+      // Clear cookies
+      document.cookie = 'authToken=; path=/; max-age=0';
+      document.cookie = 'user=; path=/; max-age=0';
+      console.log("👋 User signed out, tokens and cookies cleared");
     }
     
     isUpdating = false;
@@ -120,7 +123,7 @@ export const onAuthStateChange = (callback: (user: User | null) => void): (() =>
 // Sign out user
 export const signOutUser = async (): Promise<void> => {
   const { auth } = getFirebase();
-  
+
   if (!auth) {
     console.warn('⚠️ Firebase auth not available for sign out');
     return;
@@ -131,6 +134,9 @@ export const signOutUser = async (): Promise<void> => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
+    // Clear cookies
+    document.cookie = 'authToken=; path=/; max-age=0';
+    document.cookie = 'user=; path=/; max-age=0';
     console.log("✅ User signed out successfully");
   } catch (error) {
     console.error('Error signing out:', error);

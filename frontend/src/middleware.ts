@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getFirebase } from './lib/firebase-simplified';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,17 +11,20 @@ export function middleware(request: NextRequest) {
     '/select-role'
   ];
 
-  // Check if the current path is a protected route
+  // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
 
-  // Check if user is authenticated using simplified Firebase
-  const { auth: firebaseAuth } = getFirebase();
-  const user = firebaseAuth?.currentUser || null;
+  // Check for auth token cookie (set during login)
+  const authToken = request.cookies.get('authToken');
+  const userCookie = request.cookies.get('user');
+
+  // Check if user is authenticated (has auth token or user cookie)
+  const isAuthenticated = authToken !== undefined || userCookie !== undefined;
 
   // If it's a protected route and user is not authenticated, redirect to auth
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     return NextResponse.redirect(url);

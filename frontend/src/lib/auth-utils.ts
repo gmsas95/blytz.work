@@ -87,11 +87,14 @@ export const setupTokenRefresh = (): (() => void) => {
         localStorage.removeItem('userRole');
       }
     } else {
-      // User signed out, clear tokens
+      // User signed out, clear tokens and cookies
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('userRole');
-      console.log('👋 User signed out, tokens cleared');
+      // Clear cookies
+      document.cookie = 'authToken=; path=/; max-age=0';
+      document.cookie = 'user=; path=/; max-age=0';
+      console.log('👋 User signed out, tokens and cookies cleared');
     }
     
     isUpdating = false;
