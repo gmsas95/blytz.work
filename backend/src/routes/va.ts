@@ -49,7 +49,7 @@ export default async function vaRoutes(app: FastifyInstance) {
         where: { userId: user.uid },
         include: {
           user: {
-            select: { email: true }
+            select: { email: true, profileComplete: true }
           },
           portfolioItems: {
             orderBy: { 
@@ -74,12 +74,15 @@ export default async function vaRoutes(app: FastifyInstance) {
       }
 
       const completionPercentage = calculateProfileCompletion(profile);
+      
+      const profileComplete = completionPercentage === 100 && profile.user.profileComplete;
 
       return {
         success: true,
         data: {
           ...profile,
           completionPercentage,
+          profileComplete,
           portfolioItems: [],
           reviews: [],
           responseRate: profile?.responseRate || 0,
@@ -142,13 +145,27 @@ export default async function vaRoutes(app: FastifyInstance) {
           profileViews: 0
         },
         include: {
-          user: true
+          user: true,
+          portfolioItems: true
         }
       });
 
+      const completionPercentage = calculateProfileCompletion(profile);
+      
+      if (completionPercentage === 100) {
+        await prisma.user.update({
+          where: { id: user.uid },
+          data: { profileComplete: true }
+        });
+      }
+
       return reply.code(201).send({
         success: true,
-        data: profile,
+        data: {
+          ...profile,
+          completionPercentage,
+          profileComplete: completionPercentage === 100
+        },
         message: "VA profile created successfully"
       });
     } catch (error: any) {
@@ -186,9 +203,22 @@ export default async function vaRoutes(app: FastifyInstance) {
         }
       });
 
+      const completionPercentage = calculateProfileCompletion(profile);
+      
+      if (completionPercentage === 100) {
+        await prisma.user.update({
+          where: { id: user.uid },
+          data: { profileComplete: true }
+        });
+      }
+
       return {
         success: true,
-        data: profile,
+        data: {
+          ...profile,
+          completionPercentage,
+          profileComplete: completionPercentage === 100
+        },
         message: "VA profile updated successfully"
       };
     } catch (error: any) {
@@ -231,6 +261,15 @@ export default async function vaRoutes(app: FastifyInstance) {
         }
       });
 
+      const profile = await prisma.vAProfile.findUnique({
+        where: { userId: user.uid },
+        include: { portfolioItems: true }
+      });
+
+      if (profile) {
+        await updateProfileCompletionStatus(user.uid, profile);
+      }
+
       return reply.code(201).send({
         success: true,
         data: portfolioItem,
@@ -253,10 +292,13 @@ export default async function vaRoutes(app: FastifyInstance) {
     const { resumeUrl } = request.body as any;
 
     try {
-      await prisma.vAProfile.update({
+      const profile = await prisma.vAProfile.update({
         where: { userId: user.uid },
-        data: { resumeUrl }
+        data: { resumeUrl },
+        include: { portfolioItems: true }
       });
+
+      await updateProfileCompletionStatus(user.uid, profile);
 
       return {
         success: true,
@@ -280,10 +322,13 @@ export default async function vaRoutes(app: FastifyInstance) {
     const { videoUrl } = request.body as any;
 
     try {
-      await prisma.vAProfile.update({
+      const profile = await prisma.vAProfile.update({
         where: { userId: user.uid },
-        data: { videoIntroUrl: videoUrl }
+        data: { videoIntroUrl: videoUrl },
+        include: { portfolioItems: true }
       });
+
+      await updateProfileCompletionStatus(user.uid, profile);
 
       return {
         success: true,
@@ -487,6 +532,20 @@ function calculateProfileCompletion(profile: any): number {
 
   const completedFields = fields.filter(field => field && field !== '').length;
   return Math.round((completedFields / fields.length) * 100);
+}
+
+async function updateProfileCompletionStatus(userId: string, profile: any): Promise<boolean> {
+  const completionPercentage = calculateProfileCompletion(profile);
+  
+  if (completionPercentage === 100) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileComplete: true }
+    });
+    return true;
+  }
+  
+  return false;
 }
 
 function generateThumbnailUrl(fileUrl: string, fileType: string): string | null {
