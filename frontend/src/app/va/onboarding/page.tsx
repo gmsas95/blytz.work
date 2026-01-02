@@ -88,14 +88,15 @@ export default function VAOnboardingPage() {
         })
       });
 
+      await apiCall('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          role: 'va',
+          profileComplete: true,
+        })
+      });
+
       try {
-        await apiCall('/auth/profile', {
-          method: 'PUT',
-          body: JSON.stringify({
-            role: 'va',
-            profileComplete: true,
-          })
-        });
       } catch (roleError) {
         console.error("Failed to update user role:", roleError);
       }

@@ -111,9 +111,127 @@ export default async function vaRoutes(app: FastifyInstance) {
       });
 
       if (existingProfile) {
+        return reply.send({
+          success: true,
+          data: existingProfile,
+          message: "Profile already exists"
+        });
+      }
+
+      // Check if user role is VA
+      const userData = await prisma.user.findUnique({
+        where: { id: user.uid }
+      });
+
+      if (!userData || userData.role !== "va") {
+        return reply.code(403).send({ 
+          error: "User is not a VA",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      // Create VA profile with default values for all numeric fields
+      const profile = await prisma.vAProfile.create({
+        data: {
+          ...data,
+          userId: user.uid,
+          responseRate: data.hourlyRate || 0,
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0,
+          featuredProfile: data.featuredProfile || false,
+          profileViews: data.profileViews || 0
+        },
+        include: {
+          user: true
+        }
+      });
+
+      return reply.code(201).send({
+        success: true,
+        data: profile,
+        message: "VA profile created successfully"
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
         return reply.code(400).send({ 
-          error: "VA profile already exists",
-          code: "PROFILE_EXISTS"
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      return reply.code(500).send({ 
+        error: "Failed to create VA profile",
+        code: "PROFILE_CREATION_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+      if (existingProfile) {
+        return reply.send({
+          success: true,
+          data: existingProfile,
+          message: "Profile already exists"
+        });
+      }
+
+      // Check if user role is VA
+      const userData = await prisma.user.findUnique({
+        where: { id: user.uid }
+      });
+
+      if (!userData || userData.role !== "va") {
+        return reply.code(403).send({ 
+          error: "User is not a VA",
+          code: "INVALID_ROLE"
+        });
+      }
+
+      // Create VA profile with default values for all numeric fields
+      const profile = await prisma.vAProfile.create({
+        data: {
+          ...data,
+          userId: user.uid,
+          // Ensure numeric fields have valid defaults
+          responseRate: data.hourlyRate || 0,
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0,
+          featuredProfile: data.featuredProfile || false,
+          profileViews: data.profileViews || 0
+        },
+        include: {
+          user: true
+        }
+      });
+
+      return reply.code(201).send({
+        success: true,
+        data: profile,
+        message: "VA profile created successfully"
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({ 
+          error: "Validation error",
+          code: "VALIDATION_ERROR",
+          details: error.errors
+        });
+      }
+
+      return reply.code(500).send({ 
+        error: "Failed to create VA profile",
+        code: "PROFILE_CREATION_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+      if (existingProfile) {
+        return reply.send({
+          success: true,
+          data: existingProfile,
+          message: "Profile already exists"
         });
       }
 
