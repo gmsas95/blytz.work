@@ -51,7 +51,7 @@ export default function EmployerOnboardingPage() {
   const handleSubmit = async () => {
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      toast.error("Please fix the following errors", {
+      toast.error("Please fix following errors", {
         description: validationErrors.join(", "),
       });
       return;
@@ -69,7 +69,7 @@ export default function EmployerOnboardingPage() {
           bio: formData.bio,
           companySize: formData.companySize,
           description: formData.description,
-          website: formData.website || undefined,
+          website: (formData.website && formData.website.trim()) || undefined,
         })
       });
 
@@ -101,10 +101,10 @@ export default function EmployerOnboardingPage() {
       router.push("/employer/dashboard");
     } catch (error: any) {
       console.error("Company creation error:", error);
-      
+
       const errorMessage = error?.details || error?.message || "Failed to create company profile";
       const errorCode = error?.code;
-      
+
       if (errorCode === "VALIDATION_ERROR") {
         toast.error("Validation error", {
           description: "Please check all required fields and try again",
