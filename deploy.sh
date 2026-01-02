@@ -1,97 +1,85 @@
 #!/bin/bash
 
-# BlytzWork Platform Deployment Script
-# This script deploys the BlytzWork platform using the correct service names
-# Project name: blytzwork-webapp-uvey24
+# BlytzWork Production Deployment Script
+# Usage: ./deploy.sh [start|stop|restart|logs]
 
 set -e
 
-echo "🚀 Starting BlytzWork Platform Deployment..."
-echo "Project: blytzwork-webapp-uvey24"
-echo ""
+COMPOSE_FILE="docker-compose.dokploy-ready.yml"
+ENV_FILE=".env.production"
 
-# Check if docker-compose.yml exists
-if [ ! -f "docker-compose.yml" ]; then
-    echo "❌ Error: docker-compose.yml not found in current directory"
-    exit 1
-fi
-
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    echo "⚠️ Warning: .env file not found. Using environment variables from system."
-fi
-
-echo "📋 Deployment Configuration:"
-echo "- Compose File: docker-compose.yml"
-echo "- Project Name: blytzwork-webapp-uvey24"
-echo "- Services: blytzwork-backend, blytzwork-frontend, postgres, redis"
-echo ""
-
-# Stop any existing containers for this project
-echo "🛑 Stopping any existing containers..."
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml down --remove-orphans 2>/dev/null || true
-
-# Build and start the services
-echo "🔨 Building and starting services..."
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml up -d --build --remove-orphans
-
-echo ""
-echo "✅ Deployment initiated successfully!"
-echo ""
-
-# Wait a moment for containers to start
-echo "⏳ Waiting for services to initialize..."
-sleep 10
-
-# Check service status
-echo "📊 Checking service status..."
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml ps
-
-echo ""
-echo "🔍 Service Health Checks:"
-echo ""
-
-# Check backend health
-echo "Checking backend health..."
-if docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec -T blytzwork-backend curl -f http://localhost:3000/health 2>/dev/null; then
-    echo "✅ Backend is healthy"
-else
-    echo "❌ Backend health check failed"
-fi
-
-# Check frontend health
-echo "Checking frontend health..."
-if docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec -T blytzwork-frontend curl -f http://localhost:3001/ 2>/dev/null; then
-    echo "✅ Frontend is healthy"
-else
-    echo "❌ Frontend health check failed"
-fi
-
-# Check database health
-echo "Checking database health..."
-if docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec -T postgres pg_isready -U postgres -d blytzwork 2>/dev/null; then
-    echo "✅ Database is healthy"
-else
-    echo "❌ Database health check failed"
-fi
-
-# Check Redis health
-echo "Checking Redis health..."
-if docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec -T redis redis-cli ping 2>/dev/null; then
-    echo "✅ Redis is healthy"
-else
-    echo "❌ Redis health check failed"
-fi
-
-echo ""
-echo "🎉 Deployment completed!"
-echo ""
-echo "📝 Useful Commands:"
-echo "- View logs: docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml logs -f"
-echo "- Stop services: docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml down"
-echo "- Restart services: docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml restart"
-echo ""
-echo "🌐 Access URLs:"
-echo "- Frontend: https://blytz.work"
-echo "- Backend API: https://api.blytz.work"
-echo ""
+case "$1" in
+    start)
+        echo "🚀 Starting BlytzWork production..."
+        docker compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
+        echo "✅ BlytzWork started successfully!"
+        echo "🌐 Access at: http://72.60.236.89:8081"
+        ;;
+    
+    stop)
+        echo "🛑 Stopping BlytzWork production..."
+        docker compose -f $COMPOSE_FILE down
+        echo "✅ BlytzWork stopped successfully!"
+        ;;
+    
+    restart)
+        echo "🔄 Restarting BlytzWork production..."
+        docker compose -f $COMPOSE_FILE --env-file $ENV_FILE down
+        docker compose -f $COMPOSE_FILE --env-file $ENV_FILE up -d
+        echo "✅ BlytzWork restarted successfully!"
+        echo "🌐 Access at: http://72.60.236.89:8081"
+        ;;
+    
+    logs)
+        echo "📋 Showing BlytzWork logs..."
+        docker compose -f $COMPOSE_FILE logs -f
+        ;;
+    
+    status)
+        echo "📊 BlytzWork service status:"
+        docker compose -f $COMPOSE_FILE ps
+        ;;
+    
+    health)
+        echo "🏥 Checking BlytzWork health status..."
+        docker compose -f $COMPOSE_FILE ps --format "table {{.Names}}\t{{.Status}}"
+        
+        echo ""
+        echo "🌐 Testing endpoints..."
+        
+        # Test nginx
+        if curl -f http://localhost:8081/health > /dev/null 2>&1; then
+            echo "✅ Nginx: Healthy"
+        else
+            echo "❌ Nginx: Unhealthy"
+        fi
+        
+        # Test backend
+        if curl -f http://localhost:3002/api/health > /dev/null 2>&1; then
+            echo "✅ Backend: Healthy"
+        else
+            echo "❌ Backend: Unhealthy"
+        fi
+        
+        # Test frontend
+        if curl -f http://localhost:3003 > /dev/null 2>&1; then
+            echo "✅ Frontend: Healthy"
+        else
+            echo "❌ Frontend: Unhealthy"
+        fi
+        ;;
+    
+    *)
+        echo "📖 BlytzWork Deployment Script"
+        echo "Usage: $0 {start|stop|restart|logs|status|health}"
+        echo ""
+        echo "Commands:"
+        echo "  start   - Start all BlytzWork services"
+        echo "  stop    - Stop all BlytzWork services"
+        echo "  restart - Restart all BlytzWork services"
+        echo "  logs    - Show live logs"
+        echo "  status  - Show service status"
+        echo "  health  - Check health of all services"
+        exit 1
+        ;;
+esac

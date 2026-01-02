@@ -1,7 +1,7 @@
 http:
   routers:
     dokploy-router-app:
-      rule: Host(`sudo.blytz.app`)
+      rule: Host(`dokploy.docker.localhost`) && PathPrefix(`/`)
       service: dokploy-service-app
       entryPoints:
         - web
@@ -9,35 +9,25 @@ http:
         - redirect-to-https
     
     dokploy-router-app-secure:
-      rule: Host(`sudo.blytz.app`)
+      rule: Host(`admin.blytz.work`)
       service: dokploy-service-app
       entryPoints:
         - websecure
       tls:
         certResolver: letsencrypt
     
-    # Production frontend routing
-    blytzwork-router-app:
+    # Frontend routing - updated to match current service names
+    blytz-frontend-router:
       rule: Host(`blytz.work`) || Host(`www.blytz.work`)
-      service: blytzwork-service-app
+      service: blytzwork-frontend-service
       entryPoints:
         - web
         - websecure
       tls:
         certResolver: letsencrypt
     
-    # Staging frontend routing
-    blytzwork-staging-router-app:
-      rule: Host(`staging.blytz.work`)
-      service: blytzwork-service-app
-      entryPoints:
-        - web
-        - websecure
-      tls:
-        certResolver: letsencrypt
-    
-    # Backend API routing - CRITICAL FIX
-    blytzwork-backend-router:
+    # Backend API routing - updated to match current service names
+    blytz-backend-router:
       rule: Host(`api.blytz.work`)
       service: blytzwork-backend-service
       entryPoints:
@@ -53,18 +43,18 @@ http:
           - url: http://dokploy:3000
         passHostHeader: true
     
-    # Frontend service - UPDATE TO USE CORRECT SERVICE NAME
-    blytzwork-service-app:
+    # Frontend service - match actual container name from docker-compose.dokploy-ready.yml
+    blytzwork-frontend-service:
       loadBalancer:
         servers:
-          - url: http://frontend-final:3001
+          - url: http://blytzwork-frontend-final:3000
         passHostHeader: true
     
-    # Backend service - UPDATE TO USE CORRECT SERVICE NAME  
+    # Backend service - match actual container name from docker-compose.dokploy-ready.yml
     blytzwork-backend-service:
       loadBalancer:
         servers:
-          - url: http://backend-final:3000
+          - url: http://blytzwork-backend-final:3001
         passHostHeader: true
 
   middlewares:

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { apiCall } from '@/lib/api';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,16 +26,13 @@ export default function ForgotPasswordPage() {
     
       try {
       // API call to check if email exists and send reset
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await apiCall('/auth/forgot-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       });
 
       const data = await response.json();
-      
+
       if (response.ok && data.success) {
         setIsSubmitted(true);
         setError("");

@@ -1,76 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Skip middleware for static files, API routes, and auth page
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.') ||
-    pathname === '/auth' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-email-sent'
-  ) {
-    return NextResponse.next();
-  }
 
   // Protected routes that require authentication
   const protectedRoutes = [
     '/employer/dashboard',
     '/va/dashboard',
-    '/select-role',
-    '/employer/onboarding',
-    '/va/onboarding',
-    '/chat',
-    '/contract'
+    '/select-role'
   ];
 
-  // Check if the current path is a protected route
+  // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
 
-  // Skip authentication check for non-protected routes
-  if (!isProtectedRoute) {
-    return NextResponse.next();
-  }
+  // Check for auth token cookie (set during login)
+  const authToken = request.cookies.get('authToken');
+  const userCookie = request.cookies.get('user');
 
-  // Check for authentication token in cookies or headers
-  const token = request.cookies.get('authToken')?.value ||
-                request.headers.get('authorization')?.replace('Bearer ', '');
+  // Check if user is authenticated (has auth token or user cookie)
+  const isAuthenticated = authToken !== undefined || userCookie !== undefined;
 
-  // Check for user role in cookies
-  const userRole = request.cookies.get('userRole')?.value;
-
-  // If no token, check localStorage fallback via header (client-side should set this)
-  const hasAuthHeader = request.headers.get('x-has-auth') === 'true';
-
-  if (!token && !hasAuthHeader) {
-    // No authentication found - redirect to auth page
+  // If it's a protected route and user is not authenticated, redirect to auth
+  if (isProtectedRoute && !isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 
-  // Additional role-based checks
-  if (pathname.startsWith('/employer') && userRole !== 'employer') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
-
-  if (pathname.startsWith('/va') && userRole !== 'va') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
-
-  // User is authenticated - continue to the protected route
+  // For all other routes, continue as normal
   return NextResponse.next();
 }
 

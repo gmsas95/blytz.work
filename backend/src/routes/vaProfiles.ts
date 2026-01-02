@@ -1,7 +1,7 @@
 // Complete VA Profile Management - CRUD Operations
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
-import { verifyAuth } from "../plugins/firebaseAuth.js";
+import { verifyAuth } from "../plugins/firebaseAuth-simplified.js";
 
 export default async function vaProfileRoutes(app: FastifyInstance) {
   // Create VA Profile - DISABLED to avoid duplicate route with va.ts

@@ -7,9 +7,31 @@ import { Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInUser, registerUser, getAuthErrorMessage, getToken } from "@/lib/auth";
+import { signInUser, registerUser, getAuthErrorMessage } from "@/lib/auth";
+import { getToken, setupTokenRefresh } from "@/lib/auth-utils";
 import { apiCall } from "@/lib/api";
 import { toast } from "sonner";
+import { useEffect } from "react";
+
+// Set auth cookies for middleware (server-side authentication check)
+const setAuthCookies = (token: string, userData: any) => {
+  // Set cookies with 7-day expiration
+  const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
+  
+  document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; secure; samesite=strict`;
+  document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=${maxAge}; secure; samesite=strict`;
+};
+
+// Clear auth cookies on logout
+const clearAuthCookies = () => {
+  document.cookie = 'authToken=; path=/; max-age=0';
+  document.cookie = 'user=; path=/; max-age=0';
+};
+
+// Check if auth cookies exist (for debugging)
+const hasAuthCookies = () => {
+  return document.cookie.includes('authToken') && document.cookie.includes('user');
+};
 
 export default function AuthPage() {
   const router = useRouter();
@@ -22,173 +44,220 @@ export default function AuthPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const checkUserProfileWithRetry = async (retries = 2): Promise<{ role: string | null; needsOnboarding: boolean }> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`Checking user profile (attempt ${attempt + 1}/${retries + 1})...`);
+        
+        const profileResponse = await Promise.race([
+          apiCall('/auth/profile'),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('API call timeout')), 10000)
+          )
+        ]) as Response;
+        
+        console.log('Profile response status:', profileResponse.status);
+        
+        if (profileResponse.status === 200) {
+          const userData = await profileResponse.json();
+          
+          if (!userData.data || userData.data.exists === false) {
+            console.log('User not found in backend, needs profile setup');
+            return { role: null, needsOnboarding: true };
+          }
+          
+          const role = userData.data.role;
+          console.log('User role from backend:', role);
+          
+          if (role === 'company') {
+            localStorage.setItem("userRole", "employer");
+            try {
+              const companyResponse = await Promise.race([
+                apiCall('/company/profile'),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('API call timeout')), 5000)
+                )
+              ]) as Response;
+              
+              return { role, needsOnboarding: !companyResponse.ok };
+            } catch {
+              return { role, needsOnboarding: true };
+            }
+          } else if (role === 'va') {
+            localStorage.setItem("userRole", "va");
+            try {
+              const vaResponse = await Promise.race([
+                apiCall('/va/profile'),
+                new Promise<never>((_, reject) => 
+                  setTimeout(() => reject(new Error('API call timeout')), 5000)
+                )
+              ]) as Response;
+              
+              return { role, needsOnboarding: !vaResponse.ok };
+            } catch {
+              return { role, needsOnboarding: true };
+            }
+          } else {
+            return { role: null, needsOnboarding: false };
+          }
+        } else if (profileResponse.status === 404) {
+          console.log('User not found in backend (404)');
+          return { role: null, needsOnboarding: true };
+        } else {
+          const errorText = await profileResponse.text().catch(() => 'Unknown error');
+          throw new Error(`Backend returned ${profileResponse.status}: ${errorText}`);
+        }
+      } catch (error: any) {
+        if (attempt < retries) {
+          console.log(`Retrying profile check after error: ${error.message}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw error;
+        }
+      }
+    }
+    throw new Error('Failed to check user profile after all retries');
+  };
+
+  const createUserInBackend = async (authUser: any): Promise<void> => {
+    const createUserWithRetry = async (retries = 2): Promise<void> => {
+      try {
+        const response = await apiCall('/auth/create', {
+          method: 'POST',
+          body: JSON.stringify({
+            uid: authUser.uid,
+            email: formData.email,
+            name: authUser.displayName || formData.email.split('@')[0],
+            username: authUser.displayName || formData.email.split('@')[0],
+            role: null
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(errorData.message || `Backend returned ${response.status}`);
+        }
+      } catch (apiError: any) {
+        if (retries > 0) {
+          console.log(`Retrying user creation, attempts left: ${retries}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return createUserWithRetry(retries - 1);
+        }
+        throw apiError;
+      }
+    };
+
+    await createUserWithRetry();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    setRetryCount(0);
 
     try {
       if (isLogin) {
-        let authUser;
-        
-        // Use Firebase auth only - no mock fallback for production
-        authUser = await signInUser(formData.email, formData.password);
-        console.log('✅ Firebase authentication successful');
-        
-        // Store authentication state
-        localStorage.setItem('authUser', JSON.stringify(authUser));
-        
-        // Get Firebase ID token and store it for API calls
-        let token;
-        try {
-          token = await getToken();
-          if (!token) {
-            throw new Error('Failed to get authentication token');
-          }
-          localStorage.setItem('authToken', token);
-        } catch (tokenError) {
-          console.log('Token generation failed, using mock token');
-          token = 'demo-token-' + Date.now();
-          localStorage.setItem('authToken', token);
+        const authUser = await signInUser(formData.email, formData.password);
+
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Failed to get authentication token');
         }
-        
-        // Show success message
+
+        // Set auth cookies for middleware
+        setAuthCookies(token, {
+          uid: authUser.uid,
+          email: authUser.email,
+          displayName: authUser.displayName || undefined,
+        });
+
         toast.success(`Welcome back!`, {
           description: "Successfully signed in to your account",
         });
         
-        // Determine user role and redirect
-        let userRole = 'va'; // default
-        let redirectPath = '/va/onboarding';
-        
-        // Try to determine role from email first (fallback)
-        if (formData.email.includes('company') || formData.email.includes('employer')) {
-          userRole = 'employer';
-          redirectPath = '/employer/onboarding';
-        }
-        
-        // Check user role from backend with timeout
         try {
-          console.log('Checking user profile...');
+          const { role, needsOnboarding } = await checkUserProfileWithRetry(2);
           
-          // Add timeout to prevent infinite loading
-          const profileResponse = await Promise.race([
-            apiCall('/auth/profile'),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('API call timeout')), 3000)
-            )
-          ]) as Response;
-          
-          console.log('Profile response status:', profileResponse.status);
-          
-          if (profileResponse.status === 200) {
-            const userData = await profileResponse.json();
-            const role = userData.data.role;
-            console.log('User role from backend:', role);
+          // If user doesn't exist in database, create them
+          if (role === null && needsOnboarding) {
+            console.log('Creating user in backend...');
+            await createUserInBackend(authUser);
             
-            if (role === 'company') {
-              userRole = 'employer';
-              localStorage.setItem("userRole", "employer");
-              
-              // Check if company has profile with timeout
-              try {
-                const companyResponse = await Promise.race([
-                  apiCall('/company/profile'),
-                  new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
-                
-                redirectPath = companyResponse.ok ? "/employer/dashboard" : "/employer/onboarding";
-              } catch {
-                redirectPath = "/employer/onboarding";
-              }
-            } else if (role === 'va') {
-              userRole = 'va';
-              localStorage.setItem("userRole", "va");
-              
-              // Check if VA has profile with timeout
-              try {
-                const vaResponse = await Promise.race([
-                  apiCall('/va/profile'),
-                  new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('API call timeout')), 2000)
-                  )
-                ]) as Response;
-                
-                redirectPath = vaResponse.ok ? "/va/dashboard" : "/va/onboarding";
-              } catch {
-                redirectPath = "/va/onboarding";
-              }
-            } else {
-              // User exists but no role - send to role selection
-              console.log('User has no role, going to role selection');
-              redirectPath = "/select-role";
-            }
-          } else if (profileResponse.status === 404) {
-            // User doesn't exist in backend - use fallback
-            console.log('User not found in backend, using fallback...');
-            redirectPath = userRole === 'employer' ? "/employer/onboarding" : "/va/onboarding";
+            toast.success(`Account created!`, {
+              description: "Welcome to BlytzWork",
+            });
+            
+            router.push("/select-role");
+            return;
+          }
+          
+          if (role === 'company') {
+            router.push(needsOnboarding ? "/employer/onboarding" : "/employer/dashboard");
+          } else if (role === 'va') {
+            router.push(needsOnboarding ? "/va/onboarding" : "/va/dashboard");
           } else {
-            // Other HTTP error - use fallback
-            throw new Error(`Backend returned ${profileResponse.status}`);
+            router.push("/select-role");
           }
-        } catch (error) {
-          console.error('Error checking user role:', error);
-          console.log('Backend is unavailable, using fallback...');
-          // Backend is down - use the role determined from email
-          redirectPath = userRole === 'employer' ? "/employer/onboarding" : "/va/onboarding";
+        } catch (profileError: any) {
+          console.error('Error checking user profile:', profileError);
+          
+          if (profileError.message.includes('timeout')) {
+            setError('Connection is slow. Please try again.');
+            toast.error('Connection slow', {
+              description: 'Please check your internet connection and try again',
+            });
+          } else {
+            setError(`Failed to load your profile: ${profileError.message}`);
+            toast.error('Profile check failed', {
+              description: profileError.message,
+            });
+          }
         }
-        
-        // Store final role and redirect
-        localStorage.setItem('userRole', userRole);
-        console.log('Redirecting to:', redirectPath);
-        
-        // Use window.location.href for more reliable redirect
-        window.location.href = redirectPath;
       } else {
-        let authUser;
-        
-        // Use Firebase auth only - no mock fallback for production
-        authUser = await registerUser(formData.email, formData.password, formData.name);
-        
-        // Get Firebase ID token and store it for API calls
-        let token;
-        try {
-          token = await getToken();
-          if (!token) {
-            throw new Error('Failed to get authentication token');
-          }
-        } catch (tokenError) {
-          console.error('Token generation failed:', tokenError);
-          throw new Error('Authentication token generation failed');
+        const authUser = await registerUser(formData.email, formData.password, formData.name);
+
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Failed to get authentication token');
         }
-        
-        // Get Firebase user UID and create basic profile in backend
+
+        // Set auth cookies for middleware
+        setAuthCookies(token, {
+          uid: authUser.uid,
+          email: authUser.email,
+          displayName: authUser.displayName || undefined,
+        });
+
         if (authUser.uid) {
           try {
-            await apiCall('/auth/create', {
-              method: 'POST',
-              body: JSON.stringify({
-                uid: authUser.uid,
-                email: formData.email,
-                name: formData.name,
-                username: formData.username,
-                role: null // Will be set after role selection
-              })
+            await createUserInBackend(authUser);
+            
+            toast.success(`Account created!`, {
+              description: "Welcome to BlytzWork",
             });
-          } catch (apiError) {
-            console.log('Backend user creation failed (expected for mock users):', apiError);
+            
+            router.push("/select-role");
+          } catch (apiError: any) {
+            const errorMessage = apiError.message || 'Failed to create your account. Please try again.';
+            
+            try {
+              const { signOut } = await import('firebase/auth');
+              const { auth } = await import('@/lib/firebase-safe');
+              await signOut(auth());
+            } catch (signOutError) {
+              console.error('Failed to sign out:', signOutError);
+            }
+            
+            setError(errorMessage);
+            toast.error("Account creation failed", {
+              description: errorMessage,
+            });
+            return;
           }
         }
-        
-        toast.success(`Account created!`, {
-          description: "Welcome to BlytzWork",
-        });
-        
-        // Redirect to role selection after registration
-        router.push("/select-role");
       }
     } catch (err: any) {
       const errorMessage = getAuthErrorMessage(err);
@@ -229,8 +298,19 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md space-y-2">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setRetryCount(prev => prev + 1);
+                  }}
+                  className="text-sm font-medium underline hover:no-underline"
+                  disabled={isLoading}
+                >
+                  Try again
+                </button>
               </div>
             )}
 
@@ -243,6 +323,22 @@ export default function AuthPage() {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="johndoe"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   className="border-gray-300 focus:border-black focus:ring-[#FFD600]"
                   required
                   disabled={isLoading}

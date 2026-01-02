@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { apiCall } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 
 export default function VAOnboardingPage() {
   const router = useRouter();
@@ -26,41 +25,105 @@ export default function VAOnboardingPage() {
 
   const handleSubmit = async () => {
     try {
-      // Ensure we have a fresh token before making the API call
-      const token = await getToken();
-      if (!token) {
-        toast.error("Authentication error", {
-          description: "Please sign in again",
+      if (!formData.name || !formData.name.trim()) {
+        toast.error("Name is required", {
+          description: "Please enter your full name",
         });
-        router.push("/auth");
         return;
       }
 
-      // Create VA profile
+      if (!formData.country || !formData.country.trim()) {
+        toast.error("Country is required", {
+          description: "Please enter your country",
+        });
+        return;
+      }
+
+      if (!formData.bio || !formData.bio.trim()) {
+        toast.error("Bio is required", {
+          description: "Please provide a professional bio",
+        });
+        return;
+      }
+
+      if (!formData.skills || !formData.skills.trim()) {
+        toast.error("Skills are required", {
+          description: "Please list at least one skill",
+        });
+        return;
+      }
+
+      if (!formData.hourlyRate || isNaN(parseInt(formData.hourlyRate))) {
+        toast.error("Hourly rate is required", {
+          description: "Please enter a valid hourly rate",
+        });
+        return;
+      }
+
+      const hourlyRate = parseInt(formData.hourlyRate);
+      if (hourlyRate <= 0) {
+        toast.error("Invalid hourly rate", {
+          description: "Hourly rate must be greater than 0",
+        });
+        return;
+      }
+
+      const skillsArray = formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0);
+      if (skillsArray.length === 0) {
+        toast.error("Invalid skills", {
+          description: "Please enter valid skills separated by commas",
+        });
+        return;
+      }
+
       await apiCall('/va/profile', {
         method: 'POST',
         body: JSON.stringify({
-          name: formData.name,
-          country: formData.country,
-          bio: formData.bio,
-          skills: formData.skills.split(',').map(skill => skill.trim()),
-          hourlyRate: parseInt(formData.hourlyRate),
+          name: formData.name.trim(),
+          country: formData.country.trim(),
+          bio: formData.bio.trim(),
+          skills: skillsArray,
+          hourlyRate,
           availability: formData.availability,
         })
       });
+
+      await apiCall('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          role: 'va',
+          profileComplete: true,
+        })
+      });
+
+      try {
+      } catch (roleError) {
+        console.error("Failed to update user role:", roleError);
+      }
 
       toast.success("Profile created successfully!", {
         description: "Welcome to BlytzWork as a Virtual Assistant",
       });
 
-      // Add a small delay to ensure the profile is created before redirecting
-      setTimeout(() => {
-        router.push("/va/dashboard");
-      }, 1000);
-    } catch (error) {
-      console.error('VA Profile creation error:', error);
+      router.push("/va/dashboard");
+    } catch (error: any) {
+      console.error("Profile creation error:", error);
+      
+      const errorMessage = error?.message || "Unknown error occurred";
+      const errorCode = error?.code || "UNKNOWN_ERROR";
+      
+      let errorDescription = "Please check your input and try again";
+      
+      if (errorCode === "VALIDATION_ERROR") {
+        errorDescription = "Please review your form for errors";
+      } else if (errorCode === "NETWORK_ERROR") {
+        errorDescription = "Please check your internet connection";
+      } else if (errorCode === "AUTH_ERROR") {
+        errorDescription = "Please sign in again";
+      }
+      
       toast.error("Failed to create profile", {
-        description: error instanceof Error ? error.message : "Please try again",
+        description: errorDescription,
       });
     }
   };

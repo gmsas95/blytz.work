@@ -7,10 +7,14 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { apiCall } from "@/lib/api";
+import { useState } from "react";
 
 export default function SelectRolePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const [selectedRole, setSelectedRole] = useState<"employer" | "va" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRoleSelect = async (role: "employer" | "va") => {
     if (!user) {
@@ -19,10 +23,17 @@ export default function SelectRolePage() {
       return;
     }
 
+    setSelectedRole(role);
+    setIsLoading(true);
+    setError(null);
+
     try {
+      // Store role in localStorage as backup first
+      localStorage.setItem("userRole", role);
+
       // Update role in backend
       const backendRole = role === 'employer' ? 'company' : 'va';
-      await apiCall('/auth/profile', {
+      const response = await apiCall('/auth/profile', {
         method: 'PUT', 
         body: JSON.stringify({ role: backendRole })
       });
@@ -30,19 +41,42 @@ export default function SelectRolePage() {
       toast.success(`Welcome as ${role === "employer" ? "Employer" : "Virtual Assistant"}!`, {
         description: "Redirecting to your dashboard...",
       });
-
-      // Store role in localStorage
-      localStorage.setItem("userRole", role);
       
       // Redirect to appropriate onboarding
-      if (role === "employer") {
-        router.push("/employer/onboarding");
-      } else {
-        router.push("/va/onboarding");
+      setTimeout(() => {
+        if (role === "employer") {
+          router.push("/employer/onboarding");
+        } else {
+          router.push("/va/onboarding");
+        }
+      }, 1000);
+      
+    } catch (err: any) {
+      setIsLoading(false);
+      setSelectedRole(null);
+      
+      let errorMessage = "Failed to set role. Please try again.";
+      
+      if (err?.message?.includes('fetch') || err?.name === 'TypeError') {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (err?.status === 401 || err?.response?.status === 401) {
+        errorMessage = "Session expired. Please sign in again.";
+        localStorage.removeItem("userRole");
+        setTimeout(() => router.push("/auth"), 2000);
+      } else if (err?.status === 403 || err?.response?.status === 403) {
+        errorMessage = "Permission denied. Please contact support.";
+      } else if (err?.message) {
+        errorMessage = err.message;
       }
-    } catch (error) {
-      console.error('Failed to set role:', error);
-      toast.error("Failed to set role. Please try again.");
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleRetry = () => {
+    if (selectedRole) {
+      handleRoleSelect(selectedRole);
     }
   };
 
@@ -66,12 +100,42 @@ export default function SelectRolePage() {
           <p className="text-xl text-gray-600">Choose your role to get started</p>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 border-2 border-red-200 rounded-xl p-6 flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-red-900">Error</p>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+            <Button
+              onClick={handleRetry}
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-100"
+            >
+              Try Again
+            </Button>
+          </motion.div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           {/* Employer Card */}
           <motion.div
-            className="group relative p-10 rounded-2xl border-2 border-gray-200 hover:border-black transition-all bg-white cursor-pointer"
-            whileHover={{ y: -8 }}
-            onClick={() => handleRoleSelect("employer")}
+            className={`group relative p-10 rounded-2xl border-2 transition-all bg-white cursor-pointer ${
+              isLoading && selectedRole === 'employer' ? 'border-black opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-black'
+            }`}
+            whileHover={isLoading && selectedRole === 'employer' ? {} : { y: -8 }}
+            onClick={() => !isLoading && handleRoleSelect("employer")}
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-[#FFD600] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-t-2xl" />
             
@@ -102,17 +166,31 @@ export default function SelectRolePage() {
                 </li>
               </ul>
 
-              <Button className="w-full bg-black text-[#FFD600] hover:bg-gray-900 mt-6" size="lg">
-                Continue as Employer
+              <Button 
+                className="w-full bg-black text-[#FFD600] hover:bg-gray-900 mt-6" 
+                size="lg"
+                disabled={isLoading && selectedRole === 'employer'}
+              >
+                {isLoading && selectedRole === 'employer' ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#FFD600]" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Setting up your account...
+                  </>
+                ) : "Continue as Employer"}
               </Button>
             </div>
           </motion.div>
 
           {/* VA Card */}
           <motion.div
-            className="group relative p-10 rounded-2xl border-2 border-gray-200 hover:border-black transition-all bg-white cursor-pointer"
-            whileHover={{ y: -8 }}
-            onClick={() => handleRoleSelect("va")}
+            className={`group relative p-10 rounded-2xl border-2 transition-all bg-white cursor-pointer ${
+              isLoading && selectedRole === 'va' ? 'border-black opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-black'
+            }`}
+            whileHover={isLoading && selectedRole === 'va' ? {} : { y: -8 }}
+            onClick={() => !isLoading && handleRoleSelect("va")}
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-[#FFD600] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-t-2xl" />
             
@@ -143,8 +221,20 @@ export default function SelectRolePage() {
                 </li>
               </ul>
 
-              <Button className="w-full bg-black text-[#FFD600] hover:bg-gray-900 mt-6" size="lg">
-                Continue as VA
+              <Button 
+                className="w-full bg-black text-[#FFD600] hover:bg-gray-900 mt-6" 
+                size="lg"
+                disabled={isLoading && selectedRole === 'va'}
+              >
+                {isLoading && selectedRole === 'va' ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#FFD600]" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Setting up your account...
+                  </>
+                ) : "Continue as VA"}
               </Button>
             </div>
           </motion.div>

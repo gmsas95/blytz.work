@@ -1,0 +1,58 @@
+http:
+  routers:
+    dokploy-router-app:
+      rule: Host(`dokploy.docker.localhost`) && PathPrefix(`/`)
+      service: dokploy-service-app
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+    
+    dokploy-router-app-secure:
+      rule: Host(`admin.blytz.work`)
+      service: dokploy-service-app
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+    
+    # TEST: Use IP address instead of domain names
+    blytz-frontend-test:
+      rule: Host(`YOUR_SERVER_IP`) || Host(`localhost`)
+      service: blytzwork-frontend-final
+      entryPoints:
+        - web
+        - websecure
+    
+    blytz-backend-test:
+      rule: Host(`YOUR_SERVER_IP`) && PathPrefix(`/api`)
+      service: blytzwork-backend-final
+      entryPoints:
+        - web
+        - websecure
+
+  services:
+    dokploy-service-app:
+      loadBalancer:
+        servers:
+          - url: http://dokploy:3000
+        passHostHeader: true
+    
+    # TEST: Direct service to container ports
+    blytzwork-frontend-final:
+      loadBalancer:
+        servers:
+          - url: http://blytzwork-frontend-final:3001
+        passHostHeader: true
+    
+    blytzwork-backend-final:
+      loadBalancer:
+        servers:
+          - url: http://blytzwork-backend-final:3000
+        passHostHeader: true
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true

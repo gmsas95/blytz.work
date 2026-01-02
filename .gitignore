@@ -222,7 +222,7 @@ scripts/*.log
 scripts/*.tmp
 scripts/env-*.sh
 scripts/backup-*.sh
-scripts/test-*.sh
+# scripts/test-*.sh  # Commented out to allow test scripts
 frontend/src/app/debug/
 docs/FIREBASE_*.md
 

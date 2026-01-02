@@ -1,6 +1,6 @@
-// Runtime authentication for Dokploy deployment
+// Simplified authentication using Firebase configuration
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User } from 'firebase/auth';
-import { onAuthStateChange } from './firebase-runtime-final';
+import { getFirebase, onAuthStateChange } from './firebase-simplified';
 
 export interface AuthUser {
   uid: string;
@@ -8,26 +8,23 @@ export interface AuthUser {
   displayName?: string;
 }
 
-// Get Firebase auth instance at runtime
+// Get Firebase auth instance using simplified configuration
 const getAuthInstance = () => {
-  // Dynamic import to avoid build-time issues
-  return import('./firebase-runtime-final').then(({ getFirebase }) => {
-    const { auth } = getFirebase();
-    if (!auth) {
-      throw new Error('Firebase auth not initialized');
-    }
-    return auth;
-  });
+  const { auth } = getFirebase();
+  if (!auth) {
+    throw new Error('Firebase auth not initialized. Please check your configuration.');
+  }
+  return auth;
 };
 
 // Sign in user
 export const signInUser = async (email: string, password: string): Promise<AuthUser> => {
   try {
-    const auth = await getAuthInstance();
+    const auth = getAuthInstance();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    console.log('✅ Runtime sign in successful:', user.email);
+    console.log('✅ Sign in successful:', user.email);
     
     return {
       uid: user.uid,
@@ -35,7 +32,7 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
       displayName: user.displayName || undefined,
     };
   } catch (error) {
-    console.error('Runtime sign in error:', error);
+    console.error('Sign in error:', error);
     throw error;
   }
 };
@@ -43,11 +40,11 @@ export const signInUser = async (email: string, password: string): Promise<AuthU
 // Register new user
 export const registerUser = async (email: string, password: string, name?: string): Promise<AuthUser> => {
   try {
-    const auth = await getAuthInstance();
+    const auth = getAuthInstance();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    console.log('✅ Runtime registration successful:', user.email);
+    console.log('✅ Registration successful:', user.email);
     
     return {
       uid: user.uid,
@@ -55,7 +52,7 @@ export const registerUser = async (email: string, password: string, name?: strin
       displayName: user.displayName || name || undefined,
     };
   } catch (error) {
-    console.error('Runtime registration error:', error);
+    console.error('Registration error:', error);
     throw error;
   }
 };
@@ -63,32 +60,12 @@ export const registerUser = async (email: string, password: string, name?: strin
 // Sign out user
 export const signOutUser = async (): Promise<void> => {
   try {
-    const auth = await getAuthInstance();
+    const auth = getAuthInstance();
     await signOut(auth);
-    console.log('✅ Runtime sign out successful');
+    console.log('✅ Sign out successful');
   } catch (error) {
-    console.error('Runtime sign out error:', error);
+    console.error('Sign out error:', error);
     throw error;
-  }
-};
-
-// Get Firebase ID token for API calls
-export const getToken = async (): Promise<string | null> => {
-  try {
-    const auth = await getAuthInstance();
-    const user = auth.currentUser;
-    
-    if (!user) {
-      console.warn('No current user to get token from');
-      return null;
-    }
-    
-    const token = await user.getIdToken();
-    console.log('✅ Firebase ID token retrieved successfully');
-    return token;
-  } catch (error) {
-    console.error('Failed to get Firebase ID token:', error);
-    return null;
   }
 };
 
@@ -134,5 +111,5 @@ export const getAuthErrorMessage = (error: any): string => {
   return 'Authentication failed. Please try again.';
 };
 
-// Export runtime auth state monitoring
+// Export auth state monitoring from simplified Firebase
 export { onAuthStateChange };

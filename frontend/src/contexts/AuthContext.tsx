@@ -2,7 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthStateChange, signOutUser, getToken } from '@/lib/auth';
+import { onAuthStateChange, signOutUser } from '@/lib/auth';
+import { setupTokenRefresh } from '@/lib/auth-utils';
+
+// Clear auth cookies
+const clearAuthCookies = () => {
+  document.cookie = 'authToken=; path=/; max-age=0';
+  document.cookie = 'user=; path=/; max-age=0';
+};
 
 interface AuthUser {
   uid: string;
@@ -14,7 +21,6 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,99 +28,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check for stored auth state on mount
-    const storedUser = localStorage.getItem('authUser');
-    const storedToken = localStorage.getItem('authToken');
-    const storedRole = localStorage.getItem('userRole');
+    // Set up token refresh monitoring
+    const unsubscribeTokenRefresh = setupTokenRefresh();
     
-    if (storedUser && storedToken) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        console.log('🔍 Restored auth state from localStorage');
-      } catch (error) {
-        console.error('❌ Failed to parse stored user:', error);
-        // Clear invalid stored data
-        localStorage.removeItem('authUser');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
-      }
-    }
-
     // Set up auth state change monitoring
     const unsubscribeAuth = onAuthStateChange((firebaseUser: User | null) => {
       if (firebaseUser) {
-        const authUser = {
+        setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email!,
           displayName: firebaseUser.displayName || undefined,
-        };
-        
-        setUser(authUser);
-        setIsAuthenticated(true);
-        
-        // Update localStorage with fresh auth state
-        localStorage.setItem('authUser', JSON.stringify(authUser));
-        
-        // Get fresh token
-        getToken().then(token => {
-          if (token) {
-            localStorage.setItem('authToken', token);
-          }
-        }).catch(error => {
-          console.error('❌ Failed to get token:', error);
         });
-        
-        console.log('✅ Auth state updated from Firebase');
       } else {
         setUser(null);
-        setIsAuthenticated(false);
-        
-        // Clear localStorage on sign out
-        localStorage.removeItem('authUser');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
-        
-        console.log('🔍 User signed out, auth state cleared');
       }
       setLoading(false);
     });
 
-    // Set loading to false after initial check
-    setLoading(false);
-
     return () => {
       unsubscribeAuth();
+      unsubscribeTokenRefresh();
     };
   }, []);
 
   const signOut = async () => {
-    try {
-      await signOutUser();
-      setUser(null);
-      setIsAuthenticated(false);
-      
-      // Clear all auth-related storage
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('isMockAuth');
-      
-      // Redirect to auth page
-      window.location.href = '/auth';
-    } catch (error) {
-      console.error('❌ Sign out error:', error);
-      // Force redirect even if sign out fails
-      window.location.href = '/auth';
-    }
+    await signOutUser();
+    setUser(null);
+    // Clear localStorage tokens
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    // Clear cookies
+    clearAuthCookies();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

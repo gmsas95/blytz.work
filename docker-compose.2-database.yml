@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: blytz-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: $${{environment.POSTGRES_DB}}
+      POSTGRES_USER: $${{environment.POSTGRES_USER}}
+      POSTGRES_PASSWORD: $${{environment.POSTGRES_PASSWORD}}
+      POSTGRES_HOST_AUTH_METHOD: $${{environment.POSTGRES_HOST_AUTH_METHOD}}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/prisma:/docker-entrypoint-initdb.d
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${{environment.POSTGRES_USER}} -d $${{environment.POSTGRES_DB}}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    external: false
+
+networks:
+  dokploy-network:
+    external: true

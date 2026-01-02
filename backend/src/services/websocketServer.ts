@@ -1,7 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { prisma } from '../utils/prisma.js';
-import { getAuth } from 'firebase-admin/auth';
+import { getAuth } from '../config/firebaseConfig-simplified.js';
 
 export interface SocketUser {
   userId: string;

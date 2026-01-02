@@ -5,8 +5,7 @@ import env from "@fastify/env";
 import rateLimit from "@fastify/rate-limit";
 import { createServer } from 'http';
 import { WebSocketServer } from './services/websocketServer.js';
-import { validateFirebaseConfig } from './config/firebaseConfig.js';
-import { initializeFirebaseAuth } from './plugins/firebaseAuthDebug.js';
+import { initializeFirebaseAdmin } from './config/firebaseConfig-simplified.js';
 import { validateRequiredEnvVars } from './utils/envValidator.js';
 
 // Import routes
@@ -68,7 +67,7 @@ app.register(rateLimit, {
 app.register(cors, {
   origin: process.env.NODE_ENV === "production"
     ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work"])
-    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://api.blytz.work"],
+    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://gateway.blytz.work"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range"],
@@ -169,10 +168,8 @@ const start = async () => {
     console.log('\n🔍 Step 3: Initializing Firebase Admin...');
     let firebaseInitialized = false;
     try {
-      console.log('🔄 Validating Firebase configuration...');
-      validateFirebaseConfig();
-      console.log('🔄 Initializing Firebase Auth...');
-      initializeFirebaseAuth();
+      console.log('🔄 Initializing Firebase Admin...');
+      initializeFirebaseAdmin();
       firebaseInitialized = true;
       console.log('✅ Firebase Admin initialized successfully');
     } catch (firebaseError: any) {

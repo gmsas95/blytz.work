@@ -41,7 +41,7 @@ RESTful API service for the Hyred hiring platform, built with Node.js, Fastify, 
 
 ## 🌐 Access
 
-- **Production**: [api.blytz.work](https://api.blytz.work)
+- **Production**: [gateway.blytz.work](https://gateway.blytz.work)
 - **Health Check**: `/health`
 - **API Documentation**: Available on deployment
 

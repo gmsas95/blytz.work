@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
-import { getToken } from '@/lib/auth';
-import { signInUser, registerUser } from '@/lib/auth';
+import { getToken } from '@/lib/auth-utils';
+import { getFirebase } from '@/lib/firebase-simplified';
+import { apiCall } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -59,30 +60,31 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       console.log('📧 Email:', email);
       console.log('🔑 Password length:', password.length);
 
-      let user;
+      let userCredential;
       
+      const { auth } = getFirebase();
+      if (!auth) {
+        throw new Error('Firebase authentication is not configured');
+      }
+
       if (mode === 'register') {
         console.log('📝 Creating new user...');
-        user = await registerUser(email, password);
-        console.log('✅ User created:', user.uid);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('✅ User created:', userCredential.user.uid);
       } else {
         console.log('🔐 Signing in user...');
-        user = await signInUser(email, password);
-        console.log('✅ User signed in:', user.uid);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('✅ User signed in:', userCredential.user.uid);
       }
 
       // Get Firebase token
       console.log('🔑 Getting Firebase token...');
-      const firebaseToken = await getToken();
-      console.log('✅ Token obtained:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
-
-      if (!firebaseToken) {
-        throw new Error('Failed to get authentication token');
-      }
+      const token = await userCredential.user.getIdToken();
+      console.log('✅ Token obtained:', token ? token.substring(0, 20) + '...' : 'null');
 
       // Sync with backend
       console.log('🔄 Syncing with backend...');
-      await syncWithBackend(firebaseToken);
+      await syncWithBackend(token);
       console.log('✅ Backend sync complete');
 
       // Redirect
@@ -115,15 +117,11 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
     try {
       console.log('🔍 Starting Google authentication...');
       
-      // Import Firebase auth dynamically for Google sign-in
-      const { getAuth } = await import('firebase/auth');
-      const { getFirebase } = await import('@/lib/firebase-runtime-final');
       const { auth } = getFirebase();
-      
       if (!auth) {
-        throw new Error('Firebase auth not initialized');
+        throw new Error('Firebase authentication is not configured');
       }
-      
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
@@ -131,11 +129,11 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       console.log('✅ Google user ID:', result.user.uid);
 
       // Get Firebase token
-      const firebaseToken = await result.user.getIdToken();
+      const token = await result.user.getIdToken();
       console.log('🔑 Firebase token obtained');
 
       // Sync with backend
-      await syncWithBackend(firebaseToken);
+      await syncWithBackend(token);
       
       // Redirect
       window.location.href = '/dashboard';
@@ -151,22 +149,18 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
   const syncWithBackend = async (firebaseToken: string) => {
     try {
       console.log('🔄 Starting backend sync...');
-      console.log('🔑 Using token:', firebaseToken.substring(0, 20) + '...');
-      
-      const response = await fetch('/api/auth/sync', {
+      console.log('🔑 Using token:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
+
+      const response = await apiCall('/auth/sync', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${firebaseToken}`
-        },
         body: JSON.stringify({
-          uid: 'will-be-set-by-backend',
-          email: 'will-be-set-by-backend'
+          uid: getFirebase().auth?.currentUser?.uid,
+          email: getFirebase().auth?.currentUser?.email
         })
       });
 
       console.log('📡 Backend response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Backend sync successful:', data);
@@ -212,7 +206,7 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            placeholder="••••••"
+            placeholder="••••••••"
             disabled={loading}
           />
         </div>
@@ -242,6 +236,38 @@ export function EnhancedAuthForm({ mode }: { mode: 'login' | 'register' }) {
       </button>
     </div>
   );
+}
+
+async function syncWithBackend(firebaseToken: string) {
+  try {
+    console.log('🔄 Starting backend sync...');
+    console.log('🔑 Using token:', firebaseToken ? firebaseToken.substring(0, 20) + '...' : 'null');
+
+    const response = await apiCall('/auth/sync', {
+      method: 'POST',
+      body: JSON.stringify({
+        uid: getFirebase().auth?.currentUser?.uid,
+        email: getFirebase().auth?.currentUser?.email
+      })
+    });
+
+    console.log('📡 Backend response status:', response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Backend sync successful:', data);
+      return data;
+      
+    } else {
+      const error = await response.json();
+      console.error('❌ Backend sync failed:', error);
+      throw new Error(error.error || 'Backend sync failed');
+    }
+    
+  } catch (error) {
+    console.error('❌ Backend sync error:', error);
+    throw error;
+  }
 }
 
 function mapAuthError(error: any): string {

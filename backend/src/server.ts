@@ -3,9 +3,11 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import env from "@fastify/env";
 import rateLimit from "@fastify/rate-limit";
+import { initializeFirebaseAdmin } from "./config/firebaseConfig-simplified.js";
 
 // Import routes
 import healthRoutes from "./routes/health.js";
+import { configRoutes } from "./routes/config.js";
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import jobMarketplaceRoutes from "./routes/jobMarketplace.js";
@@ -14,9 +16,12 @@ import vaRoutes from "./routes/va.js";
 import companyRoutes from "./routes/company.js";
 import contractsRoutes from "./routes/contracts.js";
 import chatRoutes from "./routes/chat-final-fix.js";
+import vaBrowseRoutes from "./routes/vaBrowse.js";
+import companiesBrowseRoutes from "./routes/companiesBrowse.js";
 
 // Import utilities
-import { prisma, testDatabaseConnection } from "./utils/prisma.js";
+import { prisma } from "./utils/prisma.js";
+import { logFirebaseDebug } from "./utils/firebase-debug.js";
 
 // Environment schema
 const envSchema = {
@@ -52,30 +57,31 @@ app.register(rateLimit, {
 // Register plugins
 app.register(cors, {
   origin: process.env.NODE_ENV === "production"
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work", "https://staging.blytz.work"])
-    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://staging.blytz.work", "https://api.blytz.work"],
+    ? (process.env.ALLOWED_ORIGINS?.split(',') || ["https://blytz.work"])
+    : ["http://localhost:3000", "http://localhost:3001", "https://blytz.work", "https://gateway.blytz.work"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range", "Accept", "Origin"],
-  exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "DNT", "User-Agent", "X-Requested-With", "If-Modified-Since", "Cache-Control", "Range"],
+  exposedHeaders: ["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"]
 });
 
 app.register(env, {
   schema: envSchema,
 });
 
-// Register routes
-app.register(healthRoutes);
-app.register(authRoutes, { prefix: "/api" });
-app.register(uploadRoutes, { prefix: "/api" });
-app.register(jobMarketplaceRoutes, { prefix: "/api" });
-app.register(paymentRoutes, { prefix: "/api" });
-app.register(vaRoutes, { prefix: "/api" });
-app.register(companyRoutes, { prefix: "/api" });
-app.register(contractsRoutes, { prefix: "/api" });
-app.register(chatRoutes, { prefix: "/api" });
+  // Register routes
+  app.register(healthRoutes);
+  app.register(configRoutes, { prefix: "/api" });
+  app.register(authRoutes, { prefix: "/api" });
+  app.register(uploadRoutes, { prefix: "/api" });
+  app.register(jobMarketplaceRoutes, { prefix: "/api" });
+  app.register(paymentRoutes, { prefix: "/api" });
+  app.register(vaRoutes, { prefix: "/api" });
+  app.register(companyRoutes, { prefix: "/api" });
+  app.register(contractsRoutes, { prefix: "/api" });
+  app.register(chatRoutes, { prefix: "/api" });
+  app.register(vaBrowseRoutes, { prefix: "/api" });
+  app.register(companiesBrowseRoutes, { prefix: "/api" });
 
 // Error handler
 app.setErrorHandler((error, _request, reply) => {
@@ -109,12 +115,28 @@ app.setErrorHandler((error, _request, reply) => {
 // Start server
 const start = async () => {
   try {
-    // Initialize database connection with enhanced testing
-    const dbConnected = await testDatabaseConnection();
-    
-    if (!dbConnected) {
-      app.log.warn("⚠️ Database connection failed, some features may not work properly");
-      app.log.warn("⚠️ Please check your DATABASE_URL environment variable");
+// Initialize Firebase Admin (non-blocking)
+    console.log('🔄 Initializing Firebase Admin...');
+    try {
+      initializeFirebaseAdmin();
+      console.log('✅ Firebase Admin initialized successfully');
+      
+      // Log Firebase configuration for debugging
+      logFirebaseDebug();
+    } catch (firebaseError: any) {
+      console.warn('⚠️  Firebase initialization failed, continuing in development mode:', firebaseError.message);
+      console.warn('💡 To fix: Update FIREBASE_* environment variables with actual Firebase credentials');
+      
+      // Log Firebase configuration for debugging even on error
+      logFirebaseDebug();
+    }
+
+    // Initialize database connection (with fallback)
+    try {
+      await prisma.$connect();
+      app.log.info("✅ Database connected successfully");
+    } catch (dbError: any) {
+      app.log.warn("⚠️ Database connection failed, continuing without database:", dbError.message);
     }
 
     await app.ready();
@@ -123,7 +145,7 @@ const start = async () => {
       host: "0.0.0.0"
     });
     app.log.info(`Server listening on port ${process.env.PORT || 3002}`);
-    app.log.info(`🗄️ Database status: ${dbConnected ? 'Connected' : 'Disconnected'}`);
+    app.log.info(`🗄️ Database-only backend ready for operations`);
     app.log.info(`✅ Separation of Concerns (SoC) architecture implemented`);
     app.log.info(`👤 VA profiles system ready at /api/va/*`);
     app.log.info(`🏢 Company profiles system ready at /api/company/*`);

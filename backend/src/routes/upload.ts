@@ -1,7 +1,21 @@
-// Simplified Upload Routes for Week 2 MVP
+// Upload Routes with Cloudflare R2 Integration
 import { FastifyInstance } from "fastify";
-import { verifyAuth } from "../plugins/firebaseAuth.js";
+import { verifyAuth } from "../plugins/firebaseAuth-simplified.js";
 import { z } from "zod";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+// Initialize S3 client for Cloudflare R2
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION || 'auto',
+  endpoint: process.env.AWS_S3_ENDPOINT || `https://${process.env.ACCOUNT_ID || ''}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+  }
+});
+
+const S3_BUCKET = process.env.AWS_S3_BUCKET || '';
 
 // Validation schemas
 const uploadRequestSchema = z.object({
@@ -130,14 +144,38 @@ export default async function uploadRoutes(app: FastifyInstance) {
     const { fileKey } = request.params as { fileKey: string };
 
     try {
-      // Mock deletion
-      console.log(`🗑️ Deleting file from S3: ${fileKey}`);
+      // Validate environment variables
+      if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !S3_BUCKET) {
+        return reply.code(500).send({ 
+          error: "R2 not configured",
+          code: "R2_NOT_CONFIGURED",
+          details: "AWS R2 credentials are not properly configured"
+        });
+      }
+
+      // Verify the file belongs to the user
+      if (!fileKey.startsWith(`${user.uid}/`)) {
+        return reply.code(403).send({ 
+          error: "Access denied",
+          code: "ACCESS_DENIED",
+          details: "You can only delete your own files"
+        });
+      }
+
+      // Delete file from R2
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: fileKey
+      }));
+
+      console.log(`🗑️ Deleted file from R2: ${fileKey}`);
 
       return {
         success: true,
         message: "File deleted successfully"
       };
     } catch (error: any) {
+      console.error('Error deleting file from R2:', error);
       return reply.code(500).send({ 
         error: "Failed to delete file",
         code: "FILE_DELETION_ERROR",
@@ -274,6 +312,36 @@ function generateFileKey(userId: string, fileName: string, uploadType: string, f
 }
 
 async function generateS3PresignedUrl(fileKey: string, fileType: string, fileSize: number): Promise<string> {
-  // Mock presigned URL - in production, use AWS SDK
-  return `https://s3.amazonaws.com/mock-bucket/${fileKey}?presigned=${Date.now()}&type=${encodeURIComponent(fileType)}`;
+  // Validate required environment variables
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !S3_BUCKET) {
+    throw new Error('Missing required AWS R2 credentials. Please configure AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET environment variables.');
+  }
+
+  // Validate file size (10MB limit for most types)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (fileSize > maxSize) {
+    throw new Error(`File size exceeds maximum allowed size of ${maxSize / (1024 * 1024)}MB`);
+  }
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: fileKey,
+      ContentType: fileType,
+      Metadata: {
+        'uploadedAt': new Date().toISOString(),
+        'fileSize': String(fileSize)
+      }
+    });
+
+    // Generate presigned URL with 1 hour expiration
+    const presignedUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600 // 1 hour in seconds
+    });
+
+    return presignedUrl;
+  } catch (error: any) {
+    console.error('Error generating presigned URL:', error);
+    throw new Error(`Failed to generate presigned URL: ${error.message}`);
+  }
 }

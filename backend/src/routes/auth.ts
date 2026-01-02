@@ -1,7 +1,7 @@
 // Simplified User Management for MVP
 import { FastifyInstance } from "fastify";
 import { prisma } from "../utils/prisma.js";
-import { verifyAuth } from "../plugins/firebaseAuth.js";
+import { verifyAuth } from "../plugins/firebaseAuth-simplified.js";
 import { z } from "zod";
 import admin from "firebase-admin";
 
@@ -35,15 +35,90 @@ export default async function authRoutes(app: FastifyInstance) {
       });
 
       if (!userProfile) {
-        return reply.code(404).send({
-          error: "User profile not found",
-          code: "USER_NOT_FOUND"
+        return reply.code(200).send({
+          success: true,
+          data: null,
+          exists: false,
+          message: "User not found in database - please complete profile setup"
         });
       }
 
       return {
         success: true,
         data: userProfile
+      };
+    } catch (error: any) {
+      return reply.code(500).send({
+        error: "Failed to fetch user profile",
+        code: "PROFILE_FETCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+  // Get current user (me endpoint)
+  app.get("/auth/me", {
+    preHandler: [verifyAuth]
+  }, async (request, reply) => {
+    const user = request.user as any;
+
+    try {
+      const userProfile = await prisma.user.findUnique({
+        where: { id: user.uid },
+        include: {
+          vaProfile: true,
+          company: true
+        }
+      });
+
+      if (!userProfile) {
+        return reply.code(404).send({
+          error: "User profile not found",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      // Get profile-specific data
+      let profileData: any = {};
+      if (userProfile.role === 'va' && userProfile.vaProfile) {
+        profileData = {
+          name: userProfile.vaProfile.name,
+          bio: userProfile.vaProfile.bio,
+          hourlyRate: userProfile.vaProfile.hourlyRate,
+          country: userProfile.vaProfile.country,
+          availability: userProfile.vaProfile.availability,
+          skills: userProfile.vaProfile.skills,
+          averageRating: userProfile.vaProfile.averageRating,
+          totalReviews: userProfile.vaProfile.totalReviews,
+          completedJobs: userProfile.vaProfile.completedJobs,
+          earnedAmount: userProfile.vaProfile.earnedAmount,
+          avatarUrl: userProfile.vaProfile.avatarUrl
+        };
+      } else if (userProfile.role === 'company' && userProfile.company) {
+        profileData = {
+          name: userProfile.company.name,
+          description: userProfile.company.description,
+          industry: userProfile.company.industry,
+          companySize: userProfile.company.companySize,
+          foundedYear: userProfile.company.foundedYear,
+          website: userProfile.company.website,
+          logoUrl: userProfile.company.logoUrl,
+          verificationLevel: userProfile.company.verificationLevel,
+          totalSpent: userProfile.company.totalSpent
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          id: userProfile.id,
+          uid: userProfile.id,
+          email: userProfile.email,
+          role: userProfile.role,
+          profileComplete: userProfile.profileComplete,
+          createdAt: userProfile.createdAt,
+          ...profileData
+        }
       };
     } catch (error: any) {
       return reply.code(500).send({
@@ -195,12 +270,35 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   // Create new user from Firebase
-  app.post("/auth/create", {
-    preHandler: [verifyAuth]
-  }, async (request, reply) => {
-    const { uid, email, role } = request.body as any;
+  app.post("/auth/create", async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    
+    if (!authHeader) {
+      return reply.code(401).send({ 
+        error: "Missing authorization header",
+        code: "MISSING_AUTH_HEADER"
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    
+    if (!token) {
+      return reply.code(401).send({ 
+        error: "Missing token",
+        code: "MISSING_TOKEN"
+      });
+    }
 
     try {
+      // Get Firebase auth instance
+      const { getAuth } = await import("../config/firebaseConfig-simplified.js");
+      const firebaseAuth = getAuth();
+      
+      // Verify Firebase token only
+      const decodedToken = await firebaseAuth.verifyIdToken(token);
+      
+      const { uid, email } = request.body as any;
+
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
         where: { id: uid }
@@ -213,12 +311,12 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       }
 
-      // Create new user
+      // Create new user with default role
       const newUser = await prisma.user.create({
         data: {
           id: uid,
           email: email,
-          role: role
+          role: 'va' // Default role for new users
         }
       });
 

@@ -12,8 +12,7 @@ export async function POST(request: Request) {
     }
 
     // Use existing Firebase client setup (same as login/signup)
-    const { getFirebase } = await import('../../../../lib/firebase-runtime-final');
-    const { auth } = getFirebase();
+    const { auth } = await import('../../../../lib/firebase');
     const { sendPasswordResetEmail } = await import('firebase/auth');
     
     try {

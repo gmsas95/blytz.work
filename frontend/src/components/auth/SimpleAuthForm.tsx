@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup, 
+  signInWithPopup,
   GoogleAuthProvider,
   getAuth,
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
+import { apiCall } from '@/lib/api';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -111,13 +112,9 @@ export function SimpleAuthForm({ mode }: AuthFormProps) {
   const syncWithBackend = async (token: string, currentUser: FirebaseUser) => {
     try {
       console.log('🔄 Starting backend sync...');
-      
-      const response = await fetch('/api/auth/sync', {
+
+      const response = await apiCall('/auth/sync', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           uid: currentUser.uid,
           email: currentUser.email
@@ -125,7 +122,7 @@ export function SimpleAuthForm({ mode }: AuthFormProps) {
       });
 
       console.log('📡 Backend response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Backend sync successful:', data);

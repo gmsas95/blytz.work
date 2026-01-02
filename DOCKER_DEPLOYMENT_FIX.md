@@ -1,80 +1,158 @@
-# Docker Deployment Fix for Service Name Issue
+# Docker Deployment Fix for BlytzWork Platform
 
-## Problem
+## Issues Fixed
 
-The deployment command was failing with an error indicating that the service `frontend-final` was not found. This was because the service name in the docker-compose.yml file was actually `blytzwork-frontend`, not `frontend-final`.
+The original deployment was failing due to several issues with the Docker Compose configuration:
 
-## Root Cause
+### 1. PostgreSQL Health Check Issues
+- **Problem**: Complex entrypoint script was causing container startup failures
+- **Fix**: Simplified the health check to use `pg_isready -U postgres` without database dependency
+- **Additional Fix**: Added `start_period: 30s` to give PostgreSQL more time to initialize
 
-There was a mismatch between:
-1. The actual service name in `docker-compose.yml`: `blytzwork-frontend`
-2. References to an old service name: `frontend-final`
+### 2. Health Check Command Issues
+- **Problem**: Using `curl` in containers that don't have it installed
+- **Fix**: 
+  - Backend/Frontend: Use Node.js HTTP requests instead of curl
+  - Nginx/n8n: Use `wget` which is available in Alpine images
+  - Added `start_period: 60s` for application services
 
-This was likely due to a recent refactoring where service names were standardized to use the `blytzwork-` prefix for consistency.
+### 3. Environment Variable Issues
+- **Problem**: Missing environment variables causing warnings and potential runtime issues
+- **Fix**: Created `.env.docker` with all required variables
+- **Note**: Replace placeholder values with actual production values
 
-## Solution
+## Files Modified
 
-1. **Verified docker-compose.yml**: Confirmed that the correct service name `blytzwork-frontend` is used in the docker-compose.yml file.
+### `docker-compose.6-unified-fixed.yml`
+- Simplified PostgreSQL health check and removed complex entrypoint
+- Updated all health checks to use appropriate commands for each container
+- Added start periods to allow proper initialization time
 
-2. **Created deployment script**: Created a new `deploy.sh` script that uses the correct service names and project name.
+### `.env.docker` (New)
+- Contains all required environment variables
+- Uses placeholder values for Firebase and Stripe (replace in production)
 
-3. **Deployment Command**: The correct deployment command is:
-   ```bash
-   docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml up -d --build --remove-orphans
-   ```
+### `deploy-fixed.sh` (New)
+- Automated deployment script with proper error handling
+- Includes health check validation
+- Provides clear status information
 
-## Service Names in docker-compose.yml
+## Usage
 
-The docker-compose.yml file uses the following service names:
-- `blytzwork-backend` - Backend API service
-- `blytzwork-frontend` - Frontend web service
-- `postgres` - PostgreSQL database
-- `redis` - Redis cache
-
-## Deployment Script
-
-A new deployment script (`deploy.sh`) has been created that:
-1. Uses the correct project name (`blytzwork-webapp-uvey24`)
-2. References the correct service names
-3. Includes health checks for all services
-4. Provides useful commands for managing the deployment
-
-### Usage
-
+### Quick Start
 ```bash
-# Run the deployment script
-./deploy.sh
-
-# Or run the command directly
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml up -d --build --remove-orphans
+# Deploy with fixed configuration
+./deploy-fixed.sh
 ```
 
-## Verification
-
-After deployment, you can verify that all services are running correctly:
-
+### Manual Deployment
 ```bash
-# Check service status
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml ps
+# Load environment variables
+export $(cat .env.docker | grep -v '^#' | xargs)
 
-# Check service logs
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml logs -f
+# Deploy services
+docker-compose -f docker-compose.6-unified-fixed.yml up -d --build --remove-orphans
 
-# Check individual service health
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec blytzwork-backend curl -f http://localhost:3000/health
-docker compose -p blytzwork-webapp-uvey24 -f ./docker-compose.yml exec blytzwork-frontend curl -f http://localhost:3001/
+# Check status
+docker-compose -f docker-compose.6-unified-fixed.yml ps
 ```
 
-## dokploy.yml Configuration
+### Environment Configuration
+Before deploying to production, update these values in `.env.docker`:
 
-The `dokploy.yml` file correctly references the `blytzwork-frontend` service:
-```yaml
-blytzwork-service-app:
-  loadBalancer:
-    servers:
-      - url: http://blytzwork-frontend:3001
+#### Firebase Configuration
+```bash
+FIREBASE_PROJECT_ID=your-actual-firebase-project-id
+FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour-Actual-Private-Key\n-----END PRIVATE KEY-----\n"
+
+NEXT_PUBLIC_FIREBASE_API_KEY=your-actual-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-actual-firebase-project-id
+# ... other Firebase variables
 ```
 
-## Summary
+#### Stripe Configuration
+```bash
+STRIPE_SECRET_KEY=sk_live_your-actual-stripe-secret-key
+STRIPE_WEBHOOK_SECRET=whsec_your-actual-webhook-secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your-actual-publishable-key
+```
 
-The deployment issue has been resolved by ensuring that all references use the correct service name `blytzwork-frontend` instead of the outdated `frontend-final`. The deployment script and documentation have been updated to reflect the correct service names.
+#### Security Configuration
+```bash
+JWT_SECRET=your-super-secure-jwt-secret-key
+POSTGRES_PASSWORD=your-secure-database-password
+```
+
+## Service URLs
+
+After deployment, services will be available at:
+
+- **Frontend**: http://localhost:3012
+- **Backend API**: http://localhost:3010
+- **Nginx Proxy**: http://localhost:8080
+- **n8n Automation**: http://localhost:5678 (if enabled)
+
+## Troubleshooting
+
+### Check Container Logs
+```bash
+# View all logs
+docker-compose -f docker-compose.6-unified-fixed.yml logs
+
+# View specific service logs
+docker-compose -f docker-compose.6-unified-fixed.yml logs postgres
+docker-compose -f docker-compose.6-unified-fixed.yml logs backend-final
+docker-compose -f docker-compose.6-unified-fixed.yml logs frontend-final
+```
+
+### Health Check Status
+```bash
+# Check health status
+docker-compose -f docker-compose.6-unified-fixed.yml ps
+
+# Inspect health check details
+docker inspect blytzwork-unified-postgres | grep -A 10 Health
+```
+
+### Database Issues
+```bash
+# Manually connect to PostgreSQL
+docker-compose -f docker-compose.6-unified-fixed.yml exec postgres psql -U postgres -d blytzwork
+
+# Run migrations manually
+docker-compose -f docker-compose.6-unified-fixed.yml exec backend-final npx prisma migrate deploy
+```
+
+### Reset Deployment
+```bash
+# Stop and remove all containers
+docker-compose -f docker-compose.6-unified-fixed.yml down --remove-orphans
+
+# Remove volumes (WARNING: This deletes all data)
+docker-compose -f docker-compose.6-unified-fixed.yml down -v
+
+# Re-deploy
+./deploy-fixed.sh
+```
+
+## Production Deployment Notes
+
+1. **Security**: Replace all placeholder values with actual production credentials
+2. **SSL**: Configure SSL certificates in production (handled by Traefik in the full setup)
+3. **Backups**: Set up automated database backups for production
+4. **Monitoring**: Configure logging and monitoring for production environments
+5. **Resource Limits**: Consider adding resource limits to containers in production
+
+## Validation
+
+The fixed deployment addresses the following issues from the original error:
+
+1. ✅ PostgreSQL health check now works reliably
+2. ✅ All health checks use appropriate commands for each container
+3. ✅ Environment variables are properly configured
+4. ✅ Start periods allow adequate initialization time
+5. ✅ Dependency chain is correctly configured
+
+The deployment should now complete successfully without the "dependency failed to start" errors.

@@ -1,79 +1,76 @@
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: blytz-postgres
+  postgres-final:
+    container_name: uvey24-blytzwork-postgres-final
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-blytzwork}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blytzwork_secure_password_2024}
+      POSTGRES_USER: ${POSTGRES_USER:-blytz_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-blytz_work}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/prisma:/docker-entrypoint-initdb.d
-    networks:
-      - blytz-network
+      - uvey24-blytzwork-postgres-final-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-blytzwork}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blytz_user} -d ${POSTGRES_DB:-blytz_work}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
-  redis:
+  redis-final:
+    container_name: uvey24-blytzwork-redis-final
     image: redis:7-alpine
-    container_name: blytz-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
-    networks:
-      - blytz-network
+      - uvey24-blytzwork-redis-final-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
 
-  # Backend API
-  backend:
+  backend-final:
+    container_name: uvey24-blytzwork-backend-final
+    image: uvey24-blytzwork-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: blytz-backend
     restart: unless-stopped
+    expose:
+      - "3001"
     environment:
       NODE_ENV: production
-      PORT: 3000
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blytz_user}:${POSTGRES_PASSWORD:-postgres}@postgres-final:5432/${POSTGRES_DB:-blytz_work}?schema=blytz_hire
+      REDIS_URL: ${REDIS_URL:-redis://redis-final:6379}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
       JWT_SECRET: ${JWT_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-      API_URL: ${API_URL:-http://localhost:3000}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      API_URL: ${API_URL:-http://localhost:3001}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://blytz.work,https://www.blytz.work,https://api.blytz.work}
     depends_on:
-      postgres:
+      postgres-final:
         condition: service_healthy
-      redis:
+      redis-final:
         condition: service_healthy
-    networks:
-      - blytz-network
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.backend.rule=Host(`api.blytz.work`)
-      - traefik.http.routers.backend.entrypoints=websecure
-      - traefik.http.routers.backend.tls.certresolver=letsencrypt
-      - traefik.http.services.backend.loadbalancer.server.port=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
-  # Frontend
-  frontend:
+  frontend-final:
+    container_name: uvey24-blytzwork-frontend-final
+    image: uvey24-blytzwork-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        # CRITICAL: These must be set as build args for Next.js NEXT_PUBLIC_* vars
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
         NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
@@ -82,12 +79,15 @@ services:
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-    container_name: blytz-frontend
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     restart: unless-stopped
+    expose:
+      - "3000"
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3000
+      # Runtime vars (not used by Next.js but available for reference)
       NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
@@ -96,29 +96,19 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
       NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     depends_on:
-      - backend
-    networks:
-      - blytz-network
+      - backend-final
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
-      retries: 3
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`blytz.work`) || Host(`www.blytz.work`) || Host(`staging.blytz.work`)
-      - traefik.http.routers.frontend.entrypoints=websecure
-      - traefik.http.routers.frontend.tls.certresolver=letsencrypt
-      - traefik.http.services.frontend.loadbalancer.server.port=3001
+      retries: 5
+      start_period: 60s
 
 volumes:
-  postgres_data:
+  uvey24-blytzwork-postgres-final-data:
     driver: local
-  redis_data:
+  uvey24-blytzwork-redis-final-data:
     driver: local
-
-networks:
-  blytz-network:
-    driver: bridge

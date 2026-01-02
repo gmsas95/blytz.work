@@ -18,33 +18,112 @@ export default function EmployerOnboardingPage() {
     name: "",
     country: "",
     industry: "",
+    bio: "",
+    companySize: "",
     description: "",
     website: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    
+    if (!formData.name.trim()) {
+      errors.push("Company name is required");
+    }
+    if (!formData.country.trim()) {
+      errors.push("Country is required");
+    }
+    if (!formData.industry) {
+      errors.push("Industry is required");
+    }
+    if (!formData.bio.trim() || formData.bio.trim().length < 10) {
+      errors.push("Bio must be at least 10 characters");
+    }
+    if (!formData.description.trim()) {
+      errors.push("Company description is required");
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = async () => {
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      toast.error("Please fix following errors", {
+        description: validationErrors.join(", "),
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      // Update company profile
-      await apiCall('/company/profile', {
+      const companyResponse = await apiCall('/company/profile', {
         method: 'POST',
         body: JSON.stringify({
           name: formData.name,
           country: formData.country,
           industry: formData.industry,
+          bio: formData.bio,
+          companySize: formData.companySize,
           description: formData.description,
-          website: formData.website,
+          website: (formData.website && formData.website.trim()) || undefined,
         })
       });
+
+      const companyData = await companyResponse.json();
+
+      if (!companyData.success) {
+        throw new Error(companyData.error || "Failed to create company profile");
+      }
+
+      try {
+        await apiCall('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            role: 'company',
+            profileComplete: true,
+          })
+        });
+      } catch (roleError) {
+        console.error("Failed to update user role:", roleError);
+        toast.warning("Company profile created, but role update failed", {
+          description: "You may need to contact support to fix your account role",
+        });
+      }
 
       toast.success("Company profile created!", {
         description: "Welcome to BlytzWork as an Employer",
       });
 
       router.push("/employer/dashboard");
-    } catch (error) {
-      toast.error("Failed to create company profile", {
-        description: "Please try again",
-      });
+    } catch (error: any) {
+      console.error("Company creation error:", error);
+
+      const errorMessage = error?.details || error?.message || "Failed to create company profile";
+      const errorCode = error?.code;
+
+      if (errorCode === "VALIDATION_ERROR") {
+        toast.error("Validation error", {
+          description: "Please check all required fields and try again",
+        });
+      } else if (errorCode === "COMPANY_EXISTS") {
+        toast.error("Company already exists", {
+          description: "You already have a company profile",
+        });
+      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        toast.error("Network error", {
+          description: "Please check your connection and try again",
+        });
+      } else {
+        toast.error("Failed to create company profile", {
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -154,7 +233,7 @@ export default function EmployerOnboardingPage() {
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
                       value={formData.industry}
                       onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    >
+                      >
                       <option value="">Select an industry</option>
                       <option value="technology">Technology</option>
                       <option value="healthcare">Healthcare</option>
@@ -164,6 +243,17 @@ export default function EmployerOnboardingPage() {
                       <option value="consulting">Consulting</option>
                       <option value="other">Other</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Company Bio</label>
+                    <textarea
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      rows={4}
+                      placeholder="Tell us about your company, culture, and what you do... (minimum 10 characters)"
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum 10 characters</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Website (Optional)</label>
@@ -192,8 +282,11 @@ export default function EmployerOnboardingPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Team Size</label>
-                    <select className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]">
-                      <option value="">Select team size</option>
+                    <select className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      value={formData.companySize}
+                      onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
+                    >
+                      <option value="">Select team size (optional)</option>
                       <option value="1-10">1-10 employees</option>
                       <option value="11-50">11-50 employees</option>
                       <option value="51-200">51-200 employees</option>
@@ -213,8 +306,16 @@ export default function EmployerOnboardingPage() {
                         <p className="text-sm">{formData.name || "Not provided"}</p>
                       </div>
                       <div>
+                        <span className="text-sm text-gray-600">Bio:</span>
+                        <p className="text-sm">{formData.bio || "Not provided"}</p>
+                      </div>
+                      <div>
                         <span className="text-sm text-gray-600">Industry:</span>
                         <p className="text-sm">{formData.industry || "Not selected"}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Team Size:</span>
+                        <p className="text-sm">{formData.companySize || "Not selected"}</p>
                       </div>
                       <div>
                         <span className="text-sm text-gray-600">Description:</span>
@@ -242,8 +343,12 @@ export default function EmployerOnboardingPage() {
                       Continue
                     </Button>
                   ) : (
-                    <Button onClick={handleSubmit} className="bg-black text-[#FFD600] hover:bg-gray-900">
-                      Complete Setup
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={isSubmitting}
+                      className="bg-black text-[#FFD600] hover:bg-gray-900"
+                    >
+                      {isSubmitting ? "Creating Profile..." : "Complete Setup"}
                     </Button>
                   )}
                 </div>

@@ -14,6 +14,7 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+ARG CACHEBUST=1
 COPY . .
 
 # Generate Prisma client
@@ -22,7 +23,7 @@ RUN npx prisma generate
 # Build application
 RUN npm run build
 
-# Production image, copy all the files and run the app
+# Production image, copy all files and run as app
 FROM base AS runner
 WORKDIR /app
 
@@ -37,13 +38,18 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/check-db.js ./check-db.js
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Set permissions
 USER backend
 
-EXPOSE 3000
+EXPOSE 3001
 
-ENV PORT 3000
+ENV PORT 3001
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["npm", "start"]
+ENTRYPOINT ["sh", "/usr/local/bin/docker-entrypoint.sh"]
