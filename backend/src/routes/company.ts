@@ -9,7 +9,7 @@ const createCompanyProfileSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
   bio: z.string().min(10, "Bio must be at least 10 characters"),
   country: z.string().min(2, "Country is required"),
-  website: z.string().url().optional(),
+  website: z.string().optional(),
   industry: z.string().min(2, "Industry is required"),
   companySize: z.enum(["1-10", "11-50", "51-200", "201+"]).optional(),
   foundedYear: z.number().min(1800).max(new Date().getFullYear()).optional(),
