@@ -18,6 +18,8 @@ export default function EmployerOnboardingPage() {
     name: "",
     country: "",
     industry: "",
+    bio: "",
+    companySize: "",
     description: "",
     website: "",
   });
@@ -36,10 +38,13 @@ export default function EmployerOnboardingPage() {
     if (!formData.industry) {
       errors.push("Industry is required");
     }
+    if (!formData.bio.trim() || formData.bio.trim().length < 10) {
+      errors.push("Bio must be at least 10 characters");
+    }
     if (!formData.description.trim()) {
       errors.push("Company description is required");
     }
-
+    
     return errors;
   };
 
@@ -61,8 +66,10 @@ export default function EmployerOnboardingPage() {
           name: formData.name,
           country: formData.country,
           industry: formData.industry,
+          bio: formData.bio,
+          companySize: formData.companySize,
           description: formData.description,
-          website: formData.website,
+          website: formData.website || undefined,
         })
       });
 
@@ -226,7 +233,7 @@ export default function EmployerOnboardingPage() {
                       className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
                       value={formData.industry}
                       onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    >
+                      >
                       <option value="">Select an industry</option>
                       <option value="technology">Technology</option>
                       <option value="healthcare">Healthcare</option>
@@ -236,6 +243,17 @@ export default function EmployerOnboardingPage() {
                       <option value="consulting">Consulting</option>
                       <option value="other">Other</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Company Bio</label>
+                    <textarea
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      rows={4}
+                      placeholder="Tell us about your company, culture, and what you do... (minimum 10 characters)"
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Minimum 10 characters</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Website (Optional)</label>
@@ -264,8 +282,11 @@ export default function EmployerOnboardingPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Team Size</label>
-                    <select className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]">
-                      <option value="">Select team size</option>
+                    <select className="w-full p-3 border border-gray-300 rounded-lg focus:border-black focus:ring-[#FFD600]"
+                      value={formData.companySize}
+                      onChange={(e) => setFormData({ ...formData, companySize: e.target.value })}
+                    >
+                      <option value="">Select team size (optional)</option>
                       <option value="1-10">1-10 employees</option>
                       <option value="11-50">11-50 employees</option>
                       <option value="51-200">51-200 employees</option>
@@ -285,8 +306,16 @@ export default function EmployerOnboardingPage() {
                         <p className="text-sm">{formData.name || "Not provided"}</p>
                       </div>
                       <div>
+                        <span className="text-sm text-gray-600">Bio:</span>
+                        <p className="text-sm">{formData.bio || "Not provided"}</p>
+                      </div>
+                      <div>
                         <span className="text-sm text-gray-600">Industry:</span>
                         <p className="text-sm">{formData.industry || "Not selected"}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Team Size:</span>
+                        <p className="text-sm">{formData.companySize || "Not selected"}</p>
                       </div>
                       <div>
                         <span className="text-sm text-gray-600">Description:</span>
