@@ -43,7 +43,7 @@ export default async function vaRoutes(app: FastifyInstance) {
     preHandler: [verifyAuth]
   }, async (request, reply) => {
     const user = request.user as any;
-    
+
     try {
       const profile = await prisma.vAProfile.findUnique({
         where: { userId: user.uid },
@@ -65,13 +65,82 @@ export default async function vaRoutes(app: FastifyInstance) {
       });
 
       if (!profile) {
-        return reply.code(404).send({ 
-          error: "VA profile not found",
-          code: "PROFILE_NOT_FOUND"
+        return reply.send({
+          success: true,
+          data: null,
+          exists: false,
+          message: "VA profile not found - please complete onboarding"
         });
       }
 
-      // Calculate profile completion
+      const completionPercentage = calculateProfileCompletion(profile);
+
+      return {
+        success: true,
+        data: {
+          ...profile,
+          completionPercentage,
+          portfolioItems: [],
+          reviews: [],
+          responseRate: profile?.responseRate || 0,
+          averageRating: profile?.averageRating || 0,
+          totalReviews: true,
+          featuredProfile: profile?.featuredProfile || false,
+          profileViews: profile?.profileViews || 0
+        }
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to fetch VA profile",
+        code: "PROFILE_FETCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+      if (!profile) {
+        return reply.send({
+          success: true,
+          data: null,
+          exists: false,
+          message: "VA profile not found - please complete onboarding"
+        });
+      }
+
+      const completionPercentage = calculateProfileCompletion(profile);
+
+      return {
+        success: true,
+        data: {
+          ...profile,
+          completionPercentage,
+          portfolioItems: [],
+          reviews: [],
+          responseRate: profile?.responseRate || 0,
+          averageRating: profile?.averageRating || 0,
+          totalReviews: true,
+          featuredProfile: profile?.featuredProfile || false,
+          profileViews: profile?.profileViews || 0
+        }
+      };
+    } catch (error: any) {
+      return reply.code(500).send({ 
+        error: "Failed to fetch VA profile",
+        code: "PROFILE_FETCH_ERROR",
+        details: error.message
+      });
+    }
+  });
+
+      if (!profile) {
+        return reply.send({
+          success: true,
+          data: null,
+          exists: false,
+          message: "VA profile not found - please complete onboarding"
+        });
+      }
+
       const completionPercentage = calculateProfileCompletion(profile);
 
       return {
@@ -81,9 +150,6 @@ export default async function vaRoutes(app: FastifyInstance) {
           completionPercentage,
           portfolioItems: [], // Will be handled separately
           reviews: [], // Mock empty reviews
-          responseRate: profile.responseRate || 0,
-          averageRating: profile.averageRating || 0,
-          totalReviews: true,
           featuredProfile: profile.featuredProfile || false,
           profileViews: profile.profileViews || 0
         }
