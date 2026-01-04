@@ -18,6 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Upload, X, Plus, Check, AlertCircle } from 'lucide-react';
 import { apiCall } from '@/lib/api';
+import { DashboardNav } from '@/components/DashboardNav';
 
 // Form field types
 interface VAProfileFormData {
@@ -443,19 +444,27 @@ const VAProfileCreation = () => {
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
+      <DashboardNav userRole="va" />
+      <div className="container mx-auto px-4 max-w-7xl py-8">
+        {/* Welcome Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Your VA Profile</h1>
+          <p className="text-slate-600">
+            Complete your professional profile to showcase your skills and experience
+          </p>
+        </div>
+
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold text-slate-900">Create Your VA Profile</h1>
             <span className="text-sm text-slate-600">Step {currentStep} of {totalSteps}</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
           <div className="flex justify-between mt-2">
             <span className="text-xs text-slate-600">Basic Info</span>
             <span className="text-xs text-slate-600">Location</span>
-            <span className="text-xs text-slate-600">Skills & Rate</span>
+            <span className="text-xs text-slate-600">Skills</span>
             <span className="text-xs text-slate-600">Contact</span>
             <span className="text-xs text-slate-600">Experience</span>
             <span className="text-xs text-slate-600">Education</span>
